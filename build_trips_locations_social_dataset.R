@@ -10,7 +10,7 @@ MIN_NUM_ARGS = 8
 
 if (length(args) < MIN_NUM_ARGS) {
     stop(paste("Wrong number of arguments!",
-               "Usage: Rscript build_trips_locations_social_dataset.R <path.finder.base.folderpath> <ticketing.data.filepath> <gps.data.filepath> <city.zone.shape.filepath> <city.zone.shape.layer.name> <trip.zone.data.filepath> <output.filepath> <log.filepath>",sep="\n"))
+               "Usage: Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing.data.filepath> <gps.data.filepath> <city.zone.shape.filepath> <city.zone.shape.layer.name> <trip.zone.data.filepath> <output.filepath> <log.filepath>",sep="\n"))
 }
 
 path.finder.base.folderpath = args[1]
