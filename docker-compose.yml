@@ -1,7 +1,7 @@
     version: '2'
     services:
         people-paths:
-            image: people-paths
+            image: eubrabigsea/people-paths
             volumes:
              - $HOST_VOLUME_FOLDERPATH:$CONTAINER_VOLUME_FOLDERPATH
             command: Rscript /home/people-paths/build_trips_locations_social_dataset.R /home/people-paths/ $TICKETING_DATA_FILEPATH $GPS_DATA_FILEPATH metadata/41CURITI.shp 41CURITI metadata/socioeco.csv $OUTPUT_FILEPATH $LOG_FILEPATH
