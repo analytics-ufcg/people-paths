@@ -1,0 +1,7 @@
+    version: '2'
+    services:
+        path_finder:
+            image: 150.165.85.4:5000/path_finder
+            volumes:
+             - $HOST_VOLUME_FOLDERPATH:$CONTAINER_VOLUME_FOLDERPATH
+            command: Rscript /home/path_finder/build_trips_locations_social_dataset.R /home/path_finder/ $TICKETING_DATA_FILEPATH $GPS_DATA_FILEPATH 41CURITI.shp 41CURITI socioeco.csv $OUTPUT_FILEPATH $LOG_FILEPATH 
