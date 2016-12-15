@@ -19,7 +19,7 @@ sudo R -e 'install.packages(c("dplyr", "lubridate", "stringr", "sp", "rgeos", "r
 ```
 
 # Prepare Input Files
-    * Download files from owncloud repository
+    * Download Streaming Data files from [owncloud repository](https://bigsea.owncloud.lsd.ufcg.edu.br/owncloud/index.php/s/UFKZhHGdxvWzO8w)
         + doc1 files are ticketing data
         + doc2 files are gps data
     * Unzip json files
