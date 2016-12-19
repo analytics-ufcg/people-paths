@@ -2,6 +2,14 @@
 
 People Paths is an application which performs a descriptive analysis on bus GPS and passenger ticketing data, finding paths taken by Public Transportation city users in a time period, and matching the paths origin/destination locations with city zone social data: population, income and literacy rate.
 
+# Data Sources
+
+# Architecture
+<div style="display:table-cell; vertical-align:middle; text-align:center">
+  <img src="https://drive.google.com/uc?id=0B3NoFHg_3tQrVDBzQVZDT29zZTg" alt="Drawing" width: "180px" height="300px"/>
+</div>
+
+
 # Setup Instructions
 
 Tested on a 14.04 Ubuntu machine.
