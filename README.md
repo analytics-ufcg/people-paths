@@ -42,7 +42,7 @@ sudo R -e 'install.packages(c("dplyr", "lubridate", "stringr", "sp", "rgeos", "r
  
          python json2csv.py doc1-file.txt doc1-file.csv file
 
-# Run Analysis (Assuming inside folder with downloaded resource files)
+# Run an Analysis
 ```
 Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing.data.filepath> <gps.data.filepath> metadata/41CURITI.shp 41CURITI metadata/socioeco.csv <output.filepath> <log.filepath>
 ```
