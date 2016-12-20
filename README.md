@@ -3,12 +3,15 @@
 People Paths is an application which performs a descriptive analysis on bus GPS and passenger ticketing data, finding paths taken by Public Transportation city users in a time period, and matching the paths origin/destination locations with city area social data: population, income and literacy rate.
 
 # Data Sources
-  * Bus GPS Data
-    + Buses GPS record for a given time period.
-  * Bus Ticketing Data
-    + Passenger ticketing record for a given time period.
-  * Census Area Data
-    + City census area data with information such as: population, income and literacy rate.
+ * Bus GPS Data
+   + Buses GPS record for a given time period. 
+  
+ * Bus Ticketing Data
+   + Passenger ticketing record for a given time period.
+    
+ * Census Area Data
+   + City census area data with information such as: population, income and literacy rate.
+    
 
 # Architecture
 <div style="display:table-cell; vertical-align:middle; text-align:center">
@@ -46,3 +49,29 @@ sudo R -e 'install.packages(c("dplyr", "lubridate", "stringr", "sp", "rgeos", "r
 ```
 Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing.data.filepath> <gps.data.filepath> metadata/41CURITI.shp 41CURITI metadata/socioeco.csv <output.filepath> <log.filepath>
 ```
+
+# Sample Input
+
+  * Bus GPS Data
+  
+    | LAT|    VEIC    | LON | COD_LINHA | DTHR             |
+    |:---------:|:-----------------:|:------------:|:--------:| :-------------------------:|
+    | -25,351073     | V001 | -49,265108   | A      | 25/06/2016 23:59:57 |
+    | -25,35078     | V001 | -49,26514   | A      | 25/06/2016 23:59:47 |
+    | -25,350796     | V001 | -49,265528   | A      | 25/06/2016 23:59:40 |   
+
+  * Bus Ticketing Data
+  
+    | CODVEICULO|    NOMELINHA    | NUMEROCARTAO | CODLINHA | DATAUTI LIZACAO             |
+    |:---------:|:-----------------:|:------------:|:--------:| :-------------------------:|
+    | 00239     | LINHA A | 0000000000   | A      | 25/06/16 06:14:03,000000 |
+    | 00239     | LINHA B | 0000000001   | B      | 25/06/16 06:28:13,000000 |
+    | 00216     | LINHA C | 0000000002   | C      | 25/06/16 08:11:54,000000 |
+   
+# Sample Output
+
+|card.num|line.code|o.sector.code|o.neigh.code|o.neigh.name|o.loc|o.timestamp|o.pop|o.income|o.num.literate|d.sector.code|d.neigh.code|d.neigh.name|d.loc|d.timestamp|d.pop|d.income|d.num.literate|
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|000001|260|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:55|833|3268.35|781|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:59|833|3268.35|781|
+|000002|260|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:59|833|3268.35|781|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:03:56|975|4211.39|936|
+|000003|260|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:03:56|975|4211.39|936|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:04:01|975|4211.39|936|
