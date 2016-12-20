@@ -54,7 +54,7 @@ Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing
 
   * Bus GPS Data
   
-    | LAT|    VEIC    | LON | COD_LINHA | DTHR             |
+    | LATITUDE|   VEHICLE    | LONGITUDE | LINECODE | DATETIME             |
     |:---------:|:-----------------:|:------------:|:--------:| :-------------------------:|
     | -25,351073     | V001 | -49,265108   | A      | 25/06/2016 23:59:57 |
     | -25,35078     | V001 | -49,26514   | A      | 25/06/2016 23:59:47 |
@@ -62,7 +62,7 @@ Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing
 
   * Bus Ticketing Data
   
-    | CODVEICULO|    NOMELINHA    | NUMEROCARTAO | CODLINHA | DATAUTI LIZACAO             |
+    | VEHICLECODE|    LINENAME    | CARDNUMBER | LINECODE | TIMESTAMP             |
     |:---------:|:-----------------:|:------------:|:--------:| :-------------------------:|
     | 00239     | LINHA A | 0000000000   | A      | 25/06/16 06:14:03,000000 |
     | 00239     | LINHA B | 0000000001   | B      | 25/06/16 06:28:13,000000 |
@@ -75,3 +75,15 @@ Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing
 |000001|260|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:55|833|3268.35|781|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:59|833|3268.35|781|
 |000002|260|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:59|833|3268.35|781|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:03:56|975|4211.39|936|
 |000003|260|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:03:56|975|4211.39|936|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:04:01|975|4211.39|936|
+
+   In the output, the column prefix defines whether it refers to the path origin (o.) or destination (d.). Each column is described below:
+   
+      * card.num: user ticketing card number
+      * line.code: bus line code
+      * sector.code: city tract to which path origin/destination belongs
+      * neigh.code: neighbourhood to which path origin/destination belongs
+      * loc: location of path origin/destination
+      * timestamp: timestamp when user took the bus/dropped from the bus
+      * pop: population of city tract to which path origin/destination belongs
+      * income: income of city tract to which path origin/destination belongs
+      * num.literate: number of literate people in city tract to which path origin/destination belongs
