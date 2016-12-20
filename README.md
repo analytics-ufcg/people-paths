@@ -78,12 +78,12 @@ Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing
 
    In the output, the column prefix defines whether it refers to the path origin (o.) or destination (d.). Each column is described below:
    
-      * card.num: user ticketing card number
-      * line.code: bus line code
-      * sector.code: city tract to which path origin/destination belongs
-      * neigh.code: neighbourhood to which path origin/destination belongs
-      * loc: location of path origin/destination
-      * timestamp: timestamp when user took the bus/dropped from the bus
-      * pop: population of city tract to which path origin/destination belongs
-      * income: income of city tract to which path origin/destination belongs
-      * num.literate: number of literate people in city tract to which path origin/destination belongs
+   * card.num: user ticketing card number
+   * line.code: bus line code
+   * sector.code: city tract to which path origin/destination belongs
+   * neigh.code: neighbourhood to which path origin/destination belongs
+   * loc: location of path origin/destination
+   * timestamp: timestamp when user took the bus/dropped from the bus
+   * pop: population of city tract to which path origin/destination belongs
+   * income: income of city tract to which path origin/destination belongs
+   * num.literate: number of literate people in city tract to which path origin/destination belongs
