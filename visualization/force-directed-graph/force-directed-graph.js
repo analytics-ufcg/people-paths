@@ -5,12 +5,13 @@ var svg = d3.select("svg"),
 var color = d3.scaleOrdinal(d3.schemeCategory20);
 
 var simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(function(d) { return d.id; }))
+    .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(function(){return 300;}))
     .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collide",d3.forceCollide( function(d){return d.r * 5 }).iterations(16) );
 
-d3.csv("../page_rank_example.csv", function(rank) {
-    d3.csv("../ga-edges.csv", function(edges) {
+d3.csv("../low_income_weekend_nodes_pagerank.csv", function(rank) {
+    d3.csv("../low_income_weekend_edges.csv", function(edges) {
         var graph = {
             "nodes": rank,
             "links": edges
@@ -18,22 +19,26 @@ d3.csv("../page_rank_example.csv", function(rank) {
 
         console.log(graph);
 
+        var weightScale = d3.scaleLinear().domain(d3.extent(graph.links.map(function(item){return item.weight}))).range([1,5]);
+
         var link = svg.append("g")
           .attr("class", "links")
         .selectAll("line")
         .data(graph.links)
         .enter().append("line")
-          .attr("stroke-width", function(d) { return d.value; });
+          .attr("stroke-width", function(d) { return weightScale(d.weight); });
 
         var nodeSpace = svg
             .selectAll("g")
             .data(graph.nodes)
             .enter().append("g")
 
+        var nodeScale = d3.scaleLinear().domain(d3.extent(graph.nodes.map(function(d){return d.pageranks;}))).range([1,10]);
+
         var node = nodeSpace
             .append("circle")
-            .attr("r", function(d) { return d.pageranks * 300; })
-            .attr("fill", function(d) { return "blue"; })
+            .attr("r", function(d) { return nodeScale(d.pageranks); })
+            .attr("fill", function(d) { return "yellow"; })
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
