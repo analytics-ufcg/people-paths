@@ -13,6 +13,75 @@
 }
 
 </style>
-<svg width="960" height="600"></svg>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<br>
+
+<div class="row">
+  <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-addon">Income type</span>
+            <div class="dropdown">
+                <button id="dropdown1" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                    Low income
+                    <span class="caret"></span>
+                </button>
+                <ul id="options1" class="dropdown-menu">
+                  <li><a href="#">Low income</a></li>
+                  <li><a href="#">High income</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="input-group">
+            <span class="input-group-addon">Day type</span>
+            <div class="dropdown">
+                <button id="dropdown2" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                    Weekday
+                    <span class="caret"></span>
+                </button>
+                <ul id="options2" class="dropdown-menu">
+                  <li><a href="#">Weekday</a></li>
+                  <li><a href="#">Weekend</a></li>
+                </ul>
+            </div>
+        </div>
+        <svg id="chart1" width="960" height="600"></svg>
+  </div>
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-addon">Income type</span>
+            <div class="dropdown">
+                <button id="dropdown3" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                    Low income
+                    <span class="caret"></span>
+                </button>
+                <ul id="options3" class="dropdown-menu">
+                  <li><a href="#">Low income</a></li>
+                  <li><a href="#">High income</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="input-group">
+            <span class="input-group-addon">Day type</span>
+            <div class="dropdown">
+                <button id="dropdown4" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                    Weekday
+                    <span class="caret"></span>
+                </button>
+                <ul id="options4" class="dropdown-menu">
+                  <li><a href="#">Weekday</a></li>
+                  <li><a href="#">Weekend</a></li>
+                </ul>
+            </div>
+        </div>
+        <svg id="chart2" width="960" height="600"></svg>
+  </div>
+</div>
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="force-directed-graph.js"></script>
