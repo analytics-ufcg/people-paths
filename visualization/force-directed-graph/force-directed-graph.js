@@ -52,37 +52,45 @@ function renderChart(chartId) {
         }
     }
 
-    console.log(nodes_file);
-    console.log(edges_file);
-
     d3.csv(nodes_file, function(rank) {
         d3.csv(edges_file, function(edges) {
+            var edges = edges.filter(function(d){return +d.weight > 500;});
+
+            var usedNodes = new Set();
+            for (var i = 0; i < edges.length; i++) {
+                usedNodes.add(edges[i].source);
+                usedNodes.add(edges[i].target);
+            }
+
+            console.log(usedNodes);
+
             var graph = {
-                "nodes": rank,
+                "nodes": rank.filter(function(d){return usedNodes.has(d.id);}),
                 "links": edges
             };
 
             console.log(graph);
 
-            var weightScale = d3.scaleLinear().domain(d3.extent(graph.links.map(function(item){return item.weight}))).range([1,5]);
+            var weightScale = d3.scaleLinear().domain(d3.extent(graph.links.map(function(item){return +item.weight}))).range([1,10]);
 
             var link = svg.append("g")
               .attr("class", "links")
             .selectAll("line")
             .data(graph.links)
             .enter().append("line")
-              .attr("stroke-width", function(d) { return weightScale(d.weight); });
+              .attr("stroke-width", function(d) { return weightScale(+d.weight); })
+              //.attr("opacity", 0.2);
 
             var nodeSpace = svg
                 .selectAll("g")
                 .data(graph.nodes)
                 .enter().append("g")
 
-            var nodeScale = d3.scaleLinear().domain(d3.extent(graph.nodes.map(function(d){return d.pageranks;}))).range([1,10]);
+            var nodeScale = d3.scaleLinear().domain(d3.extent(graph.nodes.map(function(d){return +d.pageranks;}))).range([1,20]);
 
             var node = nodeSpace
                 .append("circle")
-                .attr("r", function(d) { return nodeScale(d.pageranks); })
+                .attr("r", function(d) { return nodeScale(+d.pageranks); })
                 .attr("fill", function(d) { return "yellow"; })
                 .call(d3.drag()
                     .on("start", dragstarted)
