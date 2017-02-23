@@ -54,7 +54,7 @@ function renderChart(chartId) {
 
     d3.csv(nodes_file, function(rank) {
         d3.csv(edges_file, function(edges) {
-            var edges = edges.filter(function(d){return +d.weight > 500;});
+            edges = edges.filter(function(d){return +d.weight > 500 && d.source != d.target;});
 
             var usedNodes = new Set();
             for (var i = 0; i < edges.length; i++) {
@@ -78,20 +78,20 @@ function renderChart(chartId) {
             .selectAll("line")
             .data(graph.links)
             .enter().append("line")
-              .attr("stroke-width", function(d) { return weightScale(+d.weight); })
+              .attr("stroke-width", function(d) { return weightScale(+d.weight); });
               //.attr("opacity", 0.2);
 
             var nodeSpace = svg
-                .selectAll("g")
+                .selectAll("g1")
                 .data(graph.nodes)
-                .enter().append("g")
+                .enter().append("g");
 
-            var nodeScale = d3.scaleLinear().domain(d3.extent(graph.nodes.map(function(d){return +d.pageranks;}))).range([1,20]);
+            var nodeScale = d3.scaleLinear().domain(d3.extent(graph.nodes.map(function(d){return +d.pageranks;}))).range([5,20]);
 
             var node = nodeSpace
                 .append("circle")
                 .attr("r", function(d) { return nodeScale(+d.pageranks); })
-                .attr("fill", function(d) { return "yellow"; })
+                .attr("fill", "yellow")
                 .call(d3.drag()
                     .on("start", dragstarted)
                     .on("drag", dragged)
