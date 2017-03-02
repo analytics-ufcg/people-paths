@@ -6,7 +6,7 @@ function renderChart(chartId) {
         width = $( document ).width() / 2,
         height = $( document ).height() - 200;
 
-    var color = d3.scaleOrdinal(d3.schemeCategory20);
+    var color;
 
     var simulation = d3.forceSimulation()
         .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(function(){return 100;}))
@@ -15,6 +15,7 @@ function renderChart(chartId) {
         .force("collide",d3.forceCollide( function(d){return d.r * 3 }).iterations(2) );
 
     if (chartId == "chart1"){
+        color = "orange";
         if ($("#dropdown1").text() == "Low income") {
             if ($("#dropdown2").text() == "Weekday") {
                 nodes_file = "../low_income_not_weekend_nodes_pagerank.csv";
@@ -33,6 +34,7 @@ function renderChart(chartId) {
             }
         }
     } else {
+        color = "purple";
         if ($("#dropdown3").text() == "Low income") {
             if ($("#dropdown4").text() == "Weekday") {
                 nodes_file = "../low_income_not_weekend_nodes_pagerank.csv";
@@ -107,7 +109,7 @@ function renderChart(chartId) {
             var node = nodeSpace
                 .append("circle")
                 .attr("r", function(d) { return nodeScale(+d.pageranks); })
-                .attr("fill", "orange")
+                .attr("fill", color)
                 .call(d3.drag()
                     .on("start", dragstarted)
                     .on("drag", dragged)
