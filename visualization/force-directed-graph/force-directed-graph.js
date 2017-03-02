@@ -9,10 +9,10 @@ function renderChart(chartId) {
     var color = d3.scaleOrdinal(d3.schemeCategory20);
 
     var simulation = d3.forceSimulation()
-        .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(function(){return 300;}))
+        .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(function(){return 100;}))
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collide",d3.forceCollide( function(d){return d.r * 5 }).iterations(16) );
+        .force("collide",d3.forceCollide( function(d){return d.r * 3 }).iterations(2) );
 
     if (chartId == "chart1"){
         if ($("#dropdown1").text() == "Low income") {
@@ -62,31 +62,44 @@ function renderChart(chartId) {
                 usedNodes.add(edges[i].target);
             }
 
-            console.log(usedNodes);
-
             var graph = {
                 "nodes": rank.filter(function(d){return usedNodes.has(d.id);}),
                 "links": edges
             };
 
-            console.log(graph);
+            var weightScale = d3.scaleLinear().domain(d3.extent(graph.links.map(function(item){return +item.weight}))).range([1,5]);
 
-            var weightScale = d3.scaleLinear().domain(d3.extent(graph.links.map(function(item){return +item.weight}))).range([1,10]);
+            var nodes = graph.nodes,
+                nodeById = d3.map(nodes, function(d) { return d.id; }),
+                links = graph.links,
+                bilinks = [];
+
+            links.forEach(function(link) {
+                var s = link.source = nodeById.get(link.source),
+                    t = link.target = nodeById.get(link.target),
+                    i = {}, // intermediate node
+                    w = link.weight;
+                nodes.push(i);
+                links.push({source: s, target: i}, {source: i, target: t});
+                bilinks.push([s, i, t, w]);
+            });
 
             var link = svg.append("g")
               .attr("class", "links")
             .selectAll("line")
-            .data(graph.links)
-            .enter().append("line")
-              .attr("stroke-width", function(d) { return weightScale(+d.weight); });
+            .data(bilinks)
+            .enter().append("path")
+              .attr("stroke-width", function(d) { return weightScale(+d[3]); });
               //.attr("opacity", 0.2);
+
+            var nodesNotNull = graph.nodes.filter(function(d) { return d.id; });
 
             var nodeSpace = svg
                 .selectAll("g1")
-                .data(graph.nodes)
+                .data(nodesNotNull)
                 .enter().append("g");
 
-            var nodeScale = d3.scaleLinear().domain(d3.extent(graph.nodes.map(function(d){return +d.pageranks;}))).range([5,20]);
+            var nodeScale = d3.scaleLinear().domain(d3.extent(nodesNotNull.map(function(d){return +d.pageranks;}))).range([3, 15]);
 
             var node = nodeSpace
                 .append("circle")
@@ -112,8 +125,22 @@ function renderChart(chartId) {
             simulation.force("link")
               .links(graph.links);
 
+            function positionLink(d) {
+                return "M" + d[0].x + "," + d[0].y
+                     + "S" + d[1].x + "," + d[1].y
+                     + " " + d[2].x + "," + d[2].y;
+            }
+
+            function positionNode(d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            }
+
+
             function ticked() {
-                link
+                link.attr("d", positionLink);
+                node.attr("transform", positionNode);
+
+                /*link
                     .attr("x1", function(d) { return d.source.x; })
                     .attr("y1", function(d) { return d.source.y; })
                     .attr("x2", function(d) { return d.target.x; })
@@ -121,7 +148,7 @@ function renderChart(chartId) {
 
                 node
                     .attr("cx", function(d) { return d.x; })
-                    .attr("cy", function(d) { return d.y; });
+                    .attr("cy", function(d) { return d.y; });*/
 
                 nodeText
                     .attr("dx", function(d) { return d.x; })
