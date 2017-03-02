@@ -3,8 +3,8 @@ function renderChart(chartId) {
     d3.select("#" + chartId).selectAll("*").remove();
 
     var svg = d3.select("#" + chartId),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");
+        width = $( document ).width() / 2,
+        height = $( document ).height() - 200;
 
     var color = d3.scaleOrdinal(d3.schemeCategory20);
 
@@ -84,7 +84,10 @@ function renderChart(chartId) {
                 bilinks.push([s, i, t, w]);
             });
 
-            var link = svg.append("g")
+            var link = svg
+                .style("width", width)
+                .style("height", height)
+            .append("g")
               .attr("class", "links")
             .selectAll("line")
             .data(bilinks)
@@ -104,7 +107,7 @@ function renderChart(chartId) {
             var node = nodeSpace
                 .append("circle")
                 .attr("r", function(d) { return nodeScale(+d.pageranks); })
-                .attr("fill", "yellow")
+                .attr("fill", "orange")
                 .call(d3.drag()
                     .on("start", dragstarted)
                     .on("drag", dragged)
