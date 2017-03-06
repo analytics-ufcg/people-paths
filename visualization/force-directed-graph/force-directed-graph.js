@@ -56,7 +56,13 @@ function renderChart(chartId) {
 
     d3.csv(nodes_file, function(rank) {
         d3.csv(edges_file, function(edges) {
-            edges = edges.filter(function(d){return +d.weight > 500 && d.source != d.target;});
+            edges.sort(function(e1, e2){
+                return e2.weight - e1.weight;
+            });
+
+            edges = edges.filter(function(d){return d.source != d.target;}).slice(0, 300);
+
+            console.log(edges);
 
             var usedNodes = new Set();
             for (var i = 0; i < edges.length; i++) {
