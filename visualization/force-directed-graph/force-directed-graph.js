@@ -60,7 +60,7 @@ function renderChart(chartId) {
                 return e2.weight - e1.weight;
             });
 
-            edges = edges.filter(function(d){return d.source != d.target;}).slice(0, 300);
+            edges = edges.filter(function(d){return d.source != d.target;}).slice(0, 200);
 
             console.log(edges);
 
