@@ -15,9 +15,9 @@ function renderChart(chartId, nodes_file, edges_file, edgesScale) {
         .force("collide",d3.forceCollide( function(d){return d.r * 3 }).iterations(2) );
 
     if (chartId == "chart1"){
-        color = "orange";
+        color = "#d95f02";
     } else {
-        color = "purple";
+        color = "#1b9e77";
     }
 
     d3.csv(nodes_file, function(rank) {
