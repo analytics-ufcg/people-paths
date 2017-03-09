@@ -1,5 +1,5 @@
 
-function renderChart(chartId) {
+function renderChart(chartId, nodes_file, edges_file, edgesScale) {
     d3.select("#" + chartId).selectAll("*").remove();
 
     var svg = d3.select("#" + chartId),
@@ -16,42 +16,8 @@ function renderChart(chartId) {
 
     if (chartId == "chart1"){
         color = "orange";
-        if ($("#dropdown1").text() == "Low income") {
-            if ($("#dropdown2").text() == "Weekday") {
-                nodes_file = "../low_income_not_weekend_nodes_pagerank.csv";
-                edges_file = "../low_income_not_weekend_edges.csv";
-            } else {
-                nodes_file = "../low_income_weekend_nodes_pagerank.csv";
-                edges_file = "../low_income_weekend_edges.csv";
-            }
-        } else {
-            if ($("#dropdown2").text() == "Weekday") {
-                nodes_file = "../high_income_not_weekend_nodes_pagerank.csv";
-                edges_file = "../high_income_not_weekend_edges.csv";
-            } else {
-                nodes_file = "../high_income_weekend_nodes_pagerank.csv";
-                edges_file = "../high_income_weekend_edges.csv";
-            }
-        }
     } else {
         color = "purple";
-        if ($("#dropdown3").text() == "Low income") {
-            if ($("#dropdown4").text() == "Weekday") {
-                nodes_file = "../low_income_not_weekend_nodes_pagerank.csv";
-                edges_file = "../low_income_not_weekend_edges.csv";
-            } else {
-                nodes_file = "../low_income_weekend_nodes_pagerank.csv";
-                edges_file = "../low_income_weekend_edges.csv";
-            }
-        } else {
-            if ($("#dropdown4").text() == "Weekday") {
-                nodes_file = "../high_income_not_weekend_nodes_pagerank.csv";
-                edges_file = "../high_income_not_weekend_edges.csv";
-            } else {
-                nodes_file = "../high_income_weekend_nodes_pagerank.csv";
-                edges_file = "../high_income_weekend_edges.csv";
-            }
-        }
     }
 
     d3.csv(nodes_file, function(rank) {
@@ -74,8 +40,6 @@ function renderChart(chartId) {
                 "nodes": rank.filter(function(d){return usedNodes.has(d.id);}),
                 "links": edges
             };
-
-            var weightScale = d3.scaleLinear().domain(d3.extent(graph.links.map(function(item){return +item.weight}))).range([1,5]);
 
             var nodes = graph.nodes,
                 nodeById = d3.map(nodes, function(d) { return d.id; }),
@@ -100,7 +64,7 @@ function renderChart(chartId) {
             .selectAll("line")
             .data(bilinks)
             .enter().append("path")
-              .attr("stroke-width", function(d) { return weightScale(+d[3]); });
+              .attr("stroke-width", function(d) { return edgesScale(+d[3]); });
               //.attr("opacity", 0.2);
 
             var nodesNotNull = graph.nodes.filter(function(d) { return d.id; });
@@ -186,6 +150,75 @@ function renderChart(chartId) {
     }
 }
 
+function getFiles() {
+        if ($("#dropdown1").text() == "Low income") {
+            if ($("#dropdown2").text() == "Weekday") {
+                nodes_file1 = "../low_income_not_weekend_nodes_pagerank.csv";
+                edges_file1 = "../low_income_not_weekend_edges.csv";
+            } else {
+                nodes_file1 = "../low_income_weekend_nodes_pagerank.csv";
+                edges_file1 = "../low_income_weekend_edges.csv";
+            }
+        } else {
+            if ($("#dropdown2").text() == "Weekday") {
+                nodes_file1 = "../high_income_not_weekend_nodes_pagerank.csv";
+                edges_file1 = "../high_income_not_weekend_edges.csv";
+            } else {
+                nodes_file1 = "../high_income_weekend_nodes_pagerank.csv";
+                edges_file1 = "../high_income_weekend_edges.csv";
+            }
+        }
+
+        if ($("#dropdown3").text() == "Low income") {
+            if ($("#dropdown4").text() == "Weekday") {
+                nodes_file2 = "../low_income_not_weekend_nodes_pagerank.csv";
+                edges_file2 = "../low_income_not_weekend_edges.csv";
+            } else {
+                nodes_file2 = "../low_income_weekend_nodes_pagerank.csv";
+                edges_file2 = "../low_income_weekend_edges.csv";
+            }
+        } else {
+            if ($("#dropdown4").text() == "Weekday") {
+                nodes_file2 = "../high_income_not_weekend_nodes_pagerank.csv";
+                edges_file2 = "../high_income_not_weekend_edges.csv";
+            } else {
+                nodes_file2 = "../high_income_weekend_nodes_pagerank.csv";
+                edges_file2 = "../high_income_weekend_edges.csv";
+            }
+        }
+
+        return { "nodes_file1": nodes_file1, "edges_file1": edges_file1, "nodes_file2": nodes_file2, "edges_file2": edges_file2}
+}
+
+function renderBothCharts() {
+    files = getFiles();
+
+    d3.queue()
+        .defer(d3.csv, files.edges_file1)
+        .defer(d3.csv, files.edges_file2)
+        .await(function(error, edges1, edges2){
+            if (error) throw error;
+            edges1.sort(function(e1, e2){
+                return e2.weight - e1.weight;
+            });
+
+            edges1 = edges1.filter(function(d){return d.source != d.target;}).slice(0, 200);
+
+            edges2.sort(function(e1, e2){
+                return e2.weight - e1.weight;
+            });
+
+            edges2 = edges2.filter(function(d){return d.source != d.target;}).slice(0, 200);
+
+            edges = edges1.concat(edges2);
+
+            var edgesScale = d3.scaleLinear().domain(d3.extent(edges.map(function(item){return +item.weight}))).range([1,5]);
+
+            renderChart("chart1", files.nodes_file1, files.edges_file1, edgesScale);
+            renderChart("chart2", files.nodes_file2, files.edges_file2, edgesScale);
+        });
+}
+
 $(function(){
 
     $("#dropdown1").html("Low income" + '<span class="caret"></span>');
@@ -193,14 +226,13 @@ $(function(){
     $("#dropdown3").html("Low income" + '<span class="caret"></span>');
     $("#dropdown4").html("Weekday" + '<span class="caret"></span>');
 
-    renderChart("chart1");
-    renderChart("chart2");
+    renderBothCharts();
 
     $("#options1").on('click', 'li a', function(){
         var text = $(this).text();
         if ($("#dropdown1").text() != text) {
             $("#dropdown1").html(text + '<span class="caret"></span>');
-            renderChart("chart1");
+            renderBothCharts();
         }
     });
 
@@ -208,7 +240,7 @@ $(function(){
         var text = $(this).text();
         if ($("#dropdown2").text() != text) {
             $("#dropdown2").html(text + '<span class="caret"></span>');
-            renderChart("chart1");
+            renderBothCharts();
         }
     });
 
@@ -216,7 +248,7 @@ $(function(){
         var text = $(this).text();
         if ($("#dropdown3").text() != text) {
             $("#dropdown3").html(text + '<span class="caret"></span>');
-            renderChart("chart2");
+            renderBothCharts();
         }
     });
 
@@ -224,7 +256,7 @@ $(function(){
         var text = $(this).text();
         if ($("#dropdown4").text() != text) {
             $("#dropdown4").html(text + '<span class="caret"></span>');
-            renderChart("chart2");
+            renderBothCharts();
         }
     });
 
