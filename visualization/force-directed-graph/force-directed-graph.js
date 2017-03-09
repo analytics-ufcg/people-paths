@@ -153,37 +153,37 @@ function renderChart(chartId, nodes_file, edges_file, edgesScale) {
 function getFiles() {
         if ($("#dropdown1").text() == "Low income") {
             if ($("#dropdown2").text() == "Weekday") {
-                nodes_file1 = "../low_income_not_weekend_nodes_pagerank.csv";
-                edges_file1 = "../low_income_not_weekend_edges.csv";
+                nodes_file1 = "low_income_not_weekend_nodes_pagerank.csv";
+                edges_file1 = "low_income_not_weekend_edges.csv";
             } else {
-                nodes_file1 = "../low_income_weekend_nodes_pagerank.csv";
-                edges_file1 = "../low_income_weekend_edges.csv";
+                nodes_file1 = "low_income_weekend_nodes_pagerank.csv";
+                edges_file1 = "low_income_weekend_edges.csv";
             }
         } else {
             if ($("#dropdown2").text() == "Weekday") {
-                nodes_file1 = "../high_income_not_weekend_nodes_pagerank.csv";
-                edges_file1 = "../high_income_not_weekend_edges.csv";
+                nodes_file1 = "high_income_not_weekend_nodes_pagerank.csv";
+                edges_file1 = "high_income_not_weekend_edges.csv";
             } else {
-                nodes_file1 = "../high_income_weekend_nodes_pagerank.csv";
-                edges_file1 = "../high_income_weekend_edges.csv";
+                nodes_file1 = "high_income_weekend_nodes_pagerank.csv";
+                edges_file1 = "high_income_weekend_edges.csv";
             }
         }
 
         if ($("#dropdown3").text() == "Low income") {
             if ($("#dropdown4").text() == "Weekday") {
-                nodes_file2 = "../low_income_not_weekend_nodes_pagerank.csv";
-                edges_file2 = "../low_income_not_weekend_edges.csv";
+                nodes_file2 = "low_income_not_weekend_nodes_pagerank.csv";
+                edges_file2 = "low_income_not_weekend_edges.csv";
             } else {
-                nodes_file2 = "../low_income_weekend_nodes_pagerank.csv";
-                edges_file2 = "../low_income_weekend_edges.csv";
+                nodes_file2 = "low_income_weekend_nodes_pagerank.csv";
+                edges_file2 = "low_income_weekend_edges.csv";
             }
         } else {
             if ($("#dropdown4").text() == "Weekday") {
-                nodes_file2 = "../high_income_not_weekend_nodes_pagerank.csv";
-                edges_file2 = "../high_income_not_weekend_edges.csv";
+                nodes_file2 = "high_income_not_weekend_nodes_pagerank.csv";
+                edges_file2 = "high_income_not_weekend_edges.csv";
             } else {
-                nodes_file2 = "../high_income_weekend_nodes_pagerank.csv";
-                edges_file2 = "../high_income_weekend_edges.csv";
+                nodes_file2 = "high_income_weekend_nodes_pagerank.csv";
+                edges_file2 = "high_income_weekend_edges.csv";
             }
         }
 
