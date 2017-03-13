@@ -2,7 +2,7 @@
 function renderChart(chartId, nodes_file, edges_file, edgesScale) {
     d3.select("#" + chartId).selectAll("*").remove();
 
-    var svg = d3.select("#" + chartId),
+    var svg = d3.select("#" + chartId).append("svg"),
         width = $( document ).width() / 2,
         height = $( document ).height() - 200;
 
@@ -148,6 +148,8 @@ function renderChart(chartId, nodes_file, edges_file, edgesScale) {
       d.fx = null;
       d.fy = null;
     }
+
+    return simulation
 }
 
 function getFiles() {
@@ -214,8 +216,16 @@ function renderBothCharts() {
 
             var edgesScale = d3.scaleLinear().domain(d3.extent(edges.map(function(item){return +item.weight}))).range([1,5]);
 
-            renderChart("chart1", files.nodes_file1, files.edges_file1, edgesScale);
-            renderChart("chart2", files.nodes_file2, files.edges_file2, edgesScale);
+            if (simulation1 != null) {
+                simulation1.stop();
+            }
+
+            if (simulation2 != null) {
+                simulation2.stop();
+            }
+
+            simulation1 = renderChart("chart1", files.nodes_file1, files.edges_file1, edgesScale);
+            simulation2 = renderChart("chart2", files.nodes_file2, files.edges_file2, edgesScale);
         });
 }
 
@@ -225,6 +235,9 @@ $(function(){
     $("#dropdown2").html("Weekday" + '<span class="caret"></span>');
     $("#dropdown3").html("Low income" + '<span class="caret"></span>');
     $("#dropdown4").html("Weekday" + '<span class="caret"></span>');
+
+    simulation1 = null;
+    simulation2 = null;
 
     renderBothCharts();
 
