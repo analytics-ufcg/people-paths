@@ -22,7 +22,7 @@ def printUsage():
     print "Usage: " + sys.argv[0] + " <buste-base-folder-path> <ticketing-base-folder-path> <output-folder-path> <initial-date> <final-date> <terminal-codes-filepath>"
 
 def readBUSTE_HDFSdir(path):
-    allFiles = glob.glob(os.path.join(path,"*.csv"))
+    allFiles = glob.glob(os.path.join(path,"part-*"))
 
     frame = pd.DataFrame()
     list_ = []
@@ -42,7 +42,7 @@ def select_input_folders(buste_base_path,init_date,fin_date):
 		if (folder_date >= init_date) and (folder_date <= fin_date):
 			selected_folders.append(folder)
 
-	return selected_folders
+	return sorted(selected_folders)
 
 def get_boarding_data_filepath(buste_date,ticketing_base_path):
 	boarding_date = buste_date + pd.DateOffset(days=1)
@@ -51,8 +51,9 @@ def get_boarding_data_filepath(buste_date,ticketing_base_path):
 	return boarding_file
 	
 def check_data_compatibility(buste_df,ticketing_df):
-	buste_date = pd.to_datetime(buste_df.at[0,'date'],format='%Y_%m_%d')
-	ticketing_date = pd.to_datetime(ticketing_df.at[0,'DATAUTILIZACAO'],format='%d/%m/%y')
+	buste_date = pd.to_datetime(buste_df['date'].iloc[0],format='%Y_%m_%d')
+	ticketing_date = pd.to_datetime(ticketing_df['DATAUTILIZACAO'].iloc[0],format='%d/%m/%y')
+	#print buste_date, ticketing_date
 	return buste_date == ticketing_date
 
 
