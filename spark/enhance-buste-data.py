@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 #Constants
-MIN_NUM_ARGS = 7
+MIN_NUM_ARGS = 8
 first_cols = ['cardNum', 'boarding_datetime','gps_datetime','route','busCode','stopPointId']
 boarding_key_cols = ['cardNum','boarding_datetime']
 gps_key_cols = ['route','busCode','tripNum','stopPointId']
@@ -19,7 +19,7 @@ max_match_diff = 1800
 
 #Functions
 def printUsage():
-    print "Usage: " + sys.argv[0] + " <buste-base-folder-path> <ticketing-base-folder-path> <output-folder-path> <initial-date> <final-date> <terminal-codes-filepath>"
+    print "Usage: " + sys.argv[0] + " <buste-base-folder-path> <ticketing-base-folder-path> <output-folder-path> <initial-date> <final-date> <terminal-codes-filepath> <gtfs-stops-filepath>"
 
 def readBUSTE_HDFSdir(path):
     allFiles = glob.glob(os.path.join(path,"part-*"))
@@ -70,6 +70,8 @@ output_folder_path = sys.argv[3]
 initial_date = sys.argv[4]
 final_date = sys.argv[5]
 terminal_codes_file_path = sys.argv[6]	
+gtfs_stops_filepath = sys.argv[7]
+
 
 initial_date_dt = pd.to_datetime(initial_date,format='%Y-%m-%d')
 final_date_dt = pd.to_datetime(final_date,format='%Y-%m-%d')
@@ -153,7 +155,17 @@ for folder in selected_folders:
 	gps_boardings_with_terminals = gps_boardings_with_terminals[['cardNum', 'boarding_datetime', 'route', 'busCode', 'tripNum', 'gps_datetime','stopPointId',
                                       'shapeId','shapeSequence','shapeLat','shapeLon','distanceTraveledShape','problem','lineName','birthdate','gender']].sort_values(sort_cols)
 
-	gps_boardings_with_terminals.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d')  + '.csv', index=False)
+	#Adding stops location coordinates and parent station
+	stops_df = pd.read_csv(gtfs_stops_filepath)
+	stops_metadata = stops_df[['stop_id','stop_lat','stop_lon','parent_station']].rename(index=str,columns={'stop_id':'stopPointId'})
+	enhanced_buste = gps_boardings_with_terminals.merge(stops_metadata, on='stopPointId', how='left')
+
+	#Selecting columns to be kept in data and sorting rows
+	enhanced_buste = enhanced_buste[['cardNum', 'boarding_datetime', 'route', 'busCode', 'tripNum', 
+			'gps_datetime','stopPointId','stop_lat','stop_lon','parent_station','shapeId','shapeSequence','shapeLat','shapeLon',
+			'distanceTraveledShape','problem','lineName','birthdate','gender']].sort_values(sort_cols)
+
+	enhanced_buste.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d')  + '.csv', index=False)
 	
 print "Finishing Script..."
 
