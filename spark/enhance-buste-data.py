@@ -165,8 +165,36 @@ for folder in selected_folders:
 			'gps_datetime','stopPointId','stop_lat','stop_lon','parent_station','shapeId','shapeSequence','shapeLat','shapeLon',
 			'distanceTraveledShape','problem','lineName','birthdate','gender']].sort_values(sort_cols)
 
-	enhanced_buste.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d')  + '.csv', index=False)
+	enhanced_buste.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d')  + '_enhanced_buste.csv', index=False)
+
+	#Generating Origin-Next Origin Pairs
+	filtered_boardings = enhanced_buste.dropna(subset=['cardNum','boarding_datetime']).drop_duplicates(['cardNum','boarding_datetime'])
+	multiple_boardings = filtered_boardings.cardNum.value_counts() \
+				.reset_index(name='num_boardings') \
+				.rename(index=str, columns={'index':'cardNum'}) \
+				.query('num_boardings > 1')
+	clean_boardings = filtered_boardings[filtered_boardings['cardNum'].isin(multiple_boardings.cardNum)] \
+				.reset_index() \
+				.rename(index=str, columns={'index':'boarding_id'})
+	od_matrix_ids = clean_boardings.sort_values('boarding_datetime')[['cardNum','boarding_id']] \
+				.assign(next_boarding_id = lambda x: x.groupby('cardNum').boarding_id.shift(-1))
+	first_user_boarding_id = od_matrix_ids.groupby('cardNum').boarding_id.first() \
+				.reset_index() \
+				.rename(index=str, columns={'boarding_id':'first_boarding_id'})
+	od_matrix_ids = od_matrix_ids.merge(first_user_boarding_id) \
+				.assign(next_boarding_id = lambda x: np.where(np.isnan(
+								x['next_boarding_id']),
+								x['first_boarding_id'],
+								x['next_boarding_id'])) \
+				.drop('first_boarding_id', axis=1)
+
+	bus_trip_data = enhanced_buste[["route","busCode","tripNum","stopPointId","gps_datetime","stop_lat","stop_lon","parent_station"]].dropna(subset=["route","busCode","tripNum","stopPointId","gps_datetime","stop_lat","stop_lon"])
+
+	od_matrix_ids.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d') + '_trips.csv', index=False)
+	clean_boardings.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d') + '_clean_boardings.csv', index=False)
 	
-print "Finishing Script..."
+	bus_trip_data.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d') + '_bus_trips.csv', index=False)
+
+	print "Finishing Script..."
 
 sys.exit(0)
