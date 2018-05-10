@@ -4,13 +4,17 @@
 import sys
 import os
 import glob
+from datetime import datetime
+import json
+import urllib2
+import time
 
 #Data Analysis Libs
 import pandas as pd
 import numpy as np
 
 #Constants
-MIN_NUM_ARGS = 5
+MIN_NUM_ARGS = 6 
 first_cols = ['cardNum', 'boarding_datetime','gps_datetime','route','busCode','stopPointId']
 boarding_key_cols = ['cardNum','boarding_datetime']
 gps_key_cols = ['route','busCode','tripNum','stopPointId']
@@ -19,7 +23,7 @@ max_match_diff = 1800
 
 #Functions
 def printUsage():
-    print "Usage: " + sys.argv[0] + " <enhanced-buste-folder-path> <output-folder-path> <otp-url> <initial-date> <final-date>"
+    print "Usage: " + sys.argv[0] + " <enhanced-buste-folder-path> <output-folder-path> <otp-server-url> <initial-date> <final-date>"
 
 def select_input_files(enh_buste_base_path,init_date,fin_date,suffix):
 	selected_files = []
@@ -46,25 +50,35 @@ def get_router_id(query_date):
     else:
         return 'ctba-2017-2'
 
-def get_otp_itineraries(otp_url,o_lat,o_lon,d_lat,d_lon,date,time,verbose=False):
-    otp_http_request = 'routers/{}/plan?fromPlace={},{}&toPlace={},{}&mode=TRANSIT,WALK&date={}&time={}'
+def get_otp_itineraries(otp_url,o_lat,o_lon,d_lat,d_lon,date,time,route,verbose=False):
+    otp_http_request = 'routers/{}/plan?fromPlace={},{}&toPlace={},{}&mode=TRANSIT,WALK&date={}&time={}&numItineraries=10&maxWalkingDistance=1000'
 	
     router_id = get_router_id(date)
-    otp_request_url = otp_url + otp_http_request.format(router_id,o_lat,o_lon,d_lat,d_lon,date,time)
+    otp_request_url = otp_url + otp_http_request.format(router_id,o_lat,o_lon,d_lat,d_lon,date,time,route)
     if verbose:
         print otp_request_url
     return json.loads(urllib2.urlopen(otp_request_url).read())
 
 def get_otp_suggested_trips(od_matrix,otp_url):
+	req_duration = []
 	trips_otp_response = {}
 	counter = 0
 	for index, row in od_matrix.iterrows():
 		id=long(row['o_boarding_id'])
 		date = row['o_boarding_datetime'].strftime('%Y-%m-%d')
-		start_time = row['o_boarding_datetime'].strftime('%H:%M:%S')
-		trip_plan = get_otp_itineraries(otp_url,row['o_stop_lat'], row['o_stop_lon'], row['next_o_stop_lat'], row['next_o_stop_lon'],date,start_time)
+		start_time = (row['o_boarding_datetime']-pd.Timedelta('2 min')).strftime('%H:%M:%S')
+		req_start_time = time.time()
+		trip_plan = get_otp_itineraries(otp_url,row['o_stop_lat'], row['o_stop_lon'], row['next_o_stop_lat'], row['next_o_stop_lon'],date,start_time,row['o_route'])
+		req_end_time = time.time()
+		req_time = req_end_time - req_start_time
+		req_duration.append((id,req_time))
+		#print "OTP request took ", req_end_time - req_start_time,"seconds."
 		trips_otp_response[id] = trip_plan
 		counter+=1
+
+	req_dur_df = pd.DataFrame().from_records(req_duration,columns=['id','duration'])
+	print req_dur_df.duration.describe()	
+
 	return trips_otp_response
 
 def extract_otp_trips_legs(otp_trips):
@@ -109,8 +123,9 @@ if __name__ == "__main__":
 
 enhanced_buste_folder_path = sys.argv[1]
 output_folder_path = sys.argv[2]
-initial_date = sys.argv[3]
-final_date = sys.argv[4]
+otp_server_url = sys.argv[3]
+initial_date = sys.argv[4]
+final_date = sys.argv[5]
 
 initial_date_dt = pd.to_datetime(initial_date,format='%Y-%m-%d')
 final_date_dt = pd.to_datetime(final_date,format='%Y-%m-%d')
@@ -118,12 +133,10 @@ final_date_dt = pd.to_datetime(final_date,format='%Y-%m-%d')
 selected_files = select_input_files(enhanced_buste_folder_path,initial_date_dt,final_date_dt,'_user_trips')
 
 for file_,file_date in selected_files:
+	print "Processing date", file_date.strftime('%Y_%m_%d')
 	user_trips = pd.read_csv(file_, parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
-	otp_suggestions = get_otp_suggested_trips(od_matrix,otp_server_url)
-
-	print len(otp_suggestions)
-
+	otp_suggestions = get_otp_suggested_trips(user_trips.head(1000),otp_server_url)
 	otp_legs_df = prepare_otp_legs_df(extract_otp_trips_legs(otp_suggestions))
 
-	print otp_legs_df.head()
+	otp_legs_df.to_csv(output_folder_path + os.sep + file_date.strftime('%Y_%m_%d') + '_otp_itineraries.csv',index=False)
 
