@@ -56,6 +56,13 @@ def check_data_compatibility(buste_df,ticketing_df):
 	#print buste_date, ticketing_date
 	return buste_date == ticketing_date
 
+def dist(stop_lat, stop_lon,next_o_lat,next_o_lon):
+    return np.arccos(
+        np.sin(np.radians(stop_lat)) * np.sin(np.radians(next_o_lat)) + 
+        np.cos(np.radians(stop_lat)) * np.cos(np.radians(next_o_lat)) * 
+            np.cos(np.radians(stop_lon) - np.radians(next_o_lon))
+    ) * 6371
+
 
 #Code
 if __name__ == "__main__":
@@ -201,7 +208,13 @@ for folder in selected_folders:
 	                                .drop(['boarding_id','next_boarding_id'], axis=1) \
                                 	.assign(boardings_timediff = lambda x: \
 										np.where(x.next_o_boarding_datetime > x.o_boarding_datetime, 
-													x.next_o_boarding_datetime - x.o_boarding_datetime, np.nan))
+													x.next_o_boarding_datetime - x.o_boarding_datetime, 
+													x.o_boarding_datetime - x.next_o_boarding_datetime)) \
+									.assign(dist_between_origins = lambda x: dist(x['o_stop_lat'],x['o_stop_lon'],
+																					x['next_o_stop_lat'],x['next_o_stop_lon']))
+
+	user_trips_data = user_trips_data[(user_trips_data['boardings_timediff'] > pd.Timedelta('5 min')) &
+									  (user_trips_data['dist_between_origins'] > 1.5)]
 
 	user_trips_data.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d') + '_user_trips.csv', index=False)
 
