@@ -19,7 +19,7 @@ max_match_diff = 1800
 
 #Functions
 def printUsage():
-    print "Usage: " + sys.argv[0] + " <buste-base-folder-path> <ticketing-base-folder-path> <output-folder-path> <initial-date> <final-date> <terminal-codes-filepath> <gtfs-stops-filepath>"
+    print "Usage: " + sys.argv[0] + " <buste-base-folder-path> <ticketing-base-folder-path> <output-folder-path> <initial-date> <final-date> <terminal-codes-filepath> <gtfs-base-folderpath>"
 
 def readBUSTE_HDFSdir(path):
     allFiles = glob.glob(os.path.join(path,"part-*"))
@@ -63,6 +63,15 @@ def dist(stop_lat, stop_lon,next_o_lat,next_o_lon):
             np.cos(np.radians(stop_lon) - np.radians(next_o_lon))
     ) * 6371
 
+def get_router_id(query_date):
+    INTERMEDIATE_OTP_DATE = pd.to_datetime("2017-06-30", format="%Y-%m-%d")
+    router_id = ''
+
+    if (query_date <= INTERMEDIATE_OTP_DATE):
+        return 'ctba-2017-1'
+    else:
+        return 'ctba-2017-2'
+
 
 #Code
 if __name__ == "__main__":
@@ -77,7 +86,7 @@ output_folder_path = sys.argv[3]
 initial_date = sys.argv[4]
 final_date = sys.argv[5]
 terminal_codes_file_path = sys.argv[6]	
-gtfs_stops_filepath = sys.argv[7]
+gtfs_base_folderpath = sys.argv[7]
 
 
 initial_date_dt = pd.to_datetime(initial_date,format='%Y-%m-%d')
@@ -163,7 +172,8 @@ for folder in selected_folders:
                                       'shapeId','shapeSequence','shapeLat','shapeLon','distanceTraveledShape','problem','lineName','birthdate','gender']].sort_values(sort_cols)
 
 	#Adding stops location coordinates and parent station
-	stops_df = pd.read_csv(gtfs_stops_filepath)
+	router_id = get_router_id(folder_date)
+	stops_df = pd.read_csv(gtfs_base_folderpath + os.sep + router_id + os.sep + 'stops.txt')
 	stops_metadata = stops_df[['stop_id','stop_lat','stop_lon','parent_station']].rename(index=str,columns={'stop_id':'stopPointId'})
 	enhanced_buste = gps_boardings_with_terminals.merge(stops_metadata, on='stopPointId', how='left')
 
