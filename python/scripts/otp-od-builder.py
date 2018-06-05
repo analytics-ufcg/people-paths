@@ -169,11 +169,17 @@ print "Terminal boardings with matching OTP suggestions: ", num_matched_terminal
 
 # Matching special case route 021 terminal boarding origins 
 terminal_021_origins = selected_trips[(selected_trips['o_busCode'].str.isdigit()) & (selected_trips['o_route'] == '021')]
+
 matched_021_terminal_boardings = terminal_021_origins.merge(itineraries_start, left_on=['o_boarding_id','o_route','o_stopPointId'], right_on=['user_trip_id','route','parent_station'], how='inner')	
 num_matched_021_terminal_boardings = len(matched_021_terminal_boardings.drop_duplicates(subset=['cardNum','o_boarding_id']))
 
-print "Line 021 Terminal boardings with matching OTP suggestions: ", num_matched_021_terminal_boardings, "(", \
+
+if (len(terminal_021_origins) > 0):
+	print "Line 021 Terminal boardings with matching OTP suggestions: ", num_matched_021_terminal_boardings, "(", \
 													100*(num_matched_021_terminal_boardings/float(len(terminal_021_origins))), "%)"
+else:
+	print "No Line 021 Terminal boardings found. Skipping matching."
+
 
 total_num_matches = num_matched_vehicle_boardings + num_matched_021_terminal_boardings + num_matched_terminal_boardings
 
@@ -230,6 +236,7 @@ otp_legs_buste = otp_legs_buste_start \
 				.assign(leg_duration = lambda x: x['matched_end_time'] - x['matched_start_time'],
 						boarding_otp_match_start_timediff = 
 							lambda x: np.absolute(x['o_boarding_datetime'] - x['matched_start_time'])) \
+				.query('matched_end_time > matched_start_time') \
 				.filter(['user_trip_id','first_vehicle_boarding','itinerary_id','leg_id','route','busCode',
 						 'o_busCode','tripNum','o_tripNum','from_stop_id','otp_start_time',
 						 'matched_start_time','o_boarding_datetime','otp_buste_start_timediff',
@@ -249,13 +256,13 @@ chosen_leg_matches = choose_leg_matches(legs_matches_groups)
 stops_locations = stops_df[['stop_id','stop_lat','stop_lon']]
 user_trips_ids = otp_legs_suggestions_matches[['cardNum','user_trip_id']].drop_duplicates().sort_values(['cardNum','user_trip_id'])
 otp_legs_buste_data = chosen_leg_matches.merge(stops_locations, left_on='from_stop_id', right_on='stop_id', how='left') \
-.drop('stop_id', axis=1) \
-.rename(index=str, columns={'stop_lat':'from_stop_lat','stop_lon':'from_stop_lon'}) \
-.merge(stops_locations, left_on='to_stop_id', right_on='stop_id', how='left') \
-.drop('stop_id', axis=1) \
-.rename(index=str, columns={'stop_lat':'to_stop_lat','stop_lon':'to_stop_lon'}) \
-.merge(user_trips_ids, on=['user_trip_id'], how='inner') \
-					[np.append(np.append(['cardNum'],otp_legs_buste.columns.values),['from_stop_lat','from_stop_lon','to_stop_lat','to_stop_lon'])]
+										.drop('stop_id', axis=1) \
+										.rename(index=str, columns={'stop_lat':'from_stop_lat','stop_lon':'from_stop_lon'}) \
+										.merge(stops_locations, left_on='to_stop_id', right_on='stop_id', how='left') \
+										.drop('stop_id', axis=1) \
+										.rename(index=str, columns={'stop_lat':'to_stop_lat','stop_lon':'to_stop_lon'}) \
+										.merge(user_trips_ids, on=['user_trip_id'], how='inner') \
+										[np.append(np.append(['cardNum'],otp_legs_buste.columns.values),['from_stop_lat','from_stop_lon','to_stop_lat','to_stop_lon'])]
 
 # Summarizing suggested itineraries information
 otp_buste_itineraries = otp_legs_buste_data \
