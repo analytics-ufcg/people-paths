@@ -6,6 +6,8 @@ import os
 import glob
 from datetime import datetime
 import time
+from geopy import distance
+
 
 #Data Analysis Libs
 import pandas as pd
@@ -32,12 +34,8 @@ def select_input_files(enh_buste_base_path,init_date,fin_date,suffix):
 
 	return sorted(selected_files)
 
-def dist(stop_lat, stop_lon,next_o_lat,next_o_lon):
-    return np.arccos(
-        np.sin(np.radians(stop_lat)) * np.sin(np.radians(next_o_lat)) + 
-        np.cos(np.radians(stop_lat)) * np.cos(np.radians(next_o_lat)) * 
-            np.cos(np.radians(stop_lon) - np.radians(next_o_lon))
-    ) * 6371
+def dist(p1_lat, p1_lon, p2_lat, p2_lon):
+    return np.around(distance.geodesic((p1_lat,p1_lon),(p2_lat,p2_lon)).km,decimals=5)
 
 def get_router_id(query_date):
     INTERMEDIATE_OTP_DATE = pd.to_datetime("2017-06-30", format="%Y-%m-%d")
@@ -293,8 +291,8 @@ otp_buste_itineraries_summary = otp_buste_itineraries \
 						  'match_to_stop_lat', 'match_to_stop_lon', 'next_o_stop_lat', 'next_o_stop_lon','match_num_transfers', 'match_vehicle_boarding']] \
 					.assign(start_diff = lambda x: np.absolute(x['match_matched_start_time'] - x['o_boarding_datetime']),
 							trip_duration = lambda x: x['match_matched_end_time'] - x['match_matched_start_time'],
-							origin_dist = lambda x: dist(x['match_from_stop_lat'], x['match_from_stop_lon'], x['o_stop_lat'], x['o_stop_lon']),
-							next_origin_dist = lambda x: dist(x['match_to_stop_lat'], x['match_to_stop_lon'], x['next_o_stop_lat'], x['next_o_stop_lon'])) \
+							origin_dist = lambda y: y.apply(lambda x: dist(x['match_from_stop_lat'], x['match_from_stop_lon'], x['o_stop_lat'], x['o_stop_lon']),axis=1),
+							next_origin_dist = lambda y: y.apply(lambda x: dist(x['match_to_stop_lat'], x['match_to_stop_lon'], x['next_o_stop_lat'], x['next_o_stop_lon']),axis=1)) \
 					.sort_values(['cardNum','user_trip_id'])
 
 otp_buste_itineraries_filtered = otp_buste_itineraries_summary[((otp_buste_itineraries_summary['trip_duration'] > pd.Timedelta('0s')) & (otp_buste_itineraries_summary['trip_duration'] < pd.Timedelta('2h'))) &
