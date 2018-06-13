@@ -58,14 +58,10 @@ def check_data_compatibility(buste_df,ticketing_df):
 	return buste_date == ticketing_date
 
 def dist(p1_lat, p1_lon, p2_lat, p2_lon):
+    if np.any(np.isnan([p1_lat,p1_lon,p2_lat,p2_lon])):
+        print "NAN values for location coordinates found!"
+        print p1_lat, p1_lon, p2_lat, p2_lon
     return np.around(distance.geodesic((p1_lat,p1_lon),(p2_lat,p2_lon)).km,decimals=5)
-
-#def dist(stop_lat, stop_lon,next_o_lat,next_o_lon):
-#    return np.arccos(
-#        np.sin(np.radians(stop_lat)) * np.sin(np.radians(next_o_lat)) + 
-#        np.cos(np.radians(stop_lat)) * np.cos(np.radians(next_o_lat)) * 
-#            np.cos(np.radians(stop_lon) - np.radians(next_o_lon))
-#    ) * 6371
 
 def get_router_id(query_date):
     INTERMEDIATE_OTP_DATE = pd.to_datetime("2017-06-30", format="%Y-%m-%d")
@@ -179,7 +175,7 @@ for folder in selected_folders:
 	router_id = get_router_id(folder_date)
 	stops_df = pd.read_csv(gtfs_base_folderpath + os.sep + router_id + os.sep + 'stops.txt')
 	stops_metadata = stops_df[['stop_id','stop_lat','stop_lon','parent_station']].rename(index=str,columns={'stop_id':'stopPointId'})
-	enhanced_buste = gps_boardings_with_terminals.merge(stops_metadata, on='stopPointId', how='left')
+	enhanced_buste = gps_boardings_with_terminals.merge(stops_metadata, on='stopPointId', how='inner')
 
 	#Selecting columns to be kept in data and sorting rows
 	enhanced_buste = enhanced_buste[['cardNum', 'boarding_datetime', 'route', 'busCode', 'tripNum', 
