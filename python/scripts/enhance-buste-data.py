@@ -4,6 +4,7 @@
 import sys
 import os
 import glob
+from geopy import distance
 
 #Data Analysis Libs
 import pandas as pd
@@ -56,12 +57,15 @@ def check_data_compatibility(buste_df,ticketing_df):
 	#print buste_date, ticketing_date
 	return buste_date == ticketing_date
 
-def dist(stop_lat, stop_lon,next_o_lat,next_o_lon):
-    return np.arccos(
-        np.sin(np.radians(stop_lat)) * np.sin(np.radians(next_o_lat)) + 
-        np.cos(np.radians(stop_lat)) * np.cos(np.radians(next_o_lat)) * 
-            np.cos(np.radians(stop_lon) - np.radians(next_o_lon))
-    ) * 6371
+def dist(p1_lat, p1_lon, p2_lat, p2_lon):
+    return np.around(distance.geodesic((p1_lat,p1_lon),(p2_lat,p2_lon)).km,decimals=5)
+
+#def dist(stop_lat, stop_lon,next_o_lat,next_o_lon):
+#    return np.arccos(
+#        np.sin(np.radians(stop_lat)) * np.sin(np.radians(next_o_lat)) + 
+#        np.cos(np.radians(stop_lat)) * np.cos(np.radians(next_o_lat)) * 
+#            np.cos(np.radians(stop_lon) - np.radians(next_o_lon))
+#    ) * 6371
 
 def get_router_id(query_date):
     INTERMEDIATE_OTP_DATE = pd.to_datetime("2017-06-30", format="%Y-%m-%d")
@@ -205,7 +209,7 @@ for folder in selected_folders:
 								x['next_boarding_id'])) \
 				.drop('first_boarding_id', axis=1)
 
-	bus_trip_data = enhanced_buste[["route","busCode","tripNum","stopPointId","gps_datetime","stop_lat","stop_lon","parent_station"]].dropna(subset=["route","busCode","tripNum","stopPointId","gps_datetime","stop_lat","stop_lon"])
+	bus_trip_data = enhanced_buste[["route","busCode","shapeId","tripNum","stopPointId","gps_datetime","distanceTraveledShape","stop_lat","stop_lon","parent_station"]].dropna(subset=["route","busCode","shapeId","tripNum","stopPointId","gps_datetime","distanceTraveledShape","stop_lat","stop_lon"])
 
 	user_trips_columns = ['boarding_id','boarding_datetime','route','busCode','tripNum','stopPointId','gps_datetime','stop_lat','stop_lon']
 
@@ -220,8 +224,8 @@ for folder in selected_folders:
 										np.where(x.next_o_boarding_datetime > x.o_boarding_datetime, 
 													x.next_o_boarding_datetime - x.o_boarding_datetime, 
 													x.o_boarding_datetime - x.next_o_boarding_datetime)) \
-									.assign(dist_between_origins = lambda x: dist(x['o_stop_lat'],x['o_stop_lon'],
-																					x['next_o_stop_lat'],x['next_o_stop_lon']))
+									.assign(dist_between_origins = lambda y: y.apply(lambda x: dist(x['o_stop_lat'],x['o_stop_lon'],
+																					x['next_o_stop_lat'],x['next_o_stop_lon']),axis=1))
 
 	user_trips_data = user_trips_data[(user_trips_data['boardings_timediff'] > pd.Timedelta('5 min')) &
 									  (user_trips_data['dist_between_origins'] > 1.5)]
