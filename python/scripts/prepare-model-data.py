@@ -30,6 +30,8 @@ output_folderpath = sys.argv[3]
 file_date_str = od_trips_filepath.split('/')[-1].split('_full_od_trips')[0]
 file_date = pd.to_datetime(file_date_str,format='%Y_%m_%d')
 
+print "Processing data for date:", file_date
+
 od_trips = pd.read_csv(od_trips_filepath, parse_dates=['start_time','end_time'])
 
 bus_trips_filepath = enhanced_buste_folderpath + os.sep + file_date_str + '_bus_trips.csv'
