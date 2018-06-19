@@ -121,7 +121,10 @@ def match_terminal_021_boardings(selected_trips,itineraries_start):
 	terminal_021_origins = selected_trips[(selected_trips['o_busCode'].str.isdigit()) & (selected_trips['o_route'] == '021')]
 	matched_021_terminal_boardings = terminal_021_origins.merge(itineraries_start, left_on=['o_boarding_id','o_route','o_stopPointId'], right_on=['user_trip_id','route','parent_station'], how='inner')	
 	num_matched_021_terminal_boardings = len(matched_021_terminal_boardings.drop_duplicates(subset=['cardNum','o_boarding_id']))
-	terminal_021_match_perc = 100*(num_matched_021_terminal_boardings/float(len(terminal_021_origins)))
+	if (len(terminal_021_origins) == 0):
+		terminal_021_match_perc = 0
+	else:
+		terminal_021_match_perc = 100*(num_matched_021_terminal_boardings/float(len(terminal_021_origins)))
 	return (len(terminal_021_origins),matched_021_terminal_boardings,num_matched_021_terminal_boardings,terminal_021_match_perc)
 
 def get_otp_matched_legs(boarding_suggestions_matches,otp_suggestions):
