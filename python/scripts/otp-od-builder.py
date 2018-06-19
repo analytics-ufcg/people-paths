@@ -81,9 +81,15 @@ def choose_leg_matches(leg_matches_groups):
 		prev_group_id = name[0:2]
 		prev_leg_end_time = chosen_leg_match['matched_end_time']
 
+        chosen_leg_matches = chosen_leg_matches.filter(otp_legs_buste.columns.values) \
+                                                .assign(user_trip_id = lambda x: x['user_trip_id'].astype(int),
+                                                        itinerary_id = lambda x: x['itinerary_id'].astype(int),
+                                                        leg_id = lambda x: x['leg_id'].astype(int))
 
-	#print num_groups_not_survived
-	return chosen_leg_matches.filter(otp_legs_buste.columns.values)
+
+        #print num_groups_not_survived
+        return chosen_leg_matches
+
 
 def prepare_otp_data(otp_data):
 	otp_data['otp_start_time'] = otp_data['otp_start_time'] - pd.Timedelta('10800 s')
