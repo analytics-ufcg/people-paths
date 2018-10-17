@@ -14,7 +14,7 @@ MIN_NUM_ARGS = 5
 
 #Functions
 def printUsage():
-    print "Usage: " + sys.argv[0] + " <ticketing-base-folder-path> <output-folder-path> <initial-date> <final-date>"
+    print("Usage: " + sys.argv[0] + " <ticketing-base-folder-path> <output-folder-path> <initial-date> <final-date>")
 
 def select_input_files(ticketing_base_path,init_date,fin_date):
 	selected_files = []
@@ -37,8 +37,8 @@ def get_correct_boarding_data_filepath(ticketing_date,ticketing_base_path):
 #Main
 if __name__ == "__main__":
     if len(sys.argv) < MIN_NUM_ARGS:
-        print "Error: Wrong Usage!"
-	printUsage()
+        print("Error: Wrong Usage!")
+        printUsage()
         sys.exit(1)
 
 ticketing_base_folder_path = sys.argv[1]
@@ -55,7 +55,7 @@ selected_files = select_input_files(ticketing_base_folder_path,initial_date_dt,f
 for file_path,file_date in selected_files:
 #	file_date =  pd.to_datetime(file_path.split('/')[-1].split('-')[-1],format='%Y_%m_%d')
 
-	print "Processing date:", file_date.strftime('%Y-%m-%d')
+	print("Processing date:", file_date.strftime('%Y-%m-%d'))
 	#Reading Ticketing Data
 	ticketing_data = pd.read_csv(file_path)
 
@@ -80,6 +80,6 @@ for file_path,file_date in selected_files:
 
 	indexed_ticketing.to_csv(indexed_ticketing_filepath, index=False)
 
-print "Finishing Script..."
+print("Finishing Script...")
 
 sys.exit(0)
