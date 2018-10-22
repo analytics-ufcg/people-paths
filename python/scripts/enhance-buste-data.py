@@ -28,7 +28,29 @@ def readBUSTE_HDFSdir(path):
     frame = pd.DataFrame()
     list_ = []
     for file_ in allFiles:
-        df = pd.read_csv(file_, dtype = {'route': str}, na_values='-')
+        df = pd.read_csv(file_, 
+                         dtype = {'route': str,
+                                  'tripNum': np.float64,
+                                  'shapeId': np.float64,
+                                  'shapeSequence': np.float64,
+                                  'shapeLat': np.float64,
+                                  'shapeLon': np.float64,
+                                  'distanceTraveledShape': np.float64,
+                                  'busCode': str,
+                                  'gpsPointId': np.float64,
+                                  'gpsLat': np.float64,
+                                  'gpsLon': np.float64,
+                                  'distanceToShapePoint': np.float64,
+                                  'timestamp': str,
+                                  'stopPointId': np.float64,
+                                  'problem': str,
+                                  'boarding_id': np.float64,
+                                  'lineName': str,
+                                  'cardNum': np.float64,
+                                  'birthdate': str,
+                                  'gender': str},
+                         parse_dates=['boarding_datetime'],
+                         na_values='-')
         list_.append(df)
     frame = pd.concat(list_)
 
@@ -52,7 +74,7 @@ def get_boarding_data_filepath(buste_date,ticketing_base_path):
 	return boarding_file
 	
 def check_data_compatibility(buste_df,ticketing_df):
-	buste_date = pd.to_datetime(buste_df['date'].iloc[0],format='%Y_%m_%d').date()
+	buste_date = pd.to_datetime(buste_df[buste_df.boarding_datetime.notnull()]['boarding_datetime'].iloc[0],format='%Y-%m-%d %H:%M:%S').date()
 	ticketing_date = pd.to_datetime(ticketing_df['boarding_datetime'].iloc[0],format='%Y-%m-%d %H:%M:%S').date()
 	#print buste_date, ticketing_date
 	return buste_date == ticketing_date
@@ -98,21 +120,29 @@ selected_folders = select_input_folders(buste_base_folder_path,initial_date_dt,f
 for folder in selected_folders:
 	folder_date =  pd.to_datetime(folder.split('/')[-1],format='%Y_%m_%d')
 
-	print("Processing date:" + folder_date.strftime('%Y-%m-%d'))
+	print("Processing date: " + folder_date.strftime('%Y-%m-%d'))
 	#Reading BUSTE Data
 	buste_data = readBUSTE_HDFSdir(folder)
 	
 	#Reading Boarding Data
-	boarding_data = pd.read_csv(get_boarding_data_filepath(folder_date,ticketing_base_folder_path))
+	boarding_data = pd.read_csv(get_boarding_data_filepath(folder_date,ticketing_base_folder_path),
+                             dtype={'boarding_id': np.float64,
+                                     'route': str,
+                                     'lineName': str,
+                                     'busCode': str,
+                                     'cardNum': np.float64,
+                                     'birthdate': str,
+                                     'gender': str},
+                            parse_dates=['boarding_datetime'])
 
 	#Checking if data matches:
 	if not check_data_compatibility(buste_data,boarding_data):
 		print("Error: BUSTE and boarding data dates do not match!")
 		print("Skipping date...")
 
-	buste_data['gps_datetime'] = pd.to_datetime(buste_data['date'] + ' ' + buste_data['timestamp'],format='%Y_%m_%d %H:%M:%S')
-	buste_data['boarding_datetime'] = pd.to_datetime(buste_data['date'] + ' ' + buste_data['cardTimestamp'],format='%Y_%m_%d %H:%M:%S')
-        buste_data['stopPointId'] = buste_data['stopPointId'].astype('int64')
+	buste_data['gps_datetime'] = pd.to_datetime(folder_date.strftime('%Y-%m-%d') + ' ' + buste_data['timestamp'],format='%Y-%m-%d %H:%M:%S')
+	buste_data['boarding_datetime'] = pd.to_datetime(buste_data['boarding_datetime'])
+        buste_data['stopPointId'] = buste_data['stopPointId'].astype('float64')
 
 	other_cols = [col for col in buste_data.columns if col not in first_cols]
 	cols_order = first_cols + other_cols
@@ -147,9 +177,9 @@ for folder in selected_folders:
 	#print "GPS w/o match: {}, after removing NAs: {}, Diff: {}".format(len(gps_with_no_match), len(gps_with_no_match_clean), len(gps_with_no_match) - len(gps_with_no_match_clean))
 
 	#Building dataset with unique GPS-Ticketing matches and unique GPS records
-	unique_boarding_gps = pd.concat([gps_by_boarding_filtered,gps_with_no_match_clean],ignore_index=True,sort=True)
+        unique_boarding_gps = pd.concat([gps_by_boarding_filtered,gps_with_no_match_clean],ignore_index=True,sort=True)
         unique_boarding_gps  = unique_boarding_gps.astype(gps_by_boarding_filtered.dtypes.to_dict())
-	unique_boarding_gps = unique_boarding_gps[~((unique_boarding_gps.duplicated(subset=gps_key_cols, keep=False)) & (pd.isnull(unique_boarding_gps['cardNum'])))].sort_values(sort_cols)
+        unique_boarding_gps = unique_boarding_gps[~((unique_boarding_gps.duplicated(subset=gps_key_cols, keep=False)) & (pd.isnull(unique_boarding_gps['cardNum'])))].sort_values(sort_cols)
 	
 	# Match station/terminal boarding registries with their respective stop codes
 	terminal_codes = pd.read_csv(terminal_codes_file_path, dtype = {'URBS_CODE': str})
@@ -165,7 +195,7 @@ for folder in selected_folders:
     
 	gps_boardings_with_terminals = pd.concat([unique_boarding_gps,terminal_boardings], ignore_index=True, sort=True)
         gps_boardings_with_terminals = gps_boardings_with_terminals.astype(unique_boarding_gps.dtypes.to_dict())
-	gps_boardings_with_terminals = gps_boardings_with_terminals[['cardNum', 'boarding_datetime', 'route', 'busCode', 'tripNum', 'gps_datetime','stopPointId',
+	gps_boardings_with_terminals = gps_boardings_with_terminals[['cardNum', 'boarding_id','boarding_datetime', 'route', 'busCode', 'tripNum', 'gps_datetime','stopPointId',
                                       'shapeId','shapeSequence','shapeLat','shapeLon','distanceTraveledShape','problem','lineName','birthdate','gender']].sort_values(sort_cols)
 
 	#Adding stops location coordinates and parent station
@@ -175,7 +205,7 @@ for folder in selected_folders:
 	enhanced_buste = gps_boardings_with_terminals.merge(stops_metadata, on='stopPointId', how='inner')
 
 	#Selecting columns to be kept in data and sorting rows
-	enhanced_buste = enhanced_buste[['cardNum', 'boarding_datetime', 'route', 'busCode', 'tripNum', 
+	enhanced_buste = enhanced_buste[['cardNum', 'boarding_id','boarding_datetime', 'route', 'busCode', 'tripNum', 
 			'gps_datetime','stopPointId','stop_lat','stop_lon','parent_station','shapeId','shapeSequence','shapeLat','shapeLon',
 			'distanceTraveledShape','problem','lineName','birthdate','gender']].sort_values(sort_cols)
 
@@ -187,9 +217,7 @@ for folder in selected_folders:
 				.reset_index(name='num_boardings') \
 				.rename(index=str, columns={'index':'cardNum'}) \
 				.query('num_boardings > 1')
-	clean_boardings = filtered_boardings[filtered_boardings['cardNum'].isin(multiple_boardings.cardNum)] \
-				.reset_index() \
-				.rename(index=str, columns={'index':'boarding_id'})
+	clean_boardings = filtered_boardings[filtered_boardings['cardNum'].isin(multiple_boardings.cardNum)]
 	od_matrix_ids = clean_boardings.sort_values('boarding_datetime')[['cardNum','boarding_id']] \
 				.assign(next_boarding_id = lambda x: x.groupby('cardNum').boarding_id.shift(-1))
 	first_user_boarding_id = od_matrix_ids.groupby('cardNum').boarding_id.first() \
@@ -229,6 +257,6 @@ for folder in selected_folders:
 	
 	bus_trip_data.to_csv(output_folder_path + os.sep + folder_date.strftime('%Y_%m_%d') + '_bus_trips.csv', index=False)
 
-	print "Finishing Script..."
+	print("Finishing Script...")
 
 sys.exit(0)
