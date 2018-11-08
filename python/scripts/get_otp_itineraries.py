@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 #Constants
-MIN_NUM_ARGS = 6 
+MIN_NUM_ARGS = 4 
 first_cols = ['cardNum', 'boarding_datetime','gps_datetime','route','busCode','stopPointId']
 boarding_key_cols = ['cardNum','boarding_datetime']
 gps_key_cols = ['route','busCode','tripNum','stopPointId']
@@ -64,7 +64,7 @@ def get_otp_suggested_trips(od_matrix,otp_url):
 	trips_otp_response = {}
 	counter = 0
 	for index, row in od_matrix.iterrows():
-		id=long(row['o_boarding_id'])
+		id=float(row['o_boarding_id'])
 		date = row['o_boarding_datetime'].strftime('%Y-%m-%d')
 		start_time = (row['o_boarding_datetime']-pd.Timedelta('2 min')).strftime('%H:%M:%S')
 		req_start_time = time.time()
@@ -121,22 +121,14 @@ if __name__ == "__main__":
         printUsage()
         sys.exit(1)
 
-enhanced_buste_folder_path = sys.argv[1]
+enhanced_buste_file = sys.argv[1]
 output_folder_path = sys.argv[2]
 otp_server_url = sys.argv[3]
-initial_date = sys.argv[4]
-final_date = sys.argv[5]
 
-initial_date_dt = pd.to_datetime(initial_date,format='%Y-%m-%d')
-final_date_dt = pd.to_datetime(final_date,format='%Y-%m-%d')
+print "Processing file", enhanced_buste_file
+user_trips = pd.read_csv(enhanced_buste_file, parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
+otp_suggestions = get_otp_suggested_trips(user_trips,otp_server_url)
+otp_legs_df = prepare_otp_legs_df(extract_otp_trips_legs(otp_suggestions))
 
-selected_files = select_input_files(enhanced_buste_folder_path,initial_date_dt,final_date_dt,'_user_trips')
-
-for file_,file_date in selected_files:
-	print "Processing date", file_date.strftime('%Y_%m_%d')
-	user_trips = pd.read_csv(file_, parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
-	otp_suggestions = get_otp_suggested_trips(user_trips.head(1000),otp_server_url)
-	otp_legs_df = prepare_otp_legs_df(extract_otp_trips_legs(otp_suggestions))
-
-	otp_legs_df.to_csv(output_folder_path + os.sep + file_date.strftime('%Y_%m_%d') + '_otp_itineraries.csv',index=False)
+otp_legs_df.to_csv(enhanced_buste_file + '_otp_itineraries.csv',index=False)
 
