@@ -4,6 +4,7 @@
 import sys
 import os
 import glob
+import traceback
 from datetime import datetime
 import time
 from geopy import distance
@@ -269,121 +270,126 @@ file_date_str = otp_suggestions_filepath.split('/')[-1].split('_user_trips_')[0]
 file_date = pd.to_datetime(file_date_str,format='%Y_%m_%d')
 print "Processing File:", otp_suggestions_filepath
 
-# Read OTP Suggestions
-otp_suggestions_raw = pd.read_csv(otp_suggestions_filepath, parse_dates=['date','otp_start_time','otp_end_time'])
+try:
 
-# Prepare OTP data for analysis
-otp_suggestions = prepare_otp_data(otp_suggestions_raw)
+	# Read OTP Suggestions
+	otp_suggestions_raw = pd.read_csv(otp_suggestions_filepath, parse_dates=['date','otp_start_time','otp_end_time'])
 
-# Read stops data
-stops_filepath = gtfs_base_folderpath + os.sep + get_router_id(file_date) + os.sep + 'stops.txt'
-stops_df = pd.read_csv(stops_filepath)
+	# Prepare OTP data for analysis
+	otp_suggestions = prepare_otp_data(otp_suggestions_raw)
 
-# Adding Parent Stop data to OTP Suggestions
-stops_parent_stations = stops_df[['stop_id','parent_station']]
-otp_suggestions = otp_suggestions.merge(stops_parent_stations, 
-										left_on='from_stop_id', 
-										right_on='stop_id', 
-										how='left') \
-							.drop(['stop_id'], axis=1)
+	# Read stops data
+	stops_filepath = gtfs_base_folderpath + os.sep + get_router_id(file_date) + os.sep + 'stops.txt'
+	stops_df = pd.read_csv(stops_filepath)
 
-# Read Origin/Next-Origin Pairs for the same date
-trips_origins_filepath = user_trips_folderpath + os.sep + file_date_str + '_user_trips.csv'
-trips_origins = pd.read_csv(trips_origins_filepath, 
-					parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
+	# Adding Parent Stop data to OTP Suggestions
+	stops_parent_stations = stops_df[['stop_id','parent_station']]
+	otp_suggestions = otp_suggestions.merge(stops_parent_stations, 
+											left_on='from_stop_id', 
+											right_on='stop_id', 
+											how='left') \
+								.drop(['stop_id'], axis=1)
 
-# Checking whether OTP and ticketing dates match
-dates_compatibility, otp_date, ticketing_date = compatible_dates(otp_suggestions,trips_origins)
-if not dates_compatibility:
-	print "ERROR: OTP date", otp_date, "does not match Ticketing data", ticketing_date
-	print "Skipping current day"
-	exit(1)
+	# Read Origin/Next-Origin Pairs for the same date
+	trips_origins_filepath = user_trips_folderpath + os.sep + file_date_str + '_user_trips.csv'
+	trips_origins = pd.read_csv(trips_origins_filepath, 
+						parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
 
-# Selecting trips for whom OTP suggestions were found
-selected_trips = trips_origins[trips_origins['o_boarding_id'].isin(otp_suggestions['user_trip_id'])]
-num_selected_trips = len(selected_trips)
+	# Checking whether OTP and ticketing dates match
+	dates_compatibility, otp_date, ticketing_date = compatible_dates(otp_suggestions,trips_origins)
+	if not dates_compatibility:
+		print "ERROR: OTP date", otp_date, "does not match Ticketing data", ticketing_date
+		print "Skipping current day"
+		exit(1)
 
-# Matching all kinds of boarding events to valid OTP suggestions
-itineraries_start = otp_suggestions.query('mode == \'BUS\'') \
-			.groupby(['user_trip_id','itinerary_id']) \
-			.first() \
-			.reset_index()
+	# Selecting trips for whom OTP suggestions were found
+	selected_trips = trips_origins[trips_origins['o_boarding_id'].isin(otp_suggestions['user_trip_id'])]
+	num_selected_trips = len(selected_trips)
 
-# Matching vehicle boarding origins
-matched_vehicle_boardings,num_matched_vehicle_boardings,vehicle_match_perc = match_vehicle_boardings(selected_trips,itineraries_start)
-print "Vehicle boardings with matching OTP suggestions: ", num_matched_vehicle_boardings, "(",vehicle_match_perc, "%)"
+	# Matching all kinds of boarding events to valid OTP suggestions
+	itineraries_start = otp_suggestions.query('mode == \'BUS\'') \
+				.groupby(['user_trip_id','itinerary_id']) \
+				.first() \
+				.reset_index()
+
+	# Matching vehicle boarding origins
+	matched_vehicle_boardings,num_matched_vehicle_boardings,vehicle_match_perc = match_vehicle_boardings(selected_trips,itineraries_start)
+	print "Vehicle boardings with matching OTP suggestions: ", num_matched_vehicle_boardings, "(",vehicle_match_perc, "%)"
 
 
-# Matching terminal boarding origins
-matched_terminal_boardings,num_matched_terminal_boardings,terminal_matched_perc = match_terminal_boardings(selected_trips,itineraries_start)
-print "Terminal boardings with matching OTP suggestions: ", num_matched_terminal_boardings, "(", terminal_matched_perc, "%)"
+	# Matching terminal boarding origins
+	matched_terminal_boardings,num_matched_terminal_boardings,terminal_matched_perc = match_terminal_boardings(selected_trips,itineraries_start)
+	print "Terminal boardings with matching OTP suggestions: ", num_matched_terminal_boardings, "(", terminal_matched_perc, "%)"
 
-# Matching special case route 021 terminal boarding origins 
-num_terminal_021_boardings,matched_021_terminal_boardings,num_matched_021_terminal_boardings,terminal_021_match_perc = match_terminal_021_boardings(selected_trips,itineraries_start)
-if (num_terminal_021_boardings > 0):
-	print "Line 021 Terminal boardings with matching OTP suggestions: ", num_matched_021_terminal_boardings, "(",terminal_021_match_perc, "%)"
-else:
-	print "No Line 021 Terminal boardings found. Skipping matching."
+	# Matching special case route 021 terminal boarding origins 
+	num_terminal_021_boardings,matched_021_terminal_boardings,num_matched_021_terminal_boardings,terminal_021_match_perc = match_terminal_021_boardings(selected_trips,itineraries_start)
+	if (num_terminal_021_boardings > 0):
+		print "Line 021 Terminal boardings with matching OTP suggestions: ", num_matched_021_terminal_boardings, "(",terminal_021_match_perc, "%)"
+	else:
+		print "No Line 021 Terminal boardings found. Skipping matching."
 
-boarding_suggestions_matches = pd.concat([matched_vehicle_boardings,matched_021_terminal_boardings,matched_terminal_boardings]) 
-total_num_matches = num_matched_vehicle_boardings + num_matched_021_terminal_boardings + num_matched_terminal_boardings
-print "Total number of matches: ", total_num_matches, "(", 100*(total_num_matches/float(num_selected_trips)), "%)"
+	boarding_suggestions_matches = pd.concat([matched_vehicle_boardings,matched_021_terminal_boardings,matched_terminal_boardings]) 
+	total_num_matches = num_matched_vehicle_boardings + num_matched_021_terminal_boardings + num_matched_terminal_boardings
+	print "Total number of matches: ", total_num_matches, "(", 100*(total_num_matches/float(num_selected_trips)), "%)"
 
-# Add OTP extra origin/next-origin pairs to final dataset
-otp_filtered_legs = get_otp_matched_legs(boarding_suggestions_matches,otp_suggestions)
+	# Add OTP extra origin/next-origin pairs to final dataset
+	otp_filtered_legs = get_otp_matched_legs(boarding_suggestions_matches,otp_suggestions)
 
-# Find OTP Suggested Itineraries in BUSTE Data
-bus_trips_filepath = bus_trips_folderpath + os.sep + file_date_str + '_bus_trips.csv'
-bus_trips = pd.read_csv(bus_trips_filepath, dtype={'route': object},parse_dates=['gps_datetime']) \
-				.sort_values(['route','busCode','tripNum','gps_datetime']) \
-				.assign(route = lambda x: x['route'].astype(str).str.replace("\.0",'').str.zfill(3))
+	# Find OTP Suggested Itineraries in BUSTE Data
+	bus_trips_filepath = bus_trips_folderpath + os.sep + file_date_str + '_bus_trips.csv'
+	bus_trips = pd.read_csv(bus_trips_filepath, dtype={'route': object},parse_dates=['gps_datetime']) \
+					.sort_values(['route','busCode','tripNum','gps_datetime']) \
+					.assign(route = lambda x: x['route'].astype(str).str.replace("\.0",'').str.zfill(3))
 
-# Find legs candidate match start point
-otp_legs_buste_start = match_otp_legs_start_to_buste(otp_filtered_legs,bus_trips)
+	# Find legs candidate match start point
+	otp_legs_buste_start = match_otp_legs_start_to_buste(otp_filtered_legs,bus_trips)
 
-# Find legs end point
-otp_legs_buste = match_otp_legs_end_to_buste(otp_legs_buste_start,bus_trips)
+	# Find legs end point
+	otp_legs_buste = match_otp_legs_end_to_buste(otp_legs_buste_start,bus_trips)
 
-# Choosing best leg match using current and previous leg information
-legs_matches_groups = otp_legs_buste.groupby(['user_trip_id','itinerary_id','leg_id'])
-chosen_leg_matches = choose_leg_matches(legs_matches_groups)
+	# Choosing best leg match using current and previous leg information
+	legs_matches_groups = otp_legs_buste.groupby(['user_trip_id','itinerary_id','leg_id'])
+	chosen_leg_matches = choose_leg_matches(legs_matches_groups)
 
-# Choosing itinerary
-# Adding stops location data
-stops_locations = stops_df[['stop_id','stop_lat','stop_lon']]
-user_trips_ids = boarding_suggestions_matches[['cardNum','user_trip_id']] \
-					.drop_duplicates() \
-					.sort_values(['cardNum','user_trip_id'])
+	# Choosing itinerary
+	# Adding stops location data
+	stops_locations = stops_df[['stop_id','stop_lat','stop_lon']]
+	user_trips_ids = boarding_suggestions_matches[['cardNum','user_trip_id']] \
+						.drop_duplicates() \
+						.sort_values(['cardNum','user_trip_id'])
 
-chosen_leg_matches_data = add_stops_data_to_leg_matches(chosen_leg_matches,stops_locations)
+	chosen_leg_matches_data = add_stops_data_to_leg_matches(chosen_leg_matches,stops_locations)
 
-# Summarizing suggested itineraries information
-candidate_itineraries = build_candidate_itineraries_df(chosen_leg_matches_data)
-candidate_itineraries_filtered = get_candidate_itineraries_summary(candidate_itineraries,boarding_suggestions_matches)
+	# Summarizing suggested itineraries information
+	candidate_itineraries = build_candidate_itineraries_df(chosen_leg_matches_data)
+	candidate_itineraries_filtered = get_candidate_itineraries_summary(candidate_itineraries,boarding_suggestions_matches)
 
-# Assigning suggested itineraries a penalty score
-otp_buste_itineraries_penalty = get_candidate_itineraries_penalty_score(candidate_itineraries_filtered)
+	# Assigning suggested itineraries a penalty score
+	otp_buste_itineraries_penalty = get_candidate_itineraries_penalty_score(candidate_itineraries_filtered)
 
-# Choose best itineraries based on the penalty score
-chosen_itineraries = otp_buste_itineraries_penalty.groupby(['user_trip_id']).first().reset_index()
+	# Choose best itineraries based on the penalty score
+	chosen_itineraries = otp_buste_itineraries_penalty.groupby(['user_trip_id']).first().reset_index()
 
-# Filtering chosen itineraries
-chosen_itineraries = chosen_itineraries[(np.logical_not(chosen_itineraries['match_vehicle_boarding'])) | 
-										((chosen_itineraries['match_vehicle_boarding']) 
-										& (chosen_itineraries['start_diff'] < pd.Timedelta('20 min')))]
-num_chosen_itineraries = len(chosen_itineraries)
+	# Filtering chosen itineraries
+	chosen_itineraries = chosen_itineraries[(np.logical_not(chosen_itineraries['match_vehicle_boarding'])) | 
+											((chosen_itineraries['match_vehicle_boarding']) 
+											& (chosen_itineraries['start_diff'] < pd.Timedelta('20 min')))]
+	num_chosen_itineraries = len(chosen_itineraries)
 
-print "Final number of matches (after processing): ", len(chosen_itineraries) , "(", 100*(num_chosen_itineraries/float(num_selected_trips)), "%)"
+	print "Final number of matches (after processing): ", len(chosen_itineraries) , "(", 100*(num_chosen_itineraries/float(num_selected_trips)), "%)"
 
-# Building final Origin-Destination Trips dataframe
-od_trips = chosen_itineraries.merge(chosen_leg_matches_data, on=['cardNum','user_trip_id','itinerary_id'], how='inner') \
-								.filter(['cardNum','user_trip_id','itinerary_id','leg_id','route','busCode','tripNum',
-										'from_stop_id','matched_start_time','from_stop_lat','from_stop_lon','to_stop_id',
-										'matched_end_time','to_stop_lat','to_stop_lon','leg_duration']) \
-								.rename(index=str, columns={'matched_start_time':'start_time','matched_end_time':'end_time'})
+	# Building final Origin-Destination Trips dataframe
+	od_trips = chosen_itineraries.merge(chosen_leg_matches_data, on=['cardNum','user_trip_id','itinerary_id'], how='inner') \
+									.filter(['cardNum','user_trip_id','itinerary_id','leg_id','route','busCode','tripNum',
+											'from_stop_id','matched_start_time','from_stop_lat','from_stop_lon','to_stop_id',
+											'matched_end_time','to_stop_lat','to_stop_lon','leg_duration']) \
+									.rename(index=str, columns={'matched_start_time':'start_time','matched_end_time':'end_time'})
 
-# Writing final OD Trips dataset to file
-itinerary_part_name = otp_suggestions_filepath.split('/')[-1].split('_')[5]
-output_filepath = output_folderpath + os.sep + file_date_str + '_' + itinerary_part_name + '_od_trips.csv'
-od_trips.to_csv(output_filepath,index=False)
+	# Writing final OD Trips dataset to file
+	itinerary_part_name = otp_suggestions_filepath.split('/')[-1].split('_')[5]
+	output_filepath = output_folderpath + os.sep + file_date_str + '_' + itinerary_part_name + '_od_trips.csv'
+	od_trips.to_csv(output_filepath,index=False)
 
+except Exception:
+	print "Error in processing file " + otp_suggestions_filepath
+	traceback.print_exc(file=sys.stdout)
