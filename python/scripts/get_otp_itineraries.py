@@ -121,14 +121,23 @@ if __name__ == "__main__":
         printUsage()
         sys.exit(1)
 
-enhanced_buste_file = sys.argv[1]
+user_trips_file = sys.argv[1]
 output_folder_path = sys.argv[2]
 otp_server_url = sys.argv[3]
 
-print "Processing file", enhanced_buste_file
-user_trips = pd.read_csv(enhanced_buste_file, parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
-otp_suggestions = get_otp_suggested_trips(user_trips,otp_server_url)
-otp_legs_df = prepare_otp_legs_df(extract_otp_trips_legs(otp_suggestions))
+print "Processing file", user_trips_file
+file_name = user_trips_file.split('/')[-1].replace('.csv','')
+file_date = pd.to_datetime(file_name.split('_user_trips_')[0],format='%Y_%m_%d')
+if (file_date.dayofweek == 6):
+	print "File date is sunday. File will not be processed."
+else:
+	try:
+		user_trips = pd.read_csv(user_trips_file, parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
+		otp_suggestions = get_otp_suggested_trips(user_trips,otp_server_url)
+		otp_legs_df = prepare_otp_legs_df(extract_otp_trips_legs(otp_suggestions))
 
-otp_legs_df.to_csv(enhanced_buste_file + '_otp_itineraries.csv',index=False)
+		otp_legs_df.to_csv(output_folder_path + '/' + file_name + '_otp_itineraries.csv',index=False)
+	except Exception as e:
+		print e
+		print "Error in processing file " + file_name
 
