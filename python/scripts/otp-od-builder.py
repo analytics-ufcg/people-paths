@@ -14,11 +14,11 @@ import pandas as pd
 import numpy as np
 
 #Constants
-MIN_NUM_ARGS = 5
+MIN_NUM_ARGS = 6
 
 #Functions
 def printUsage():
-    print "Usage: " + sys.argv[0] + " <otp-suggestions-filepath> <enhanced-buste-folderpath> <gtfs-base-folderpath> <output-folderpath>"
+    print "Usage: " + sys.argv[0] + " <otp-suggestions-filepath> <user-trips-folderpath> <bus-trips-folderpath> <gtfs-base-folderpath> <output-folderpath>"
 
 def select_input_files(enh_buste_base_path,init_date,fin_date,suffix):
 	selected_files = []
@@ -260,9 +260,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
 otp_suggestions_filepath = sys.argv[1]
-enhanced_buste_folderpath = sys.argv[2]
-gtfs_base_folderpath = sys.argv[3]
-output_folderpath = sys.argv[4]
+user_trips_folderpath = sys.argv[2]
+bus_trips_folderpath = sys.argv[3]
+gtfs_base_folderpath = sys.argv[4]
+output_folderpath = sys.argv[5]
 
 file_date_str = otp_suggestions_filepath.split('/')[-1].split('_user_trips_')[0]
 file_date = pd.to_datetime(file_date_str,format='%Y_%m_%d')
@@ -287,7 +288,7 @@ otp_suggestions = otp_suggestions.merge(stops_parent_stations,
 							.drop(['stop_id'], axis=1)
 
 # Read Origin/Next-Origin Pairs for the same date
-trips_origins_filepath = enhanced_buste_folderpath + os.sep + file_date_str + '_user_trips.csv'
+trips_origins_filepath = user_trips_folderpath + os.sep + file_date_str + '_user_trips.csv'
 trips_origins = pd.read_csv(trips_origins_filepath, 
 					parse_dates=['o_boarding_datetime','o_gps_datetime','next_o_boarding_datetime','next_o_gps_datetime'])
 
@@ -332,7 +333,7 @@ print "Total number of matches: ", total_num_matches, "(", 100*(total_num_matche
 otp_filtered_legs = get_otp_matched_legs(boarding_suggestions_matches,otp_suggestions)
 
 # Find OTP Suggested Itineraries in BUSTE Data
-bus_trips_filepath = enhanced_buste_folderpath + os.sep + file_date_str + '_bus_trips.csv'
+bus_trips_filepath = bus_trips_folderpath + os.sep + file_date_str + '_bus_trips.csv'
 bus_trips = pd.read_csv(bus_trips_filepath, dtype={'route': object},parse_dates=['gps_datetime']) \
 				.sort_values(['route','busCode','tripNum','gps_datetime']) \
 				.assign(route = lambda x: x['route'].astype(str).str.replace("\.0",'').str.zfill(3))
