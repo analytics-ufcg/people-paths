@@ -102,18 +102,21 @@ def prepare_otp_data(otp_data):
 
 	return otp_data
 
-def match_vehicle_boardings(selected_trips,itineraries_start):
-	vehicle_boarding_origins = selected_trips[np.logical_not(selected_trips['o_busCode'].str.isdigit())]
-	matched_vehicle_boardings = vehicle_boarding_origins.merge(itineraries_start, left_on=['o_boarding_id','o_route','o_stopPointId'], right_on=['user_trip_id','route','from_stop_id'], how='inner')
-	num_matched_vehicle_boardings = len(matched_vehicle_boardings.drop_duplicates(subset=['cardNum','o_boarding_id']))
-	match_perc = 100*(num_matched_vehicle_boardings/float(len(vehicle_boarding_origins)))
-	return (matched_vehicle_boardings,num_matched_vehicle_boardings,match_perc)
-
 def compatible_dates(otp_data,ticketing_data):
 	otp_date = otp_data['date'].iloc[0]
 	ticketing_date = pd.to_datetime(ticketing_data['o_boarding_datetime'].dt.strftime('%Y-%m-%d')[0])
 
 	return (otp_date == ticketing_date,otp_date,ticketing_date)
+
+def match_vehicle_boardings(selected_trips,itineraries_start):
+	vehicle_boarding_origins = selected_trips[np.logical_not(selected_trips['o_busCode'].str.isdigit())]
+	matched_vehicle_boardings = vehicle_boarding_origins.merge(itineraries_start, left_on=['o_boarding_id','o_route','o_stopPointId'], right_on=['user_trip_id','route','from_stop_id'], how='inner')
+	num_matched_vehicle_boardings = len(matched_vehicle_boardings.drop_duplicates(subset=['cardNum','o_boarding_id']))
+        if num_matched_vehicle_boardings == 0:
+            match_perc = 0.0
+        else:
+	    match_perc = 100*(num_matched_vehicle_boardings/float(len(vehicle_boarding_origins)))
+	return (matched_vehicle_boardings,num_matched_vehicle_boardings,match_perc)
 
 def match_terminal_boardings(selected_trips,itineraries_start):
 	terminal_boarding_origins = selected_trips[(selected_trips['o_busCode'].str.isdigit()) & (selected_trips['o_route'] != '021')]
@@ -121,15 +124,18 @@ def match_terminal_boardings(selected_trips,itineraries_start):
 																left_on=['o_boarding_id','o_stopPointId'], 
 																right_on=['user_trip_id','parent_station'], how='inner')
 	num_matched_terminal_boardings = len(matched_terminal_boardings.drop_duplicates(subset=['cardNum','o_boarding_id']))
-	matched_perc = 100*(num_matched_terminal_boardings/float(len(terminal_boarding_origins)))
+        if num_matched_terminal_boardings == 0:
+            matched_perc = 0.0
+        else:
+            matched_perc = 100*(num_matched_terminal_boardings/float(len(terminal_boarding_origins)))
 	return (matched_terminal_boardings,num_matched_terminal_boardings,matched_perc)
 
 def match_terminal_021_boardings(selected_trips,itineraries_start):
 	terminal_021_origins = selected_trips[(selected_trips['o_busCode'].str.isdigit()) & (selected_trips['o_route'] == '021')]
 	matched_021_terminal_boardings = terminal_021_origins.merge(itineraries_start, left_on=['o_boarding_id','o_route','o_stopPointId'], right_on=['user_trip_id','route','parent_station'], how='inner')	
 	num_matched_021_terminal_boardings = len(matched_021_terminal_boardings.drop_duplicates(subset=['cardNum','o_boarding_id']))
-	if (len(terminal_021_origins) == 0):
-		terminal_021_match_perc = 0
+	if num_matched_021_terminal_boardings == 0:
+		terminal_021_match_perc = 0.0
 	else:
 		terminal_021_match_perc = 100*(num_matched_021_terminal_boardings/float(len(terminal_021_origins)))
 	return (len(terminal_021_origins),matched_021_terminal_boardings,num_matched_021_terminal_boardings,terminal_021_match_perc)
@@ -275,6 +281,11 @@ try:
 	# Read OTP Suggestions
 	otp_suggestions_raw = pd.read_csv(otp_suggestions_filepath, parse_dates=['date','otp_start_time','otp_end_time'])
 
+        if len(otp_suggestions_raw) == 0:
+            print "Zero OTP suggestions found."
+            print "Skipping next steps..."
+            exit(0)
+
 	# Prepare OTP data for analysis
 	otp_suggestions = prepare_otp_data(otp_suggestions_raw)
 
@@ -332,6 +343,10 @@ try:
 	total_num_matches = num_matched_vehicle_boardings + num_matched_021_terminal_boardings + num_matched_terminal_boardings
 	print "Total number of matches: ", total_num_matches, "(", 100*(total_num_matches/float(num_selected_trips)), "%)"
 
+        if total_num_matches == 0:
+            print "No match was found. Skipping next steps..."
+            exit(0)
+
 	# Add OTP extra origin/next-origin pairs to final dataset
 	otp_filtered_legs = get_otp_matched_legs(boarding_suggestions_matches,otp_suggestions)
 
@@ -359,6 +374,11 @@ try:
 						.sort_values(['cardNum','user_trip_id'])
 
 	chosen_leg_matches_data = add_stops_data_to_leg_matches(chosen_leg_matches,stops_locations)
+
+        if len(chosen_leg_matches_data) == 0:
+            print "No matches left after matching and selecting feasible bus legs."
+            print "Skipping next steps..."
+            exit(0)
 
 	# Summarizing suggested itineraries information
 	candidate_itineraries = build_candidate_itineraries_df(chosen_leg_matches_data)
