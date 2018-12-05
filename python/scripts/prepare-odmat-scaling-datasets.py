@@ -33,6 +33,12 @@ def select_input_files(input_folderpath,init_date,fin_date,fname_suffix):
 
     return sorted(selected_files)
 
+def remove_od_dist_files(od_dist_dir):
+    files = glob.glob(os.path.join(od_dist_dir,'*'))
+    for f in files:
+        os.remove(f)
+        
+
 #Main
 if __name__ == "__main__":
     if len(sys.argv) < MIN_NUM_ARGS:
@@ -54,6 +60,9 @@ initial_date_dt = pd.to_datetime(initial_date,format='%Y-%m-%d')
 final_date_dt = pd.to_datetime(final_date,format='%Y-%m-%d')
 
 od_matrices = select_input_files(od_matrix_folderpath,initial_date_dt,final_date_dt,OD_MATRIX_SUFFIX)
+
+print("Removing previous OD distribution files...")
+remove_od_dist_files(od_distribution_folderpath)
 
 for day_od_mat_filepath in od_matrices:
     od_date_str = day_od_mat_filepath.split('/')[-1].replace(OD_MATRIX_SUFFIX,'')
@@ -94,10 +103,10 @@ for day_od_mat_filepath in od_matrices:
         print(trips_matches.match_level.value_counts()/len(trips_matches))
 
         #Adding period of day to data
-        period_of_day_list = [('hour_of_day', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]), 
-                ('period_of_day', ['very_late_night','very_late_night','very_late_night','very_late_night','early_morning','early_morning','early_morning','morning','morning','morning','morning','midday','midday','midday','afternoon','afternoon','afternoon','evening','evening','evening','night','night','late_night','late_night'])]
-        period_of_day_df = pd.DataFrame.from_items(period_of_day_list)
-        period_of_day_df.period_of_day = period_of_day_df.period_of_day.astype('category', ordered=True)
+        period_of_day_dict = {'hour_of_day': [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23], 
+                'period_of_day': ['very_late_night','very_late_night','very_late_night','very_late_night','early_morning','early_morning','early_morning','morning','morning','morning','morning','midday','midday','midday','afternoon','afternoon','afternoon','evening','evening','evening','night','night','late_night','late_night']}
+        period_of_day_df = pd.DataFrame.from_dict(period_of_day_dict)
+        period_of_day_df.period_of_day = period_of_day_df.period_of_day.astype('object', ordered=True)
 
 
         #Creating Origin-Destination Distribution dataset
