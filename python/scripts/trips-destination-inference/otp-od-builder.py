@@ -278,6 +278,8 @@ print "Processing File:", otp_suggestions_filepath
 
 try:
 
+	# Extracting itinerary part name for later use
+	itinerary_part_name = otp_suggestions_filepath.split('/')[-1].split('_')[5]
 	# Read OTP Suggestions
 	otp_suggestions_raw = pd.read_csv(otp_suggestions_filepath, parse_dates=['date','otp_start_time','otp_end_time'])
 
@@ -380,6 +382,10 @@ try:
             print "Skipping next steps..."
             exit(0)
 
+	# Writing suggested itineraries dataset to file
+        actual_itineraries_output_filepath = output_folderpath + os.sep + file_date_str + '_' + itinerary_part_name + '_actual_itin.csv'
+        chosen_leg_matches_data.to_csv(actual_itineraries_output_filepath)
+
 	# Summarizing suggested itineraries information
 	candidate_itineraries = build_candidate_itineraries_df(chosen_leg_matches_data)
 	candidate_itineraries_filtered = get_candidate_itineraries_summary(candidate_itineraries,boarding_suggestions_matches)
@@ -406,7 +412,6 @@ try:
 									.rename(index=str, columns={'matched_start_time':'start_time','matched_end_time':'end_time'})
 
 	# Writing final OD Trips dataset to file
-	itinerary_part_name = otp_suggestions_filepath.split('/')[-1].split('_')[5]
 	output_filepath = output_folderpath + os.sep + file_date_str + '_' + itinerary_part_name + '_od_trips.csv'
 	od_trips.to_csv(output_filepath,index=False)
 
