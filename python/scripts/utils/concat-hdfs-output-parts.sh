@@ -17,8 +17,7 @@ else
 		echo "Processing date: $subfoldername - located at: $f"
 		output_subfolderpath=$output_folderpath/$subfoldername.csv
 		
-		random_file=`ls $f | shuf -n 1`
-		files_header=`head -1 $f/$random_file`
+		files_header=`head -1 $f/part-00000`
 		
 		echo $files_header > $output_subfolderpath		
 		tail -q -n +2 $f/part-* >> $output_subfolderpath
