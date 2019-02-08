@@ -41,9 +41,8 @@ output_folderpath = sys.argv[6]
 trips_data = pd.read_csv(trips_filepath)
 
 od_matrix_df = trips_data.groupby([origin_col,dest_col]).agg({id_col:'count'}).reset_index() \
-                                            .rename(index=str, columns={id_col:'num_trips'})
-
-od_matrix_freqs = od_matrix_df.pivot(index=origin_col,columns=dest_col,values='num_trips')
+                                            .rename(index=str, columns={id_col:aggregation_col})
+od_matrix_freqs = od_matrix_df.pivot(index=origin_col,columns=dest_col,values=aggregation_col)
 
 od_matrix_freqs.to_csv(output_folderpath + prefix + FREQS_ODMAT_SUFFIX)
 
