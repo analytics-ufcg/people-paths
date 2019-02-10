@@ -327,6 +327,7 @@ try:
 	# Matching all kinds of boarding events to valid OTP suggestions
 	itineraries_start = otp_suggestions.query('mode == \'BUS\'') \
 				.groupby(['user_trip_id','itinerary_id']) \
+                                .sort_values('leg_id') \ #Added later
 				.first() \
 				.reset_index()
 
