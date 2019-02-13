@@ -359,15 +359,9 @@ try:
             print "Skipping next steps..."
             exit(0)
 
-	# Remove last walk legs of itinerary
-	chosen_legs_clean = chosen_legs.groupby(['otp_user_trip_id','otp_itinerary_id']) \
-            .apply(lambda x: x.iloc[:-1] if x.otp_mode.iloc[-1] == 'WALK' else x) \
-            .reset_index(drop=True) \
-            .sort_values(['otp_user_trip_id','otp_itinerary_id','otp_leg_id'])
-
 	# Add stops data to legs
 	stops_locations = stops_df[['stop_id','stop_lat','stop_lon']]
-	itineraries_legs = add_stops_data_to_legs(chosen_legs_clean,stops_locations)
+	itineraries_legs = add_stops_data_to_legs(chosen_legs,stops_locations)
 
 	# Add back card number
 	passenger_trips_ids = trips_on_pairs_full.filter(['cardNum','o_boarding_id']) \
