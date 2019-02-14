@@ -78,13 +78,18 @@ def match_vehicle_boardings(selected_trips,itineraries_st):
             match_perc = 100*(num_matched_vehicle_boardings/float(len(vehicle_boarding_origins)))
         return (matched_vehicle_boardings,num_matched_vehicle_boardings,len(vehicle_boarding_origins),match_perc)
 
-def choose_leg_matches(leg_matches_groups,colnames):
+def is_new_itinerary(prev_trip_id,curr_trip_id,prev_itin_id,curr_itin_id):
+    return ((prev_trip_id != curr_trip_id) | (prev_itin_id != curr_itin_id))    
+
+def choose_leg_matches(leg_matches_groups):
+        colnames = leg_matches_groups.obj.columns.values
         chosen_leg_matches = pd.DataFrame(columns = colnames)
-        chosen_leg_matches = pd.DataFrame()
-        prev_group_id = ()
+        prev_trip_id = -1
         prev_itin_id = -1
+        prev_leg_mode = ""
         prev_leg_end_time = pd.NaT
         num_groups_not_survived = 0
+        new_itinerary = False
 
         for name, group in leg_matches_groups:
             
@@ -94,29 +99,37 @@ def choose_leg_matches(leg_matches_groups,colnames):
                 #print group
                 #print
                 
-                if ((prev_itin_id == -1)):
-                        prev_itin_id = group['otp_itinerary_id'].iloc[0]
-                        prev_leg_end_time = group['bt_start_time'].dt.floor('d').iloc[0]
-                elif (prev_itin_id != group['otp_itinerary_id'].iloc[0]):
-                        prev_leg_end_time = group['bt_start_time'].dt.floor('d').iloc[0]
-                    
+                curr_trip_id = group['otp_user_trip_id'].iloc[0]
+                curr_itin_id = group['otp_itinerary_id'].iloc[0]
+                curr_leg_id = group['otp_leg_id'].iloc[0]
+                curr_leg_mode = group['otp_mode'].iloc[0]
+                
+                new_itinerary = is_new_itinerary(prev_trip_id,curr_trip_id,prev_itin_id,curr_itin_id)
+                if new_itinerary:
+                    prev_leg_end_time = group['otp_start_time'].dt.floor('d').iloc[0]
 
                 #if (prev_group_id == ()):
                 #        prev_leg_end_time = group['bt_start_time'].dt.floor('d')[0]
 
                 #print
+                #print "Previous itinerary id:", prev_itin_id
+                #print "Previous leg mode:", prev_leg_mode
                 #print "Previous leg end time:", prev_leg_end_time
+                #print "Current leg id:", curr_leg_id
+                #print "Current leg mode:", curr_leg_mode
                 #print
                 #print "Original Group"
                 #print group.filter(['otp_start_time','bt_start_time','bt_end_time'])
                 
-                if (group['otp_mode'].iloc[0] == 'WALK'):
+                if (curr_leg_mode == 'WALK'):
                     #print "Walking duration:", filtered_group['otp_duration_mins']
-                    filtered_group = group.copy().reset_index()
-                    filtered_group.loc[0,'bt_start_time'] = prev_leg_end_time
-                    filtered_group.loc[0,'bt_end_time'] = prev_leg_end_time + \
-                        pd.Timedelta(minutes=np.rint(filtered_group['otp_duration_mins'].iloc[0]))
-                    
+                    filtered_group = group.reset_index()
+                    if new_itinerary: #first leg is a WALK leg
+                        filtered_group.loc[0,'bt_end_time'] = prev_leg_end_time
+                    else:
+                        filtered_group.loc[0,'bt_start_time'] = prev_leg_end_time
+                        filtered_group.loc[0,'bt_end_time'] = prev_leg_end_time + \
+                            pd.Timedelta(minutes=np.rint(filtered_group['otp_duration_mins'].iloc[0]))
                     #print "Filtered Group"
                     #print filtered_group
                 else:
@@ -128,10 +141,30 @@ def choose_leg_matches(leg_matches_groups,colnames):
 
                 if (len(filtered_group) == 0):
                         #print "Group did not survive! =("
+                        #print
+                        #print "Previous itinerary id:", prev_itin_id
+                        #print "Previous leg mode:", prev_leg_mode
+                        #print "Previous leg end time:", prev_leg_end_time
+                        #print "Current leg id:", curr_leg_id
+                        #print "Current leg mode:", curr_leg_mode
+                        #print
+                        #print "Original Group"
+                        #print group#.filter(['otp_start_time','bt_start_time','bt_end_time'])
                         num_groups_not_survived += 1
                         continue
 
                 chosen_leg_match = filtered_group.sort_values('bt_start_time').iloc[0]
+                
+                if ((curr_leg_id == 2) & 
+                    ((curr_leg_mode == 'BUS') & (prev_leg_mode == 'WALK'))):
+                        #Update previous walk start/end_times
+                        #print
+                        #print "Chosen Leg Matches"
+                        #print chosen_leg_matches.iloc[-1]
+                        #print
+                        chosen_leg_matches.iloc[-1,chosen_leg_matches.columns.get_loc('bt_start_time')] = chosen_leg_match['bt_start_time'] - \
+                            pd.Timedelta(minutes=np.rint(chosen_leg_matches.iloc[-1].otp_duration_mins))
+                        chosen_leg_matches.iloc[-1,chosen_leg_matches.columns.get_loc('bt_end_time')] = chosen_leg_match['bt_start_time']
                 #print "Chosen Leg"
                 #print chosen_leg_match
 
@@ -139,11 +172,14 @@ def choose_leg_matches(leg_matches_groups,colnames):
 
                 #Update variables
                 #prev_group_id = name
-                prev_itin_id = group['otp_itinerary_id'].iloc[0]
+                prev_trip_id = curr_trip_id
+                prev_itin_id = curr_itin_id
+                prev_leg_mode = curr_leg_mode
                 prev_leg_end_time = chosen_leg_match['bt_end_time']
 
-        #print num_groups_not_survived
+        #print "Number of groups which did not survive:", num_groups_not_survived
         return chosen_leg_matches.filter(colnames)
+
 
 def add_stops_data_to_legs(itineraries_legs,stops_locs):
     itineraries_legs_stops = itineraries_legs.merge(stops_locs, left_on='otp_from_stop_id', right_on='stop_id', how='left') \
@@ -155,28 +191,44 @@ def add_stops_data_to_legs(itineraries_legs,stops_locs):
     return itineraries_legs_stops
 
 def build_candidate_itineraries_df(chosen_leg_matches_data):
-        otp_buste_itineraries = chosen_leg_matches_data \
+        itins_bus_info = chosen_leg_matches_data \
                                         .query('otp_mode == \'BUS\'') \
                                         .groupby(['card_num','trip_id','otp_itinerary_id']) \
                                         .agg({'otp_from_stop_id': lambda x: x.iloc[0],
-                                                  'bt_start_time': lambda x: x.iloc[0],
-                                                  'from_stop_lat': lambda x: x.iloc[0],
-                                                  'from_stop_lon': lambda x: x.iloc[0],
-                                                  'otp_to_stop_id': lambda x: x.iloc[-1],
-                                                  'bt_end_time': lambda x: x.iloc[-1],
-                                                  'to_stop_lat': lambda x: x.iloc[-1],
-                                                  'to_stop_lon': lambda x: x.iloc[-1],
-                                                  'otp_mode': lambda x: len(x)}) \
-                                        .rename(index=str, columns={'otp_mode':'num_transfers'}) \
+                                              'from_stop_lat': lambda x: x.iloc[0],
+                                              'from_stop_lon': lambda x: x.iloc[0],
+                                              'otp_to_stop_id': lambda x: x.iloc[-1],
+                                              'to_stop_lat': lambda x: x.iloc[-1],
+                                              'to_stop_lon': lambda x: x.iloc[-1],
+                                              'otp_mode': lambda x: len(x)}) \
                                         .reset_index() \
-                                        .reindex(['card_num','trip_id','otp_itinerary_id',
-                                                  'otp_from_stop_id','bt_start_time','from_stop_lat',
-                                                  'from_stop_lon','otp_to_stop_id','bt_end_time',
-                                                  'to_stop_lat','to_stop_lon','num_transfers'], axis=1, copy=False)\
+                                        .rename(index=str, columns={'otp_mode':'num_transfers',
+                                                                    'otp_from_stop_id':'from_stop_id',
+                                                                    'otp_to_stop_id':'to_stop_id'})
+        itins_time_info = chosen_leg_matches_data \
+                                        .groupby(['card_num','trip_id','otp_itinerary_id']) \
+                                        .agg({'bt_start_time': lambda x: x.iloc[0],
+                                              'bt_end_time': lambda x: x.iloc[-1],
+                                              'otp_start_time': lambda x: x.iloc[0],
+                                              'otp_end_time': lambda x: x.iloc[-1],
+                                              'date': lambda x: x.iloc[0]}) \
+                                        .reset_index() \
+                                        .rename(index=str, columns={'otp_start_time':'sch_start_time',
+                                                                    'otp_end_time':'sch_end_time',
+                                                                    'bt_start_time':'obs_start_time',
+                                                                    'bt_end_time':'obs_end_time'}) 
+        
+        otp_buste_itineraries = itins_bus_info.merge(itins_time_info) \
+                                        .reindex(['date','card_num','trip_id','otp_itinerary_id',
+                                                  'from_stop_id','sch_start_time','obs_start_time',
+                                                  'from_stop_lat','from_stop_lon','to_stop_id',
+                                                  'sch_end_time','obs_end_time','to_stop_lat',
+                                                  'to_stop_lon','num_transfers'], axis=1, copy=False)\
                                         .assign(card_num = lambda x: x['card_num'].astype(float),
                                                 trip_id = lambda x: x['trip_id'].astype(float),
                                                 otp_itinerary_id = lambda x: x['otp_itinerary_id'].astype(float))
         return otp_buste_itineraries
+
 
 def dist(p1_lat, p1_lon, p2_lat, p2_lon):
     if(np.isnan([p1_lat, p1_lon, p2_lat, p2_lon]).any()):
@@ -184,14 +236,17 @@ def dist(p1_lat, p1_lon, p2_lat, p2_lon):
     else:
         return np.around(distance.geodesic((p1_lat,p1_lon),(p2_lat,p2_lon)).km,decimals=5)
 
-def get_candidate_itineraries_summary(candidate_itineraries,trips_valid):
+def get_candidate_itineraries_summary(candidate_itineraries,trips_validation):
         otp_buste_itineraries_summary = candidate_itineraries \
-                                        .merge(trips_valid,how='inner') \
-                                        .assign(start_diff = lambda x: np.absolute(x['bt_start_time'] - x['o_boarding_datetime']),
-                                                trip_duration = lambda x: x['bt_end_time'] - x['bt_start_time'],
+                                        .merge(trips_validation,how='inner') \
+                                        .assign(start_diff = lambda x: np.absolute(x['obs_start_time'] - x['o_boarding_datetime']),
                                                 origin_dist = lambda y: y.apply(lambda x: dist(x['from_stop_lat'], x['from_stop_lon'], x['o_stop_lat'], x['o_stop_lon']),axis=1),
                                                 next_origin_dist = lambda y: y.apply(lambda x: dist(x['to_stop_lat'], x['to_stop_lon'], x['next_o_stop_lat'], x['next_o_stop_lon']),axis=1),
-                                                next_start_diff = lambda x: np.absolute(x['next_o_boarding_datetime'] - x['bt_end_time'])) \
+                                                next_start_diff = lambda x: np.absolute(x['next_o_boarding_datetime'] - x['obs_end_time']),
+                                                sch_duration_mins = lambda x: 
+                                                (x.sch_end_time - x.sch_start_time)/pd.Timedelta('1m'),
+                                                obs_duration_mins = lambda x:
+                                                (x.obs_end_time - x.obs_start_time)/pd.Timedelta('1m')) \
                                         .sort_values(['card_num','trip_id'])
         return otp_buste_itineraries_summary
 
@@ -216,6 +271,8 @@ file_date = pd.to_datetime(file_date_str,format='%Y_%m_%d')
 print "Processing File:", otp_suggestions_filepath
 
 try:
+
+	exec_start_time = time.time()
 
 	# Extracting itinerary part name for later use
 	itinerary_part_name = otp_suggestions_filepath.split('/')[-1].split('_')[5]
@@ -251,32 +308,6 @@ try:
         otp_suggestions_bus_legs = otp_suggestions[otp_suggestions['otp_mode'] == 'BUS']
         otp_suggestions_walk_legs = otp_suggestions[otp_suggestions['otp_mode'] == 'WALK']
 
-	# Read and Prepare Bus Trips Data
-        bus_trips_filepath = bus_trips_folderpath + os.sep + file_date_str + '_bus_trips.csv'
-        bus_trips = pd.read_csv(bus_trips_filepath, dtype={'route': object},parse_dates=['gps_datetime']) \
-                                        .sort_values(['route','busCode','tripNum','gps_datetime']) \
-                                        .assign(route = lambda x: x['route'].astype(str).str.replace("\.0",'').str.zfill(3))
-
-	# Match Scheduled Itineraries to Observed Bus Trips
-	scheduled_itin_observed_od = otp_suggestions_bus_legs.merge(bus_trips.add_prefix('bt_from_'),
-                                left_on=['otp_route','otp_from_stop_id'],
-                                right_on=['bt_from_route','bt_from_stopPointId'],
-                                how='inner') \
-                                .assign(sched_obs_start_timediff = 
-                                        lambda x: np.absolute(x['bt_from_gps_datetime'] - x['otp_start_time']))
-	scheduled_itin_observed_od = scheduled_itin_observed_od[scheduled_itin_observed_od['sched_obs_start_timediff'] <= pd.Timedelta(minutes=60)]
-
-	scheduled_itin_observed_od = scheduled_itin_observed_od.merge(bus_trips.add_prefix('bt_to_'),
-                                left_on=['otp_route','bt_from_busCode','bt_from_tripNum','otp_to_stop_id'],
-                                right_on=['bt_to_route','bt_to_busCode','bt_to_tripNum','bt_to_stopPointId'],
-                                how='inner') \
-                                .assign(sched_obs_end_timediff = 
-                                        lambda x: np.absolute(x['bt_to_gps_datetime'] - x['otp_end_time'])) \
-                                .sort_values(['otp_user_trip_id','otp_itinerary_id','otp_leg_id','sched_obs_start_timediff','sched_obs_end_timediff'])
-	scheduled_itin_observed_od = scheduled_itin_observed_od[scheduled_itin_observed_od['sched_obs_end_timediff'] <= pd.Timedelta(minutes=60)]
-
-	scheduled_itin_observed_od_full = pd.concat([scheduled_itin_observed_od,otp_suggestions_walk_legs], sort=False)
-
 	# Read and Prepare Origin/Next-Origin Pairs data
         trips_origins_filepath = user_trips_folderpath + os.sep + file_date_str + '_user_trips.csv'
         trips_on_pairs_full = pd.read_csv(trips_origins_filepath,
@@ -291,12 +322,63 @@ try:
         trips_on_pairs = trips_on_pairs_full.filter(['o_boarding_id','next_o_boarding_id'])
         trips_origins = trips_on_pairs_full.filter([col for col in trips_on_pairs_full.columns if col.startswith('o_')])	
 
+	# Filtering out non-vehicle-boarding itinerary suggestions
+	vehicle_boarding_trip_ids = trips_origins[np.logical_not(trips_origins['o_busCode'].str.isdigit())].o_boarding_id
+
+	otp_suggestions_vehicle = otp_suggestions[otp_suggestions['otp_user_trip_id'].isin(vehicle_boarding_trip_ids)]
+	otp_suggestions_bus_legs = otp_suggestions_vehicle[otp_suggestions_vehicle['otp_mode'] == 'BUS']
+	otp_suggestions_walk_legs = otp_suggestions_vehicle[otp_suggestions_vehicle['otp_mode'] == 'WALK']
+
+	# Read and Prepare Bus Trips Data
+        bus_trips_filepath = bus_trips_folderpath + os.sep + file_date_str + '_bus_trips.csv'
+        bus_trips = pd.read_csv(bus_trips_filepath, dtype={'route': object},parse_dates=['gps_datetime']) \
+                                        .sort_values(['route','busCode','tripNum','gps_datetime']) \
+                                        .assign(route = lambda x: x['route'].astype(str).str.replace("\.0",'').str.zfill(3))  \
+                                        .drop_duplicates()
+
+	bus_trips_clean = bus_trips.filter(['route','busCode','tripNum','stopPointId','gps_datetime'])
+
+	# Identify Possible Matches between OTP Itineraries and Bus Trips Observed Data
+	scheduled_itin_observed_o = otp_suggestions_bus_legs.merge(bus_trips_clean.add_prefix('bt_'),
+                                left_on=['otp_route','otp_from_stop_id'],
+                                right_on=['bt_route','bt_stopPointId'],
+                                how='inner') \
+                                .drop(['bt_route','bt_stopPointId'], axis=1) \
+                                .rename(index=str, columns={'bt_gps_datetime':'bt_start_time',
+                                                            'bt_tripNum':'bt_trip_num',
+                                                            'bt_busCode':'bt_bus_code'}) \
+                                .assign(sched_obs_start_timediff = 
+                                        lambda x: np.absolute(x['bt_start_time'] - x['otp_start_time']))
+
+	scheduled_itin_observed_od = scheduled_itin_observed_o.merge(bus_trips_clean.add_prefix('bt_'),
+                                left_on=['otp_route','bt_bus_code','bt_trip_num','otp_to_stop_id'],
+                                right_on=['bt_route','bt_busCode','bt_tripNum','bt_stopPointId'],
+                                how='inner') \
+                                .drop(['bt_route','bt_stopPointId'], axis=1) \
+                                .rename(index=str, columns={'bt_gps_datetime':'bt_end_time'}) \
+                                .assign(sched_obs_end_timediff = 
+                                        lambda x: np.absolute(x['bt_end_time'] - x['otp_end_time'])) \
+                                .sort_values(['otp_user_trip_id','otp_itinerary_id','otp_leg_id','sched_obs_start_timediff','sched_obs_end_timediff'])
+
+	scheduled_itin_observed_od['bt_duration_mins'] = (scheduled_itin_observed_od['bt_end_time'] - scheduled_itin_observed_od['bt_start_time'])/pd.Timedelta(minutes=1)
+	scheduled_itin_observed_od = scheduled_itin_observed_od[scheduled_itin_observed_od['bt_duration_mins'] > 0]
+
+	scheduled_itin_observed_od_full = pd.concat([scheduled_itin_observed_od,otp_suggestions_walk_legs], sort=False)
+
+	scheduled_itin_observed_od_full_clean = scheduled_itin_observed_od_full \
+                            .filter(['otp_user_trip_id','otp_itinerary_id','otp_leg_id','otp_mode','otp_route',
+                                     'bt_bus_code','bt_trip_num','otp_from_stop_id','otp_start_time',
+                                     'bt_start_time','sched_obs_start_timediff','otp_to_stop_id',
+                                     'otp_end_time','bt_end_time','sched_obs_end_timediff','otp_duration_mins']) \
+                            .sort_values(['otp_user_trip_id','otp_itinerary_id','otp_leg_id'])
+
+	# Working with Vehicle Boardings
         # Selecting trips for whom OTP suggestions were found
-        selected_trips = trips_origins[trips_origins['o_boarding_id'].isin(otp_suggestions['otp_user_trip_id'])]
+        selected_trips = trips_origins[trips_origins['o_boarding_id'].isin(otp_suggestions_vehicle['otp_user_trip_id'])]
         num_selected_trips = len(selected_trips)
 
-        # Matching vehicle-boarding events to valid OTP suggestions
-        itins_first_bus_legs = otp_suggestions.query('otp_mode == \'BUS\'') \
+	# Matching all kinds of boarding events to valid OTP suggestions
+        itins_first_bus_legs = otp_suggestions_bus_legs \
                                 .groupby(['otp_user_trip_id','otp_itinerary_id']) \
                                 .first() \
                                 .reset_index()
@@ -306,20 +388,20 @@ try:
         print "Vehicle boardings with matching OTP suggestions: ", num_matched_vehicle_boardings, "(",vehicle_match_perc, "%)"
 
         total_num_matches = num_matched_vehicle_boardings
-        print "Total number of matches: ", total_num_matches, "(", 100*(total_num_matches/float(num_vehicle_boardings)), "%)"
+        print "Initial number of itinerary matches: ", total_num_matches, "(", 100*(total_num_matches/float(num_vehicle_boardings)), "%)"
 
         if total_num_matches == 0:
             print "No match was found. Skipping next steps..."
             exit(0)
 
-	vehic_first_boardings_options = matched_vehicle_boardings.merge(bus_trips, 
-                               left_on=['o_route','o_busCode','o_tripNum','otp_to_stop_id'],
+	vehic_first_boardings_options = matched_vehicle_boardings.merge(bus_trips_clean, 
+                                left_on=['o_route','o_busCode','o_tripNum','otp_to_stop_id'],
                                right_on=['route','busCode','tripNum','stopPointId'],
                                how='inner') \
             
 	# Retain only OTP-BusTrips itineraries which figure in first-vehicle-boarding matched itineraries
 	matched_vehicle_boardings_itins = vehic_first_boardings_options.filter(['otp_user_trip_id','otp_itinerary_id'])
-	vehicle_boardings_obs_sch_itin_legs = scheduled_itin_observed_od_full.merge(matched_vehicle_boardings_itins,how='inner') \
+	vehicle_boardings_obs_sch_itin_legs = scheduled_itin_observed_od_full_clean.merge(matched_vehicle_boardings_itins,how='inner') \
                                         .sort_values(['otp_user_trip_id','otp_itinerary_id','otp_leg_id'])
 	
 	# Concatenating first boarding legs to other itinerary legs
@@ -329,19 +411,15 @@ try:
 			'o_tripNum','otp_from_stop_id','otp_start_time','o_boarding_datetime','otp_to_stop_id',
 			'otp_end_time','gps_datetime','otp_duration_mins']) \
 		.rename(index=str, columns={'o_busCode':'bt_bus_code','o_tripNum':'bt_trip_num',
-					'o_boarding_datetime':'bt_start_time','gps_datetime':'bt_end_time'}) \
-		.assign(bt_duration_mins = lambda x: (x.bt_end_time - x.bt_start_time)/pd.Timedelta(minutes=1)) \
-		.assign(considered_duration_mins = lambda x: np.where(np.isnan(x.bt_duration_mins),x.otp_duration_mins,x.bt_duration_mins))		
+						'o_boarding_datetime':'bt_start_time','gps_datetime':'bt_end_time'}) \
+		.assign(bt_duration_mins = lambda x: (x.bt_end_time - x.bt_start_time)/pd.Timedelta(minutes=1))
 
 	# Preparing OTP itinerary legs data
 	vehicle_boardings_obs_sch_itin_legs_clean = vehicle_boardings_obs_sch_itin_legs \
-		.filter(['otp_user_trip_id','otp_itinerary_id','otp_leg_id','otp_mode','otp_route','bt_from_busCode',
-			'bt_from_tripNum','otp_from_stop_id','otp_start_time','bt_from_gps_datetime','otp_to_stop_id',
-			'otp_end_time','bt_to_gps_datetime','otp_duration_mins'])\
-		.rename(index=str, columns={'bt_from_busCode':'bt_bus_code','bt_from_tripNum':'bt_trip_num',
-					'bt_from_gps_datetime':'bt_start_time','bt_to_gps_datetime':'bt_end_time'}) \
-		.assign(bt_duration_mins = lambda x: (x.bt_end_time - x.bt_start_time)/pd.Timedelta(minutes=1)) \
-		.assign(considered_duration_mins = lambda x: np.where(np.isnan(x.bt_duration_mins),x.otp_duration_mins,x.bt_duration_mins))
+		.filter(['otp_user_trip_id','otp_itinerary_id','otp_leg_id','otp_mode','otp_route','bt_bus_code',
+			'bt_trip_num','otp_from_stop_id','otp_start_time','bt_start_time','otp_to_stop_id',
+			'otp_end_time','bt_end_time','otp_duration_mins'])\
+		.assign(bt_duration_mins = lambda x: (x.bt_end_time - x.bt_start_time)/pd.Timedelta(minutes=1))
 
 	# Concatenating Legs
 	vehic_first_boardings_options_clean_keys = vehic_first_boardings_options_clean.filter(['otp_user_trip_id','otp_itinerary_id','otp_leg_id']).drop_duplicates()
@@ -350,28 +428,55 @@ try:
 	all_vehicle_legs_options = pd.concat([vehic_first_boardings_options_clean,vehicle_legs_rest_clean]) \
 		.sort_values(['otp_user_trip_id','otp_itinerary_id','otp_leg_id','bt_start_time'])
 
-	# Choose best actual leg matches (based on feasibility and start time)
-	chosen_legs = choose_leg_matches(all_vehicle_legs_options.groupby(['otp_user_trip_id','otp_itinerary_id','otp_leg_id']),
-                                all_vehicle_legs_options.columns)
+	# Filtering out itineraries which lost bus legs along the processing
+	original_suggested_itins_num_legs = otp_suggestions.groupby(['otp_user_trip_id','otp_itinerary_id']) \
+                                    .agg({'otp_leg_id': lambda x: len(x)}) \
+                                    .reset_index() \
+                                    .rename(index=str, columns={'otp_leg_id':'num_legs'})
+
+	curr_matched_itins_num_legs = all_vehicle_legs_options.groupby(['otp_user_trip_id','otp_itinerary_id']) \
+                                    .agg({'otp_leg_id': lambda x: len(np.unique(x))}) \
+                                    .reset_index() \
+                                    .rename(index=str, columns={'otp_leg_id':'num_legs'})
+
+	complete_matched_itins = original_suggested_itins_num_legs.merge(curr_matched_itins_num_legs, how='inner')
 	
-	if len(chosen_legs) == 0:
+	all_complete_vehicle_legs_options = all_vehicle_legs_options.merge(complete_matched_itins.drop('num_legs', axis=1), how='inner')
+
+	# Choose best actual leg matches (based on feasibility and start time)
+	feasible_legs = choose_leg_matches(all_vehicle_legs_options.groupby(['otp_user_trip_id','otp_itinerary_id','otp_leg_id']))
+	
+	if len(feasible_legs) == 0:
             print "No matches left after matching and selecting feasible bus legs."
             print "Skipping next steps..."
             exit(0)
 
+	# Filtering out itineraries which lost bus legs after feasible legs choice processing
+	feasible_itins_num_legs = feasible_legs.groupby(['otp_user_trip_id','otp_itinerary_id']) \
+                                    .agg({'otp_leg_id': lambda x: len(x)}) \
+                                    .reset_index() \
+                                    .rename(index=str, columns={'otp_leg_id':'num_legs'})
+
+	feasible_complete_itins = feasible_itins_num_legs.merge(original_suggested_itins_num_legs,how='inner')
+
+	feasible_complete_itins_legs = feasible_legs.merge(feasible_complete_itins.drop('num_legs', axis=1),how='inner')
+
+	# Perform an endogenous validation using location and time features
 	# Add stops data to legs
 	stops_locations = stops_df[['stop_id','stop_lat','stop_lon']]
-	itineraries_legs = add_stops_data_to_legs(chosen_legs,stops_locations)
+	itineraries_legs = add_stops_data_to_legs(feasible_complete_itins_legs,stops_locations)
 
-	# Add back card number
+	# Add card number and date
 	passenger_trips_ids = trips_on_pairs_full.filter(['cardNum','o_boarding_id']) \
                             .rename(index=str, columns={'cardNum':'card_num','o_boarding_id':'trip_id'})
+
 	pass_itins_legs = itineraries_legs.merge(passenger_trips_ids, 
                        left_on=['otp_user_trip_id'], 
                        right_on=['trip_id'],
                        how='left') \
                 .drop('otp_user_trip_id', axis=1) \
-                .filter(np.append(['card_num','trip_id'],itineraries_legs.columns.values[1:])) \
+                .assign(date = lambda x: x.otp_start_time.dt.floor('d')) \
+                .filter(np.append(['date','card_num','trip_id'],itineraries_legs.columns.values[1:])) \
                 .sort_values(['card_num','trip_id','otp_itinerary_id','otp_leg_id'])
 
 	# Summarizing suggested itineraries information
@@ -385,16 +490,16 @@ try:
 
 	# Validate itineraries using boarding metadata
 	cand_itineraries_loc_validation = get_candidate_itineraries_summary(cand_itineraries_df,passenger_trips_valid_df)	
-	valid_candidate_itineraries = cand_itineraries_loc_validation[((cand_itineraries_loc_validation['trip_duration'] > pd.Timedelta('0s')) & 
-                                                               (cand_itineraries_loc_validation['trip_duration'] < pd.Timedelta('2h'))) & 
+	valid_candidate_itineraries = cand_itineraries_loc_validation[((cand_itineraries_loc_validation['obs_duration_mins'] > 0) & 
+                                                               (cand_itineraries_loc_validation['obs_duration_mins'] < 120)) & 
                                                               ((cand_itineraries_loc_validation['start_diff'] >= pd.Timedelta('0s')) & 
                                                                (cand_itineraries_loc_validation['start_diff'] < pd.Timedelta('1.5h')))] \
                                     .query('origin_dist < 0.1') \
                                     .query('next_origin_dist < 2.0')
                                     #NEXT_START_DIFF
-                               	
+                                	
 	#Infer user chosen itineraries from valid itineraries based on trip duration
-	inferred_trip_itineraries = valid_candidate_itineraries.sort_values(['card_num','trip_id','trip_duration']) \
+	inferred_trip_itineraries = valid_candidate_itineraries.sort_values(['card_num','trip_id','obs_duration_mins']) \
                                 .groupby(['card_num','trip_id']) \
                                 .first() \
                                 .reset_index()
@@ -414,7 +519,13 @@ try:
 	inferred_trip_itineraries_legs.to_csv(inf_trips_itineraries_legs_output_filepath,index=False)
 
 				
-	print "Final number of matches (after processing): ", len(inferred_trip_itineraries) , "(", 100*(len(inferred_trip_itineraries)/float(num_vehicle_boardings)), "%)"
+	print "Final number of itinerary matches (after processing): ", len(inferred_trip_itineraries) , "(", 100*(len(inferred_trip_itineraries)/float(num_vehicle_boardings)), "%)"
+
+	print "Final number of itinerary leg matches: ", len(inferred_trip_itineraries_legs)
+
+
+
+	print "Processing time:", time.time() - exec_start_time, "s"
 
 except Exception:
 	print "Error in processing file " + otp_suggestions_filepath
