@@ -58,28 +58,28 @@ def choose_leg_matches(leg_matches_groups):
 		if (prev_group_id != name[0:2]):
 			prev_leg_end_time = otp_suggestions['date'][0]
 		
-		print
-		print prev_leg_end_time
-		print
-		print "Original Group"
-		print group.filter(['otp_start_time','matched_start_time'])
+		#print
+		#print prev_leg_end_time
+		#print
+		#print "Original Group"
+		#print group.filter(['otp_start_time','matched_start_time'])
 
                 if (group['mode'].iloc[0] == 'WALK'):
                     filtered_group = group
                     filtered_group['matched_end_time'] = prev_leg_end_time + filtered_group['otp_duration_mins']
 		else:
     		    filtered_group = group[group['matched_start_time'] > prev_leg_end_time]
-		print
-		print "Filtered Group"
-		print filtered_group.filter(['otp_start_time','matched_start_time'])
+		#print
+		#print "Filtered Group"
+		#print filtered_group.filter(['otp_start_time','matched_start_time'])
 			
 		if (len(filtered_group) == 0):
 			num_groups_not_survived += 1
 			continue
 			
 		chosen_leg_match = filtered_group.sort_values('boarding_matched_start_timediff').iloc[0]
-		print "Chosen Leg"
-		print chosen_leg_match
+		#print "Chosen Leg"
+		#print chosen_leg_match
 			
 		chosen_leg_matches = chosen_leg_matches.append(chosen_leg_match)
 			
@@ -282,6 +282,8 @@ print "Processing File:", otp_suggestions_filepath
 
 try:
 
+	exec_start_time = time.time()
+
 	# Extracting itinerary part name for later use
 	itinerary_part_name = otp_suggestions_filepath.split('/')[-1].split('_')[5]
 	# Read OTP Suggestions
@@ -327,7 +329,6 @@ try:
 	# Matching all kinds of boarding events to valid OTP suggestions
 	itineraries_start = otp_suggestions.query('mode == \'BUS\'') \
 				.groupby(['user_trip_id','itinerary_id']) \
-                                .sort_values('leg_id') \ #Added later
 				.first() \
 				.reset_index()
 
@@ -427,6 +428,8 @@ try:
 	# Writing final OD Trips dataset to file
 	output_filepath = output_folderpath + os.sep + file_date_str + '_' + itinerary_part_name + '_od_trips.csv'
 	od_trips.to_csv(output_filepath,index=False)
+
+	print "Processing time:", time.time() - exec_start_time, "s"
 
 except Exception:
 	print "Error in processing file " + otp_suggestions_filepath
