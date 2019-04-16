@@ -35,7 +35,7 @@ sudo R -e 'install.packages(c("dplyr", "lubridate", "stringr", "sp", "rgeos", "r
 ```
 
 # Prepare Input Files
- * Download Streaming Data files from [owncloud repository](https://bigsea.owncloud.lsd.ufcg.edu.br/owncloud/index.php/s/UFKZhHGdxvWzO8w)
+ * Download [Streaming Data files](https://drive.google.com/file/d/1nwGDPvpGuTRJrSe2nHhqCLHwUG-aLEWb/view?usp=sharing)
      + doc1 files are ticketing data
      + doc2 files are gps data
  * Unzip json files
@@ -71,7 +71,7 @@ Rscript build_trips_locations_social_dataset.R <code.base.folderpath> <ticketing
 # Sample Output
 
 |card.num|line.code|o.sector.code|o.neigh.code|o.neigh.name|o.loc|o.timestamp|o.pop|o.income|o.num.literate|d.sector.code|d.neigh.code|d.neigh.name|d.loc|d.timestamp|d.pop|d.income|d.num.literate|
-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |000001|260|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:55|833|3268.35|781|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:59|833|3268.35|781|
 |000002|260|410690205040042|410690205033|SAO LOURENCO|"-25.388173,-49.260771"|2016-06-25 19:43:59|833|3268.35|781|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:03:56|975|4211.39|936|
 |000003|260|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:03:56|975|4211.39|936|410690205010273|410690205014|AHU|"-25.392713,-49.260928"|2016-06-25 22:04:01|975|4211.39|936|
