@@ -33,11 +33,12 @@ diff.hour <- function(trips_data) {
     mutate(diff_hour = difftime(trips_data$end_time, trips_data$start_time, units = 'hour'))
 }
 
-#variável usada para fazer a distribuição da quantidade de viagens das rotas em cada horário do dia
+#variável que mostra o horário de embarque filtrado
 start.time <- function(trips_data) {
   x <- trips_data %>% mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time)))
 }
 
+#variável que mostra o horário de desembarque filtrado
 end.time <- function(trips_data) {
   x <- trips_data %>% mutate(end_hour = lubridate::hour(lubridate::ymd_hms(start_time)))
 }
@@ -49,19 +50,20 @@ enhanced_trips_data <- trips_data %>%
   mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
   mutate(end_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
   mutate(date = lubridate::date(lubridate::ymd_hms(start_time))) %>% 
-  mutate(week_day = lubridate::wday(date))
-  #mutate(dist = distHaversine(c(from_stop_lon, from_stop_lat), c(to_stop_lon, to_stop_lat)))
-  
+  mutate(week_day = lubridate::wday(date)) %>% 
+  rowwise() %>% 
+  mutate(dist = distHaversine(c(from_stop_lon, from_stop_lat), c(to_stop_lon, to_stop_lat)))
+
 
 aggregated_trips_data <- enhanced_trips_data %>%
   group_by(date, week_day, route, start_hour, end_hour) %>%
   summarise(quantidade_viagens = n(),
-            duration_median = median(trip_duration))
+            duration_median = median(trip_duration),
+            dist_median = median(dist))
 
 
 file_name <- tail(stringr::str_split(trips_data_filepath,'/')[[1]], n=1)
-readr::write_csv(aggregated_trips_data, paste0(output_folderpath,'/',file_name))
-
+readr::write_csv(aggregated_trips_data, paste0(output_folderpath,'/',file_name, ".csv"))
 
 
 
