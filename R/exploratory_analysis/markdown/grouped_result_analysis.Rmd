@@ -1,0 +1,151 @@
+---
+title: "Análise descritiva nos dados do transporte público de Curitiba-PR - dados agrupados"
+output: html_document
+author: "José Ivan Silva da Cruz Júnior"
+---
+
+```{r}
+library(tidyverse)
+library(geosphere)
+library(dplyr)
+```
+
+```{r}
+grouped_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    end_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+```
+
+1) Há uma relação entre a distância das viagens e a tempo delas? 
+```{r}
+grouped_result %>%
+  ggplot(aes(x = dist_median, y = duration_median)) %>%
+  + geom_point() + theme_classic() 
+```
+
+2) Quais as rotas que, na mediana, percorrem uma maior distância?
+
+```{r}
+grouped_result %>%
+  group_by(route) %>%
+  summarise(median_dist = median(dist_median)) %>%
+  top_n(20) %>%
+  ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
+  
+```
+
+3) Quais as rotas que, na mediana, percorrem uma menor distância?
+
+```{r}
+grouped_result %>%
+  group_by(route) %>%
+  summarise(median_dist = median(dist_median)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
+```
+
+4) Quais as rotas mais populares, ou seja, aquelas com mais viagens (levando em consideração o passageiro) durante todo o período?
+
+```{r}
+grouped_result %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+5) Quais as rotas menos populares, ou seja, aquelas com menos viagens (levando em consideração o passageiro) durante todo o dia?
+
+```{r}
+grouped_result %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) +
+    labs(x = "route", y = "trip quantity") +
+    geom_bar(stat = "identity") +
+    theme_classic()
+```
+
+6) Quais as rotas cujas viagens são mais demoradas na mediana?
+
+```{r}
+grouped_result %>%
+  group_by(route) %>% 
+  summarise(duration = median(duration_median)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -duration), y = duration)) +
+    labs(x = "route", y = "trip duration (in minutes)") +
+    geom_bar(stat = "identity") +
+    theme_classic()
+```
+
+7) Quais as rotas cujas viagens são mais rápidas na mediana?
+
+```{r}
+grouped_result %>%
+  group_by(route) %>% 
+  summarise(duration = median(duration_median)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, duration), y = duration)) +
+    labs(x = "route", y = "trip duration (in minutes)") +
+    geom_bar(stat = "identity") +
+    theme_classic()
+```
+
+8) Quais as rotas mais populares (lotadas) das 6h as 8h?
+
+```{r}
+grouped_result %>% 
+  group_by(route) %>% 
+  filter(start_hour >= 6 & start_hour <= 8) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
+    labs(x = "route", y = "trips quantity") +
+    geom_col() +
+    theme_classic()
+```
+
+9) Quais as rotas mais populares (lotadas) das 11h as 13h?
+
+```{r}
+grouped_result %>% 
+  group_by(route) %>% 
+  filter(start_hour >= 11 & start_hour <= 13) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
+    labs(x = "route", y = "trips quantity") +
+    geom_col() +
+    theme_classic()
+```
+
+10) Quais as rotas mais populares (lotadas) das 17h as 19h?
+
+```{r}
+grouped_result %>% 
+  group_by(route) %>% 
+  filter(start_hour >= 17 & start_hour <= 19) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
+    labs(x = "route", y = "trips quantity") +
+    geom_col() +
+    theme_classic()
+```
+
+11) A rota 204 apresenta comportamento interessante. Na faixa de horário das 17h as 18h a mesma a apresenta uma quantidade de viagens 57% menor do que na faixa de horário das 6h as 8h. Vamos ver a distribuição da quantidade de viagens ao logo de todo o dia.
+
+```{r}
+
+```
+

@@ -53,7 +53,7 @@ files
 print("Building new data frames")
 for(file_data in files) {
   if (grepl("_agg", file_data)) {
-    trips_data <- read_csv(paste0(trips_data_filepath, "/", file_data), col_types = list(
+    trips_data <- read_csv(paste0(trips_data_filepath, "/", file_data)(
         cardNum = col_double(),
         user_trip_id = col_double(),
         itinerary_id = col_double(),
@@ -96,11 +96,10 @@ for(file_data in files) {
 print("the end")
   
 
-data1 <- read_csv("/local/juninho/aggregate_output/output/2017_05_06_full_agg_output.csv")
+data1 <- read_csv("/local/juninho/aggregate_output/output/result.csv")
 data1
 
-data2 <- read_csv("/local/juninho/aggregate_output/2017_05_06_full_agg")
-data2
+
 
 # criar um dataframe agregado com as seguintes colunas: rota, start_time, end_time, número de viagens, mediana da distância, mediana da duração
     #agregar pelas 3 primeiras (de uma vez só) e calcular número de viagens e a mediana pra elas.
