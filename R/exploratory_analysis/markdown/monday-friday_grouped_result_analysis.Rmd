@@ -139,6 +139,7 @@ grouped_result %>%
 ```
 
 Destaques: rotas 343, 668
+
   julho:
 ```{r}
 grouped_result %>% 

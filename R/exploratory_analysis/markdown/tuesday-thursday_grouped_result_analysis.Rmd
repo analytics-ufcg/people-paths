@@ -67,6 +67,39 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
+4.1) Verificando a popularidade mês a mês, temos:
+  
+  maio:
+```{r}
+grouped_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+junho:
+```{r}
+grouped_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+  
+  julho:
+```{r}
+grouped_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+
 5) Quais as rotas menos populares, ou seja, aquelas com menos viagens (levando em consideração o passageiro) durante todo o dia?
 
 ```{r}
@@ -82,6 +115,37 @@ grouped_result %>%
 
 Destaque: 340, 360, 732, 911
 
+5.1) Mês a mês temos:
+
+  maio:
+```{r}
+grouped_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+  
+  junho:
+```{r}
+grouped_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+  julho:
+```{r}
+grouped_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
 
 6) Quais as rotas cujas viagens são mais demoradas na mediana?
 
