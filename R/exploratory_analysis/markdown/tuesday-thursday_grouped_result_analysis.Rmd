@@ -80,6 +80,9 @@ grouped_result %>%
     theme_classic()
 ```
 
+Destaque: 340, 360, 732, 911
+
+
 6) Quais as rotas cujas viagens são mais demoradas na mediana?
 
 ```{r}
@@ -104,7 +107,11 @@ grouped_result %>%
     labs(x = "route", y = "trip duration (in minutes)") +
     geom_bar(stat = "identity") +
     theme_classic()
+
+
 ```
+
+Destaque para a rota 322 em compração com segunda e sexta.
 
 8) Quais as rotas mais populares (lotadas) das 6h as 8h?
 
@@ -120,6 +127,8 @@ grouped_result %>%
     theme_classic()
 ```
 
+Destaque para rota 022, 204, 307.
+
 9) Quais as rotas mais populares (lotadas) das 11h as 13h?
 
 ```{r}
@@ -134,6 +143,8 @@ grouped_result %>%
     theme_classic()
 ```
 
+Destaque para a rota 502, 703.
+
 10) Quais as rotas mais populares (lotadas) das 17h as 19h?
 
 ```{r}
@@ -147,6 +158,16 @@ grouped_result %>%
     geom_col() +
     theme_classic()
 
+```
+
+Destaque para a rota 050, 545, 307.
+
+```{r}
+grouped_result %>%
+  filter(route == "307") %>%
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_bw()
 ```
 
 11) A rota 204 apresenta comportamento interessante. Na faixa de horário das 17h as 18h a mesma apresenta uma quantidade de viagens 57% menor do que na faixa de horário das 6h as 8h. Vamos ver a distribuição da quantidade de viagens da rota ao longo de todo o dia.

@@ -143,10 +143,6 @@ grouped_result %>%
     geom_col() +
     theme_classic()
 
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 11 & start_hour <= 13) %>% summarise(sum(quantity_trips))
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 6 & start_hour <= 8) %>% summarise(sum(quantity_trips)) 
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 17 & start_hour <= 19) %>% summarise(sum(quantity_trips)) 
-
 ```
 
 11) A rota 204 apresenta comportamento interessante. Na faixa de horário das 17h as 18h a mesma apresenta uma quantidade de viagens 57% menor do que na faixa de horário das 6h as 8h. Vamos ver a distribuição da quantidade de viagens da rota ao longo de todo o dia.
