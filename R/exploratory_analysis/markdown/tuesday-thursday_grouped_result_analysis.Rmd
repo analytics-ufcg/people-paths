@@ -32,7 +32,7 @@ Análise para os dias de terça-feira até quinta-feira.
 1) Há uma relação entre a distância das viagens e a tempo delas? 
 ```{r}
 grouped_result %>%
-  ggplot(aes(x = dist_median, y = duration_median)) %>%
+  ggplot(aes(x = dist_median, y = duration_median, alpha = .001)) %>%
   + geom_point() + theme_classic() 
 ```
 
@@ -89,6 +89,10 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
   
+  Como destaque temos as rotas 602, 603, 507 e 550. A rota 602 apresenta uma queda na quantidade de viagens de cerca de 48%, a rota 603 cerca de 52%, a rota 507 cerca de 47% e a 550 cerca de 50%, de maio para junho.
+  
+  Destaque: rota 602, 603, 507, 550
+  
   julho:
 ```{r}
 grouped_result %>% 
@@ -113,7 +117,9 @@ grouped_result %>%
     theme_classic()
 ```
 
-Destaque: 340, 360, 732, 911
+  Como destaque temos a rota 732, onde nos dias de segunda e sexta apresenta 56% menos viagens do que nos dias de terça a quinta para os mesmos meses. Taxa bastante significativa. A rota 911 também se destaca, pois a mesma apresenta um aumento no número de viagens de 61% nos dias de terça a quinta em comparação com os dias de segunda e sexta.
+  
+Destaque: 732, 911
 
 5.1) Mês a mês temos:
 
@@ -172,10 +178,9 @@ grouped_result %>%
     geom_bar(stat = "identity") +
     theme_classic()
 
-
 ```
 
-Destaque para a rota 322 em compração com segunda e sexta.
+Destaque para a rota 322 em compração com segunda e sexta. De terças a quintas a rota apresenta um tempo mediano de 8 minutos enquanto que de segundas e sextas o tempo é de 10 minutos. Uma diferença de 2 minutos, na mediana, para cada viagem, é um tempo significativo.
 
 8) Quais as rotas mais populares (lotadas) das 6h as 8h?
 
@@ -191,7 +196,9 @@ grouped_result %>%
     theme_classic()
 ```
 
-Destaque para rota 022, 204, 307.
+  Comparando com os resultados obtidos na análise de seguna e sexta, temos 3 rotas se destacando. São elas a 022, 204 e a 307. A rota 022 apresenta uma aumento de 43% no número de viagens da segunda e sexta em compração com terça a quinta. Para as rotas 204 e 307 o aumento é de 49% e 41%, respectivamente.
+  
+Destaque: 022, 204, 307.
 
 9) Quais as rotas mais populares (lotadas) das 11h as 13h?
 
@@ -207,7 +214,9 @@ grouped_result %>%
     theme_classic()
 ```
 
-Destaque para a rota 502, 703.
+  Comparando também com os resultados obtidos na análise de seguna e sexta, temos agora 2 rotas se destacando. São elas a 502 e a 703. A rota 502 apresenta uma aumento de 51% no número de viagens da segunda e sexta em compração com terça a quinta. Para a 703 o aumento é de 61%.
+
+Destaque: 502, 703.
 
 10) Quais as rotas mais populares (lotadas) das 17h as 19h?
 
@@ -221,10 +230,12 @@ grouped_result %>%
     labs(x = "route", y = "trips quantity") +
     geom_col() +
     theme_classic()
-
+  
 ```
 
-Destaque para a rota 050, 545, 307.
+   Na comparação feita 2 rotas se destacaram. São elas a 050, a 545 e a 307. A rota 050 apresenta uma aumento de 66% no número de viagens da segunda e sexta em compração com terça a quinta. Para as rota 307 e 545 o aumento foi de 37% e 52%. 
+   
+Destaque: 050, 545, 307.
 
 ```{r}
 grouped_result %>%
@@ -264,10 +275,6 @@ grouped_result %>%
   summarise(quantity = sum(quantity_trips)) %>% 
   ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_classic()
 
-
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 11 & start_hour <= 13) %>% summarise(sum(quantity_trips))
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 6 & start_hour <= 8) %>% summarise(sum(quantity_trips)) 
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 17 & start_hour <= 19) %>% summarise(sum(quantity_trips)) 
 ```
 
 

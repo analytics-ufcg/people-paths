@@ -1,5 +1,5 @@
 ---
-title: "Análise descritiva nos dados do transporte público de Curitiba-PR - dados agrupados: segundaANDsexta"
+title: "Análise descritiva nos dados do transporte público de Curitiba-PR - dados agrupados: segunda-feira e sexta-feira"
 output: html_document
 author: "José Ivan Silva da Cruz Júnior"
 ---
@@ -32,9 +32,11 @@ Análise para os dias de segunda-feira e sexta-feira.
 1) Há uma relação entre a distância das viagens e a tempo delas? 
 ```{r}
 grouped_result %>%
-  ggplot(aes(x = dist_median, y = duration_median)) %>%
+  ggplot(aes(x = dist_median, y = duration_median, alpha = .001)) %>%
   + geom_point() + theme_classic() 
 ```
+
+  Como podemos ver, assim como nas outras análises, quanto maior a distância percorrida por uma rota maior o tempo gasto na viagem.
 
 2) Quais as rotas que, na mediana, percorrem uma maior distância?
 
@@ -42,11 +44,13 @@ grouped_result %>%
 grouped_result %>%
   group_by(route) %>%
   summarise(median_dist = median(dist_median)) %>%
-  top_n(20) %>%
+  top_n(20) %>% 
   ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
   
 ```
 
+  As rotas 659, 506 e 646 se destacam como aquelas que percorrem uma maior distância por viagem. Percorrem 8.9km, 8.8km e 8.6km, respectivamente.
+  
 3) Quais as rotas que, na mediana, percorrem uma menor distância?
 
 ```{r}
@@ -57,6 +61,8 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
 ```
 
+  As rotas 713, 829 e 331 se destacam como aquelas que percorrem uma menor distância por viagem. Percorrem 449m, 807m e 866m, respectivamente.
+    
 4) Quais as rotas mais populares, ou seja, aquelas com mais viagens (levando em consideração o passageiro) durante todo o período?
 
 ```{r}
@@ -67,6 +73,8 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
+  As rotas 203, 303 e 503 aparecem como as mais populares com 120mil, 93mil e 72mil, respectivamente.
+  
 4.1) Verificando a popularidade mês a mês, temos:
   
   maio:
@@ -79,6 +87,8 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
+  Analisando para o mês de maio, a mesma configuração de posições anterior se mantém, com a rota 203, 303 e 503 na liderança.
+  
   junho:
 ```{r}
 grouped_result %>% 
@@ -89,7 +99,9 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
   
-  Destaque para a rota 502, 307.
+  A popularidade das rotas, para as 3 primeiras posições se mantém, porém destaca-se as rotas 502 e 307, que no mês de junho apresentaram 10573 e 5674, respectivamente, enquanto que no mês de maio apresentaram 16378 e 13478, ou seja, comparando maio e junho, para a rota 502, tivemos uma queda no número de viagens de 36%, enquanto que para a rota 307 também tivemos queda no número de viagens, em cerca de 58%.
+  
+  Destaque: 502, 307.
   
   julho
 ```{r}
@@ -101,6 +113,8 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
+  Para o mês de julho, tivemos um destaque para a rota 603. No mês de maio tivemos um número de viagens para a rota de 17039, em junho 8152 e em julho 4998. Tivemos quedas sucessivas no número de viagens de 52%, de maio para junho, e 39% de junho para julho. De maio para julho a queda foi de 71%.
+  
 Destaque: rota 603
 
 5) Quais as rotas menos populares, ou seja, aquelas com menos viagens (levando em consideração o passageiro) durante todo o dia?
@@ -114,8 +128,11 @@ grouped_result %>%
     labs(x = "route", y = "trip quantity") +
     geom_bar(stat = "identity") +
     theme_classic()
+
 ```
 
+  As rotas 331, 343 e 668 se destacam como aquelas que possuem a menor popularidade entre as rotas. A rota 331 registrou apenas 1 viagem, enquanto que a 343 realizou 3.
+  
 5.1) Mês a mês temos:
 
   maio
@@ -126,6 +143,7 @@ grouped_result %>%
   summarise(quantity = sum(quantity_trips)) %>% 
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+
 ```
   
   junho:
@@ -138,7 +156,7 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
-Destaques: rotas 343, 668
+  As rotas 343 e 668 não apresentam nenhuma viagem no mês de junho
 
   julho:
 ```{r}
@@ -149,6 +167,8 @@ grouped_result %>%
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
+  
+  Como destaque, temos as rotas 001 e 732. Essa primeira apresenta uma queda em cerca de 50% no número de viagens, já a rota 732 apresenta uma queda ainda mais acentuada, de cerca de 82%.
   
   Destaque: rota 001, 732. 
   
@@ -205,6 +225,7 @@ grouped_result %>%
     labs(x = "route", y = "trips quantity") +
     geom_col() +
     theme_classic()
+  
 ```
 
 10) Quais as rotas mais populares (lotadas) das 17h as 19h?
@@ -219,7 +240,7 @@ grouped_result %>%
     labs(x = "route", y = "trips quantity") +
     geom_col() +
     theme_classic()
-
+  
 ```
 
 ```{r}
@@ -228,7 +249,7 @@ grouped_result %>%
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
   ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_bw()
-  ```
+```
 
 11) A rota 204 apresenta comportamento interessante. Na faixa de horário das 17h as 18h a mesma apresenta uma quantidade de viagens 57% menor do que na faixa de horário das 6h as 8h. Vamos ver a distribuição da quantidade de viagens da rota ao longo de todo o dia.
 
@@ -260,10 +281,6 @@ grouped_result %>%
   summarise(quantity = sum(quantity_trips)) %>% 
   ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_classic()
 
-
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 11 & start_hour <= 13) %>% summarise(sum(quantity_trips))
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 6 & start_hour <= 8) %>% summarise(sum(quantity_trips)) 
-grouped_result %>% filter(route == "550") %>% filter(start_hour >= 17 & start_hour <= 19) %>% summarise(sum(quantity_trips)) 
 ```
 
 

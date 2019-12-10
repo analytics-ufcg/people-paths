@@ -95,12 +95,7 @@ for(file_data in files) {
 
 print("the end")
   
-
-data1 <- read_csv("/local/juninho/aggregate_output/output/result.csv")
-data1
-
-
-
+#próximos passos 
 # criar um dataframe agregado com as seguintes colunas: rota, start_time, end_time, número de viagens, mediana da distância, mediana da duração
     #agregar pelas 3 primeiras (de uma vez só) e calcular número de viagens e a mediana pra elas.
 
