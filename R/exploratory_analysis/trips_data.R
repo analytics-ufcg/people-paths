@@ -53,7 +53,7 @@ files
 print("Building new data frames")
 for(file_data in files) {
   if (grepl("_agg", file_data)) {
-    trips_data <- read_csv(paste0(trips_data_filepath, "/", file_data)(
+    trips_data <- read_csv(paste0(trips_data_filepath, "/", file_data), col_types = list(
         cardNum = col_double(),
         user_trip_id = col_double(),
         itinerary_id = col_double(),
@@ -70,8 +70,8 @@ for(file_data in files) {
         to_stop_lat = col_double(),
         to_stop_lon = col_double(),
         leg_duration = col_character()
-      )
     )
+  )
     
     enhanced_trips_data <- trips_data %>% 
       mutate(trip_duration = round(difftime(end_time, start_time, units = 'hour') * 60, 0)) %>% 
