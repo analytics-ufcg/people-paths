@@ -283,5 +283,20 @@ grouped_result %>%
 
 ```
 
+14) Iremos analisar agora a distribuição da distância mediana em cada horário.
 
+```{r}
+grouped_result %>% 
+  group_by(start_hour) %>%
+  summarise(distance = median(dist_median)) %>% 
+  ggplot(aes(x = start_hour, y = distance)) + labs(x = "hour", y = "median distance") + geom_col() + theme_classic()
+```
 
+15) Agora veremos a distribuição da quantidade de viagens no decorrer das horas do dia.
+
+```{r}
+grouped_result %>% 
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "hour", y = "trips quantity") + geom_col() + theme_classic()
+```

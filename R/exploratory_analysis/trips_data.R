@@ -52,7 +52,7 @@ files
 
 print("Building new data frames")
 for(file_data in files) {
-  if (grepl("_agg", file_data)) {
+  if (grepl("2017_", file_data)) {
     trips_data <- read_csv(paste0(trips_data_filepath, "/", file_data), col_types = list(
         cardNum = col_double(),
         user_trip_id = col_double(),
@@ -76,14 +76,13 @@ for(file_data in files) {
     enhanced_trips_data <- trips_data %>% 
       mutate(trip_duration = round(difftime(end_time, start_time, units = 'hour') * 60, 0)) %>% 
       mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
-      mutate(end_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
       mutate(date = lubridate::date(lubridate::ymd_hms(start_time))) %>% 
       mutate(week_day = lubridate::wday(date)) %>% 
       rowwise() %>% 
       mutate(dist = round(distHaversine(c(from_stop_lon, from_stop_lat), c(to_stop_lon, to_stop_lat))))
     
     aggregated_trips_data <- enhanced_trips_data %>%
-      group_by(date, week_day, route, start_hour, end_hour) %>%
+      group_by(date, week_day, route, start_hour) %>%
       summarise(quantity_trips = n(),
                 duration_median = median(trip_duration),
                 dist_median = median(dist))

@@ -1,7 +1,8 @@
 ---
-title: "Análise descritiva nos dados do transporte público de Curitiba-PR - dados de maio, junho e julho agrupados"
-output: html_document
+title: "estimated-trips_analysis"
 author: "José Ivan Silva da Cruz Júnior"
+date: "12/17/2019"
+output: html_document
 ---
 
 ```{r}
@@ -11,8 +12,10 @@ library(dplyr)
 options(scipen = 999)
 ```
 
+Análise referente aos dados do estimated-trips, sendo esses dados mais atualizados do que os dados agregados.
+
 ```{r}
-grouped_result <- read_csv("/local/juninho/aggregate_output/output2/result.csv", col_types = list(
+grouped_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -200,5 +203,3 @@ grouped_result %>%
   summarise(quantity = sum(quantity_trips)) %>% 
   ggplot(aes(x = start_hour, y = quantity)) + labs(x = "hour", y = "trips quantity") + geom_col() + theme_classic()
 ```
-
-  

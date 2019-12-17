@@ -277,4 +277,22 @@ grouped_result %>%
 
 ```
 
+14) Iremos analisar agora a distribuição da distância mediana em cada horário.
 
+```{r}
+grouped_result %>% 
+  group_by(start_hour) %>%
+  summarise(distance = median(dist_median)) %>% 
+  ggplot(aes(x = start_hour, y = distance)) + labs(x = "hour", y = "median distance") + geom_col() + theme_classic()
+```
+
+  Comparando os resultados obtidos na análise de terça a quinta com a análise para segunda e sexta, vemos que para essa segunda a disparidade entre a distância percorrida no horário das 4h em relação ao segundo colocado, horário das 5h, é maior. Na primeira análise citada a diferença é de cerca de 400 metros, enquanto que na segunda análise citada a diferença é mais de 1100 metros. 
+  
+15) Agora veremos a distribuição da quantidade de viagens no decorrer das horas do dia.
+
+```{r}
+grouped_result %>% 
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "hour", y = "trips quantity") + geom_col() + theme_classic()
+```
