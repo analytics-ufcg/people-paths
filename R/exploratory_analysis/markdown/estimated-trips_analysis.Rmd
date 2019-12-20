@@ -15,7 +15,7 @@ options(scipen = 999)
 Análise referente aos dados do estimated-trips, sendo esses dados mais atualizados do que os dados agregados.
 
 ```{r}
-grouped_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -29,26 +29,44 @@ grouped_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matr
 
 1) Há uma relação entre a distância das viagens e a tempo delas? 
 ```{r}
-grouped_result %>%
+estimated_trips_result %>%
   ggplot(aes(x = dist_median, y = duration_median, alpha = .001)) %>%
   + geom_point() + theme_classic() 
 ```
 
+```{r}
+estimated_trips_result %>%
+  filter(dist_median < 5000 & duration_median > 100) %>% 
+  ggplot(aes(x = dist_median, y = duration_median)) + geom_point()
+
+estimated_trips_result %>%
+  filter(dist_median < 5000 & duration_median > 100) 
+```
+  
+  Observando alguns outliers, aqueles que apresentam uma distância mediana percorrida menor que 5 quilômetros e com uma duração de mais de 100 minutos (1 hora e 20 min). Observamos que a rota que mais aparece nessa classificação é a 022, com 12 viagens, com os horários indo de 13 as 14 horas. Temos a rota 822 também com 4 viagens.
+  
+```{r}
+estimated_trips_result %>% 
+  filter(dist_median < 5000 & duration_median >= 50) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips))
+```
+  Os outliers são aquelas viagens que apresentam duração mediana acima de 25 minutos. Nessa análise, restringimos as viagens para aquelas com duração mediana igual ou maior que 50, onde vemos que a rota 022 possui o maior número de viagens, com cerca de 284. As rotas 370 e 532 também se destacam, com 162 e 129 viagens feitas, respectivamente. 
+
 2) Quais as rotas que, na mediana, percorrem uma maior distância?
 
 ```{r}
-grouped_result %>%
+estimated_trips_result %>%
   group_by(route) %>%
   summarise(median_dist = median(dist_median)) %>%
   top_n(20) %>%
   ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
-  
 ```
 
 3) Quais as rotas que, na mediana, percorrem uma menor distância?
 
 ```{r}
-grouped_result %>%
+estimated_trips_result %>%
   group_by(route) %>%
   summarise(median_dist = median(dist_median)) %>% 
   top_n(-20) %>% 
@@ -58,7 +76,7 @@ grouped_result %>%
 4) Quais as rotas mais populares, ou seja, aquelas com mais viagens (levando em consideração o passageiro) durante todo o período?
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
   top_n(20) %>% 
@@ -68,7 +86,7 @@ grouped_result %>%
 5) Quais as rotas menos populares, ou seja, aquelas com menos viagens (levando em consideração o passageiro) durante todo o dia?
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
   top_n(-20) %>% 
@@ -81,7 +99,7 @@ grouped_result %>%
 6) Quais as rotas cujas viagens são mais demoradas na mediana?
 
 ```{r}
-grouped_result %>%
+estimated_trips_result %>%
   group_by(route) %>% 
   summarise(duration = median(duration_median)) %>% 
   top_n(20) %>% 
@@ -94,7 +112,7 @@ grouped_result %>%
 7) Quais as rotas cujas viagens são mais rápidas na mediana?
 
 ```{r}
-grouped_result %>%
+estimated_trips_result %>%
   group_by(route) %>% 
   summarise(duration = median(duration_median)) %>% 
   top_n(-20) %>% 
@@ -107,7 +125,7 @@ grouped_result %>%
 8) Quais as rotas mais populares (lotadas) das 6h as 8h?
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(route) %>% 
   filter(start_hour >= 6 & start_hour <= 8) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
@@ -121,7 +139,7 @@ grouped_result %>%
 9) Quais as rotas mais populares (lotadas) das 11h as 13h?
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(route) %>% 
   filter(start_hour >= 11 & start_hour <= 13) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
@@ -135,7 +153,7 @@ grouped_result %>%
 10) Quais as rotas mais populares (lotadas) das 17h as 19h?
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(route) %>% 
   filter(start_hour >= 17 & start_hour <= 19) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
@@ -150,7 +168,7 @@ grouped_result %>%
 11) A rota 204 apresenta comportamento interessante. Na faixa de horário das 17h as 18h a mesma apresenta uma quantidade de viagens 57% menor do que na faixa de horário das 6h as 8h. Vamos ver a distribuição da quantidade de viagens da rota ao longo de todo o dia.
 
 ```{r}
-grouped_result %>%
+estimated_trips_result %>%
   filter(route == "204") %>%
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
@@ -160,7 +178,7 @@ grouped_result %>%
 12) Iremos analisar agora a rota 506, outra rota que mostra variação na quantidade de viagens nos horários de pico. Fez 13155 das 17h às 19h e 29755 das 6h às 8h, 56% a mais do que no outro horário.
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   filter(route == "506") %>% 
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
@@ -170,7 +188,7 @@ grouped_result %>%
 13) Iremos analisar agora a rota 550, pois a mesma apresenta uma forte queda na quantidade de viagens no horário de 11h as 13h. Nesse horário ela fez apenas 7017 viagens, enquanto que nos horários de 6h as 8h e de 17h as 19h fez 38679 e 17603, respectivamente.
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   filter(route == "550") %>% 
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
@@ -180,7 +198,7 @@ grouped_result %>%
 14) Iremos analisar agora a distribuição da distância mediana em cada horário.
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(start_hour) %>%
   summarise(distance = median(dist_median)) %>% 
   ggplot(aes(x = start_hour, y = distance)) + labs(x = "hour", y = "median distance") + geom_col() + theme_classic()
@@ -189,7 +207,7 @@ grouped_result %>%
   Podemos ver que os primeiros horários do dia são aqueles que apresentam as maiores distâncias percorridas. Isso, provavelmente, diz respeito as viagens feitas por aquelas pessoas que moram em locais mais distantes do perímetro urbano e do Centro da cidade, onde os principais postos de trabalho e estudo se encontram. Como moram mais longe, essas pessoas precisam sair mais cedo para poder chegar no horário.
   
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(start_hour) %>%
   summarise(distance = median(dist_median)) %>% 
   ggplot(aes(x = start_hour, y = distance)) + labs(x = "hour", y = "median distance") + geom_col() + theme_classic()
@@ -198,7 +216,7 @@ grouped_result %>%
 15) Agora veremos a distribuição da quantidade de viagens no decorrer das horas do dia.
 
 ```{r}
-grouped_result %>% 
+estimated_trips_result %>% 
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
   ggplot(aes(x = start_hour, y = quantity)) + labs(x = "hour", y = "trips quantity") + geom_col() + theme_classic()
