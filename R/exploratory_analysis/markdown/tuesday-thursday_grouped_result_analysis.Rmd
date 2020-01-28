@@ -79,7 +79,7 @@ grouped_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
-junho:
+  junho:
 ```{r}
 grouped_result %>% 
   filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 

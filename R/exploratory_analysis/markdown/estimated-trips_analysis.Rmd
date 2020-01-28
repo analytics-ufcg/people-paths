@@ -43,15 +43,22 @@ estimated_trips_result %>%
   filter(dist_median < 5000 & duration_median > 100) 
 ```
   
-  Observando alguns outliers, aqueles que apresentam uma distância mediana percorrida menor que 5 quilômetros e com uma duração de mais de 100 minutos (1 hora e 20 min). Observamos que a rota que mais aparece nessa classificação é a 022, com 12 viagens, com os horários indo de 13 as 14 horas. Temos a rota 822 também com 4 viagens.
+  Observando alguns outliers, os que apresentam uma distância mediana percorrida menor que 5 quilômetros e com uma duração de mais de 100 minutos (1 hora e 20 min), observamos que a rota que mais aparece nessa classificação é a 022, com 12 viagens, com os horários indo de 13 as 14 horas. Temos a rota 822 também com 4 viagens.
   
 ```{r}
 estimated_trips_result %>% 
   filter(dist_median < 5000 & duration_median >= 50) %>% 
   group_by(route) %>% 
-  summarise(quantity = sum(quantity_trips))
+  summarise(quantity = sum(quantity_trips)) 
+
+estimated_trips_result %>% 
+  filter(route == "022") %>% 
+  filter(dist_median < 5000 & duration_median >= 50) %>% 
+  ggplot(aes(x = duration_median, y = dist_median)) + geom_point()
 ```
   Os outliers são aquelas viagens que apresentam duração mediana acima de 25 minutos. Nessa análise, restringimos as viagens para aquelas com duração mediana igual ou maior que 50, onde vemos que a rota 022 possui o maior número de viagens, com cerca de 284. As rotas 370 e 532 também se destacam, com 162 e 129 viagens feitas, respectivamente. 
+  
+  Podemos dizer que, de alguma forma, a linha 022 se mostra mais propensa a 'imprevistos'. Temos 3 viagens com cerca de 1,5 km percorrido em quase 120 minutos (2 horas), além de 6 viagens percorrendo cerca de 4,5 km entre 80 e 100 minutos (1hr e 20min e 1hr e 40min).  
 
 2) Quais as rotas que, na mediana, percorrem uma maior distância?
 
@@ -83,6 +90,39 @@ estimated_trips_result %>%
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
+4.1) Verificando a popularidade mês a mês, temos:
+
+  maio:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+  junho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+  julho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+
 5) Quais as rotas menos populares, ou seja, aquelas com menos viagens (levando em consideração o passageiro) durante todo o dia?
 
 ```{r}
@@ -95,6 +135,38 @@ estimated_trips_result %>%
     geom_bar(stat = "identity") +
     theme_classic()
 ```
+
+5.1) Mês a mês temos:
+
+  maio:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+  junho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+  julho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
 
 6) Quais as rotas cujas viagens são mais demoradas na mediana?
 
@@ -136,6 +208,10 @@ estimated_trips_result %>%
     theme_classic()
 ```
 
+  Nesse horário, a rota 303 ultrapassa em popularidade a rota mais popular no geral, a 203, mostrando que nesse horário a 303 possui uma capacidade muito alta de alcance. 
+  Uma possível explicação para a popularidade da rota 303 nesse horário seria o seu alcance dos bairros, isso porque ela liga bairros populosos e periféricos ao Centro da cidade e a outros bairros importantes no quesito posto de trabalho e estudo. Os bairros de Cajuru, Capão da Imbuia, Jardim Botânico, Cristo Rei, Rebouças, Bigorrilho, Campina do Siqueira e Mossunguê são alcançados pela 303 e ligam todos esses bairros ao Centro.
+  
+  
 9) Quais as rotas mais populares (lotadas) das 11h as 13h?
 
 ```{r}
@@ -150,6 +226,8 @@ estimated_trips_result %>%
     theme_classic()
 ```
 
+  Nesse horário, percebemos que já há uma queda considerável na proporção da quantidade de viagens da rota 303 fazendo com que a 203 assuma a liderança.
+  
 10) Quais as rotas mais populares (lotadas) das 17h as 19h?
 
 ```{r}
@@ -185,7 +263,7 @@ estimated_trips_result %>%
   ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_classic()
 ```
 
-13) Iremos analisar agora a rota 550, pois a mesma apresenta uma forte queda na quantidade de viagens no horário de 11h as 13h. Nesse horário ela fez apenas 7017 viagens, enquanto que nos horários de 6h as 8h e de 17h as 19h fez 38679 e 17603, respectivamente.
+13) Iremos analisar agora a rota 550, pois a mesma apresenta uma forte queda na quantidade de viagens no horário de 11h as 13h em comparação com os outros horários. Nesse horário ela fez apenas 7017 viagens, enquanto que nos horários de 6h as 8h e de 17h as 19h fez 38679 e 17603, respectivamente.
 
 ```{r}
 estimated_trips_result %>% 
@@ -204,14 +282,7 @@ estimated_trips_result %>%
   ggplot(aes(x = start_hour, y = distance)) + labs(x = "hour", y = "median distance") + geom_col() + theme_classic()
 ```
 
-  Podemos ver que os primeiros horários do dia são aqueles que apresentam as maiores distâncias percorridas. Isso, provavelmente, diz respeito as viagens feitas por aquelas pessoas que moram em locais mais distantes do perímetro urbano e do Centro da cidade, onde os principais postos de trabalho e estudo se encontram. Como moram mais longe, essas pessoas precisam sair mais cedo para poder chegar no horário.
-  
-```{r}
-estimated_trips_result %>% 
-  group_by(start_hour) %>%
-  summarise(distance = median(dist_median)) %>% 
-  ggplot(aes(x = start_hour, y = distance)) + labs(x = "hour", y = "median distance") + geom_col() + theme_classic()
-```
+  Podemos ver que os primeiros horários do dia são aqueles que apresentam as maiores distâncias percorridas. Isso, provavelmente, diz respeito as viagens feitas por aquelas pessoas que moram em locais mais distantes do perímetro urbano e do Centro da cidade, onde os principais postos de trabalho e estudo se encontram. Como moram mais longe, essas pessoas precisam sair mais cedo para poder chegar no horário certo.
 
 15) Agora veremos a distribuição da quantidade de viagens no decorrer das horas do dia.
 
@@ -221,3 +292,5 @@ estimated_trips_result %>%
   summarise(quantity = sum(quantity_trips)) %>% 
   ggplot(aes(x = start_hour, y = quantity)) + labs(x = "hour", y = "trips quantity") + geom_col() + theme_classic()
 ```
+
+  Podemos ver que os horários mais populares em relação a quantidade de viagens são concentrados na parte inicial da manhã e no início da noite. Os horários de 6h às 8h aparecem no topo da popularidade, seguido pelo horário das 17h às 19h. Esses são os horários onde as pessoas estão indo para os postos de trabalho e estudo, como também, no início da noite, voltando dos mesmos.
