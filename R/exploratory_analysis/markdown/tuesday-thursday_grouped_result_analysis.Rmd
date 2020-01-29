@@ -44,7 +44,6 @@ grouped_result %>%
   summarise(median_dist = median(dist_median)) %>%
   top_n(20) %>%
   ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
-  
 ```
 
 3) Quais as rotas que, na mediana, percorrem uma menor distância?

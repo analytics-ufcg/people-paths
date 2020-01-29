@@ -3,6 +3,11 @@ library(geosphere)
 library(dplyr)
 library(magrittr)
 
+library(rgeos)
+library(sp)
+library(rgdal)
+
+
 #trips_data <- read_csv("/local/juninho/people-paths/R/markdown/2017_07_05_full_agg")
 
 
