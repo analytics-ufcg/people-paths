@@ -8,7 +8,7 @@ library(sp)
 library(rgdal)
 
 
-trips_data <- read_csv("/local/juninho/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
+#trips_data <- read_csv("/local/juninho/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
 
 
 help <- "
