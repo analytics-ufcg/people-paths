@@ -8,7 +8,7 @@ library(sp)
 library(rgdal)
 
 
-#trips_data <- read_csv("/local/juninho/people-paths/R/markdown/2017_07_05_full_agg")
+trips_data <- read_csv("/local/juninho/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
 
 
 help <- "
@@ -47,6 +47,23 @@ start.time <- function(trips_data) {
 #variável que mostra o horário de desembarque filtrado
 end.time <- function(trips_data) {
   x <- trips_data %>% mutate(end_hour = lubridate::hour(lubridate::ymd_hms(start_time)))
+}
+
+macro.zone <- function(trips_data) {
+  cr.map <- readOGR("~/Downloads/DIVISA_DE_BAIRROS.shp")
+  sodo <- cr.map[]
+  plot(sodo)
+  dat <- data.frame(longitude = c(trips_data$from_stop_lon, trips_data$to_stop_lon),
+                    latitude = c(trips_data$from_stop_lat, trips_data$to_stop_lat)) 
+  
+  coordinates(dat) <- ~ longitude + latitude
+  proj4string(dat) <- proj4string(sodo)
+  
+  over(dat, sodo)
+  
+  over(sodo, dat)
+  #mutate(longitude = c(from_stop_lon, to_stop_lon), latitude = c(from_stop_lat, to_stop_lat))
+  
 }
 
 #trips_data <- readr::read_csv(trips_data_filepath)

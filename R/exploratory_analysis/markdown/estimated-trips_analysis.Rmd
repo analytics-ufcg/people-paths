@@ -301,22 +301,25 @@ estimated_trips_result %>%
   Podemos ver que os horários mais populares em relação a quantidade de viagens são concentrados na parte inicial da manhã e no início da noite. Os horários de 6h às 8h aparecem no topo da popularidade, seguido pelo horário das 17h às 19h. Esses são os horários onde as pessoas estão indo para os postos de trabalho e estudo, como também, no início da noite, voltando dos mesmos.
   
 ```{r}
-wa.map <- readOGR("~/Downloads/DIVISA_DE_BAIRROS.shp")
+cr.map <- readOGR("~/Downloads/DIVISA_DE_BAIRROS.shp")
 data <- read.csv("/local/juninho/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
 
 data
 
-wa.map
+cr.map
 
-sodo <- wa.map[wa.map$TIPO == "DIVISA DE BAIRROS", ]
+sodo <- cr.map[]
 
-dat <- data.frame(Longitude = c(-49.22511,-49.29225),
-                  Latitude = c(-25.42891, -25.42102),
-                  names = c("Safeco Field", "Key Arena"))
+dat <- data.frame(longitude = c(-49.20830,-49.21477, -49.21686),
+                  latitude = c(-25.46900, -25.45194, -25.44697),
+                  names = c("Cajuru 1", "Cajuru 2", "Cajuru 3"))
 
-coordinates(dat) <- ~ Latitude + Longitude
+sodo
+dat
+coordinates(dat) <- ~ longitude + latitude
 
 plot(sodo)
+plot(dat)
 
 proj4string(dat) <- proj4string(sodo)
 
@@ -324,7 +327,9 @@ over(dat, sodo)
 
 over(sodo, dat)
 
-plot(wa.map)
+plot(cr.map)
+
+#codigo regional = 3
 ```
 
 
