@@ -1,0 +1,75 @@
+---
+title: "new_estimated-trips"
+author: "José Ivan Silva da Cruz Júnior"
+date: "2/4/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(geosphere)
+library(dplyr)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+```
+
+```{r}
+estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+```
+
+1) Análise provendo histograma para a distância, velocidade e duração das rotas.
+
+  Para calcular a velocidade de uma rota faremos o cálculo da distância percorrida dividida pelo tempo gasto. Todas as medidas serão calculadas em sua mediana.
+  
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(speed = first(divide_by_int(median(dist_median), median(duration_median))), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  ggplot(aes(speed)) + geom_histogram(
+      binwidth=4,  
+      xlab="Age",  
+      fill=I("green"), 
+      col=I("red"), 
+      alpha=I(.2)) + labs(x = "speed m/min")
+```
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(dist = median(dist_median), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  ggplot(aes(dist)) + geom_histogram(
+      binwidth=1000,  
+      xlab="Age",  
+      fill=I("green"), 
+      col=I("red"), 
+      alpha=I(.30)) + labs(x = "distance - meters")
+```
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(duration = median(duration_median), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  ggplot(aes(duration)) + geom_histogram(
+      binwidth=4,  
+      xlab="Age",  
+      fill=I("green"), 
+      col=I("red"), 
+      alpha=I(.2))
+```
+
