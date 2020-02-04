@@ -32,8 +32,9 @@ Análise para os dias de terça-feira até quinta-feira.
 1) Há uma relação entre a distância das viagens e a tempo delas? 
 ```{r}
 grouped_result %>%
-  ggplot(aes(x = dist_median, y = duration_median, alpha = .001)) %>%
-  + geom_point() + theme_classic() 
+  ggplot(aes(x = dist_median, y = duration_median)) + 
+  geom_point(size = .5, alpha = .5) + theme_classic()  + 
+  geom_smooth(method = "lm") 
 ```
 
 2) Quais as rotas que, na mediana, percorrem uma maior distância?
@@ -41,7 +42,8 @@ grouped_result %>%
 ```{r}
 grouped_result %>%
   group_by(route) %>%
-  summarise(median_dist = median(dist_median)) %>%
+  summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
+  filter(qntt > 100) %>%
   top_n(20) %>%
   ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
 ```
@@ -51,7 +53,8 @@ grouped_result %>%
 ```{r}
 grouped_result %>%
   group_by(route) %>%
-  summarise(median_dist = median(dist_median)) %>% 
+  summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
+  filter(qntt > 100) %>%
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
 ```
@@ -61,9 +64,10 @@ grouped_result %>%
 ```{r}
 grouped_result %>% 
   group_by(route) %>% 
-  summarise(quantity = sum(quantity_trips)) %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 100) %>%
   top_n(20) %>% 
-  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+  ggplot(aes(x = reorder(route, -qntt), y = qntt)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
 4.1) Verificando a popularidade mês a mês, temos:
@@ -74,6 +78,7 @@ grouped_result %>%
   filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 100) %>%
   top_n(20) %>% 
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
@@ -84,6 +89,7 @@ grouped_result %>%
   filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 100) %>%
   top_n(20) %>% 
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
@@ -98,6 +104,7 @@ grouped_result %>%
   filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 100) %>%
   top_n(20) %>% 
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
@@ -108,9 +115,10 @@ grouped_result %>%
 ```{r}
 grouped_result %>% 
   group_by(route) %>% 
-  summarise(quantity = sum(quantity_trips)) %>% 
+ summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
+  filter(qntt > 300) %>%
   top_n(-20) %>% 
-  ggplot(aes(x = reorder(route, quantity), y = quantity)) +
+  ggplot(aes(x = reorder(route, qntt), y = qntt)) +
     labs(x = "route", y = "trip quantity") +
     geom_bar(stat = "identity") +
     theme_classic()
@@ -128,6 +136,7 @@ grouped_result %>%
   filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 200) %>%
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
@@ -138,6 +147,7 @@ grouped_result %>%
   filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 200) %>%
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
@@ -147,7 +157,8 @@ grouped_result %>%
 grouped_result %>% 
   filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
   group_by(route) %>% 
-  summarise(quantity = sum(quantity_trips)) %>% 
+  summarise(quantity = sum(quantity_trips)) %>%
+  filter(quantity > 200) %>%
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
@@ -157,7 +168,8 @@ grouped_result %>%
 ```{r}
 grouped_result %>%
   group_by(route) %>% 
-  summarise(duration = median(duration_median)) %>% 
+  summarise(qntt = sum(quantity_trips), duration = median(duration_median)) %>% 
+  filter(qntt > 300) %>%
   top_n(20) %>% 
   ggplot(aes(x = reorder(route, -duration), y = duration)) +
     labs(x = "route", y = "trip duration (in minutes)") +
@@ -170,13 +182,13 @@ grouped_result %>%
 ```{r}
 grouped_result %>%
   group_by(route) %>% 
-  summarise(duration = median(duration_median)) %>% 
+  summarise(qntt = sum(quantity_trips), duration = median(duration_median)) %>% 
+  filter(qntt > 300) %>%
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, duration), y = duration)) +
     labs(x = "route", y = "trip duration (in minutes)") +
     geom_bar(stat = "identity") +
     theme_classic()
-
 ```
 
 Destaque para a rota 322 em compração com segunda e sexta. De terças a quintas a rota apresenta um tempo mediano de 8 minutos enquanto que de segundas e sextas o tempo é de 10 minutos. Uma diferença de 2 minutos, na mediana, para cada viagem, é um tempo significativo.
@@ -188,6 +200,7 @@ grouped_result %>%
   group_by(route) %>% 
   filter(start_hour >= 6 & start_hour <= 8) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 300) %>% 
   top_n(20) %>% 
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
     labs(x = "route", y = "trips quantity") +
@@ -206,6 +219,7 @@ grouped_result %>%
   group_by(route) %>% 
   filter(start_hour >= 11 & start_hour <= 13) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 300) %>% 
   top_n(20) %>% 
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
     labs(x = "route", y = "trips quantity") +
@@ -223,7 +237,8 @@ Destaque: 502, 703.
 grouped_result %>% 
   group_by(route) %>% 
   filter(start_hour >= 17 & start_hour <= 19) %>% 
-  summarise(quantity = sum(quantity_trips)) %>% 
+  summarise(quantity = sum(quantity_trips)) %>%
+  filter(quantity > 300) %>% 
   top_n(20) %>% 
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
     labs(x = "route", y = "trips quantity") +
@@ -293,5 +308,6 @@ grouped_result %>%
 grouped_result %>% 
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 300) %>% 
   ggplot(aes(x = start_hour, y = quantity)) + labs(x = "hour", y = "trips quantity") + geom_col() + theme_classic()
 ```
