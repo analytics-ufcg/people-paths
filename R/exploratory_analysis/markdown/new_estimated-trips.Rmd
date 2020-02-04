@@ -47,6 +47,7 @@ estimated_trips_result %>%
       alpha=I(.2)) + labs(x = "speed m/min")
 ```
 
+  Agora, faremos o histograma para a distância percorrida.
 ```{r}
 estimated_trips_result %>% 
   group_by(route) %>% 
@@ -54,12 +55,13 @@ estimated_trips_result %>%
   filter(qntt > 300) %>% 
   ggplot(aes(dist)) + geom_histogram(
       binwidth=1000,  
-      xlab="Age",  
+      xlab="Distance",  
       fill=I("green"), 
       col=I("red"), 
       alpha=I(.30)) + labs(x = "distance - meters")
 ```
 
+  Histograma para a duração das viagens.
 ```{r}
 estimated_trips_result %>% 
   group_by(route) %>% 
@@ -67,9 +69,22 @@ estimated_trips_result %>%
   filter(qntt > 300) %>% 
   ggplot(aes(duration)) + geom_histogram(
       binwidth=4,  
-      xlab="Age",  
+      xlab="Duration",  
       fill=I("green"), 
       col=I("red"), 
       alpha=I(.2))
 ```
+
+2) Agora analisaremos a real popularidade das rotas, para isso dividiremos a quantidade de viagens realizadas pela distância percorrida. É natural pensar que quanto maior é a distância percorrida mais pessoas realizam viagem na rota.
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(popularity = divide_by_int(sum(quantity_trips), median(dist_median))) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -popularity), y = popularity)) + geom_col() +
+  labs(x = "route")
+```
+
+  Levando em conta o ranking da popularidade puro e simples, ou seja, contando apenas a quantidade de viagens realizadas, algumas rotas apresentam comportamento diferente se levarmos em conta também a distância percorrida. Rotas como 505, 506 e 507 apresentam queda na popularidade quando dividimos sua quantidade de viagens por sua distância percorrida na mediana. Essas rotas percorrem 5,738km, 8,810km, 5,804km, respectivamente. Por outro lado, as rotas que subiram nessa métrica formas as rotas 050, 020 e 021, naturalmente apresentando distâncias mais curtas na mediana, com 3,513km, 3,901km e 3,967km, respectivamente. 
 
