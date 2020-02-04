@@ -102,17 +102,21 @@ for(file_data in files) {
       mutate(week_day = lubridate::wday(date)) %>% 
       rowwise() %>% 
       mutate(dist = round(distHaversine(c(from_stop_lon, from_stop_lat), c(to_stop_lon, to_stop_lat))))
+      
     
     aggregated_trips_data <- enhanced_trips_data %>%
       group_by(date, week_day, route, start_hour) %>%
       summarise(quantity_trips = n(),
                 duration_median = median(trip_duration),
-                dist_median = median(dist))
+                dist_median = median(dist),
+                duration_sd = sd(trip_duration))
     
     #file_name <- tail(stringr::str_split(trips_data_filepath,'/')[[1]], n=1)
     readr::write_csv(aggregated_trips_data, paste0(output_folderpath,'/', file_data, "_output.csv"))  
   }  
 }
+
+
 
 print("the end")
   

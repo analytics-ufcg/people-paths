@@ -20,7 +20,7 @@ options(scipen = 999)
 Análise referente aos dados do estimated-trips, sendo esses dados mais atualizados do que os dados agregados.
 
 ```{r}
-estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -35,9 +35,21 @@ estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data
 1) Há uma relação entre a distância das viagens e a tempo delas? 
 ```{r}
 estimated_trips_result %>%
-  ggplot(aes(x = dist_median, y = duration_median, alpha = .001)) %>%
-  + geom_point() + theme_classic() 
+  ggplot(aes(x = dist_median, y = duration_median)) + 
+  geom_point(size = .5, alpha = .5) + theme_classic()  + 
+  geom_smooth(method = "lm") 
+
 ```
+
+```{r}
+theme_set(theme_classic())
+
+estimated_trips_result %>%
+  ggplot(aes(x = dist_median, y = duration_median)) + 
+  geom_hex() +   
+  geom_smooth(method = "lm", color = "brown") 
+```
+
 
 ```{r}
 estimated_trips_result %>%
@@ -79,8 +91,9 @@ estimated_trips_result %>%
 
 ```{r}
 estimated_trips_result %>%
-  group_by(route) %>%
-  summarise(median_dist = median(dist_median)) %>% 
+  group_by(route) %>% 
+  summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
+  filter(qntt > 100) %>% 
   top_n(-20) %>% 
   ggplot(aes(x = reorder(route, median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
 ```
