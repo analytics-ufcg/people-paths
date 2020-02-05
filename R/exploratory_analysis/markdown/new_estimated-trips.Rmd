@@ -86,5 +86,6 @@ estimated_trips_result %>%
   labs(x = "route")
 ```
 
-  Levando em conta o ranking da popularidade puro e simples, ou seja, contando apenas a quantidade de viagens realizadas, algumas rotas apresentam comportamento diferente se levarmos em conta também a distância percorrida. Rotas como 505, 506 e 507 apresentam queda na popularidade quando dividimos sua quantidade de viagens por sua distância percorrida na mediana. Essas rotas percorrem 5,738km, 8,810km, 5,804km, respectivamente. Por outro lado, as rotas que subiram nessa métrica formas as rotas 050, 020 e 021, naturalmente apresentando distâncias mais curtas na mediana, com 3,513km, 3,901km e 3,967km, respectivamente. 
+  Levando em conta o ranking da popularidade puro e simples, ou seja, contando apenas a quantidade de viagens realizadas, algumas rotas apresentam comportamento diferente se levarmos em conta também a distância percorrida. Rotas como 505, 506 e 507 apresentam queda na popularidade quando dividimos sua quantidade de viagens por sua distância percorrida na mediana, pois a mesma é relativamente alta. As mesmas percorrem 5,738km, 8,810km, 5,804km, respectivamente. Vendo a natureza dessas rotas, observamos que percorrem bairros mais afastados do Centro da cidade, indo até o extremo sul e extremo sudeste do mapa. Por outro lado, as rotas que subiram nessa métrica formas a 050, 020 e 021, naturalmente apresentando distâncias mais curtas na mediana, com 3,513km, 3,901km e 3,967km, respectivamente. Um detalhe é que a rota 021 faz o mesmo percurso que a 022, só que em sentido antihorário.
 
+3) 
