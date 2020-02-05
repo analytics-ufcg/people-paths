@@ -80,12 +80,56 @@ estimated_trips_result %>%
 ```{r}
 estimated_trips_result %>% 
   group_by(route) %>% 
-  summarise(popularity = divide_by_int(sum(quantity_trips), median(dist_median))) %>% 
+  summarise(popularity = divide_by_int(sum(quantity_trips), median(dist_median)), qntt = sum(quantity_trips)) %>% 
   top_n(20) %>% 
-  ggplot(aes(x = reorder(route, -popularity), y = popularity)) + geom_col() +
-  labs(x = "route")
+  ggplot(aes(x = reorder(route, -popularity), y = popularity)) + geom_col() + labs(x = "route") 
+
+dat1 <- estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(popularity = divide_by_int(sum(quantity_trips), median(dist_median)), qntt = sum(quantity_trips)) %>% 
+  top_n(14)
+
+data1long <- gather(dat1, key="measure", value="value", c("popularity", "qntt"))
+data1long <- data1long %>% mutate(value_adjusted = log10(value))
+
+ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="forest green") + facet_wrap(~measure)
+
 ```
 
   Levando em conta o ranking da popularidade puro e simples, ou seja, contando apenas a quantidade de viagens realizadas, algumas rotas apresentam comportamento diferente se levarmos em conta também a distância percorrida. Rotas como 505, 506 e 507 apresentam queda na popularidade quando dividimos sua quantidade de viagens por sua distância percorrida na mediana, pois a mesma é relativamente alta. As mesmas percorrem 5,738km, 8,810km, 5,804km, respectivamente. Vendo a natureza dessas rotas, observamos que percorrem bairros mais afastados do Centro da cidade, indo até o extremo sul e extremo sudeste do mapa. Por outro lado, as rotas que subiram nessa métrica formas a 050, 020 e 021, naturalmente apresentando distâncias mais curtas na mediana, com 3,513km, 3,901km e 3,967km, respectivamente. Um detalhe é que a rota 021 faz o mesmo percurso que a 022, só que em sentido antihorário.
 
-3) 
+3) Comparação entre a quantidade de viagens dos períodos de segunda e sexta e terça a quinta.
+
+```{r}
+day_group <- data.frame(week_day = c(2:6),
+                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
+
+days <- estimated_trips_result %>%
+  group_by(route, week_day) %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(qntt = median(qntt))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(14)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(14)
+
+segunda_sexta
+terça_quinta
+
+data_comparation <- segunda_sexta %>% 
+  mutate(qnttSS = segunda_sexta$qntt, qnttTQ = terça_quinta$qntt)
+
+data_comparation
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("qnttSS", "qnttTQ"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "route")
+```
+
