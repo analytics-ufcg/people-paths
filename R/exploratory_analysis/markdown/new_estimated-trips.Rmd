@@ -192,9 +192,6 @@ ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position
 5) Iremos ver agora a distância percorrida pelas rotas nos três principais horários.
 
 ```{r}
-hour_group <- data.frame(start_hour = c(4:23),
-                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
-
 hours2 <- estimated_trips_result %>% 
   group_by(route, start_hour) %>% 
   summarise(dist = median(dist_median)) %>% 
@@ -202,23 +199,21 @@ hours2 <- estimated_trips_result %>%
   group_by(hour_group, route) %>% 
   summarise(dist = median(dist))
 
-seis_oito <- hours2 %>% 
+seis_oito2 <- hours2 %>% 
   filter(hour_group == "M") %>% 
   top_n(20)
 
-onze_uma <- hours2 %>% 
+onze_uma2 <- hours2 %>% 
   filter(hour_group == "T") %>%
   top_n(20) 
 
-cinco_sete <- hours2 %>% 
+cinco_sete2 <- hours2 %>% 
   filter(hour_group == "N") %>% 
   top_n(20)
 
-cinco_sete
+data_comparation4 <- merge(x = seis_oito2, y = onze_uma2, by = "route")
 
-data_comparation4 <- merge(x = seis_oito, y = onze_uma, by = "route")
-
-data_comparation5 <- merge(x = data_comparation4, y = cinco_sete, by = "route")
+data_comparation5 <- merge(x = data_comparation4, y = cinco_sete2, by = "route")
 data_comparation5
 
 data_comparation5 <- data_comparation5 %>% mutate(distManha = dist.x, distTarde = dist.y, distNoite = dist)
@@ -233,7 +228,35 @@ ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) +
 6) Observando agora para o tempo gasto.
 
 ```{r}
+hours3 <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  summarise(duration = median(duration_median)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(duration = median(duration))
 
+hours3
+
+seis_oito3 <- hours3 %>% 
+  filter(hour_group == "M") %>% 
+  top_n(20)
+
+onze_uma3 <- hours3 %>% 
+  filter(hour_group == "T") %>%
+  top_n(20) 
+
+cinco_sete3 <- hours3 %>% 
+  filter(hour_group == "N") %>% 
+  top_n(20)
+
+data_comparation6 <- merge(x = seis_oito3, y = onze_uma3, by = "route")
+data_comparation7 <- merge(x = data_comparation6, y = cinco_sete3, by = "route")
+
+data_comparation7 <- data_comparation7 %>% mutate(durationManha = duration.x, durationTarde = duration.y, durationNoite = duration)
+
+comp_long2 <- gather(data_comparation7, key="measure", value="value", c("durationManha", "durationTarde", "durationNoite"))
+
+ggplot(comp_long2, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips distance")
 ```
 
   
