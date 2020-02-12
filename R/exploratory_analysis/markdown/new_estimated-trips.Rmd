@@ -259,4 +259,5 @@ comp_long2 <- gather(data_comparation7, key="measure", value="value", c("duratio
 ggplot(comp_long2, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips distance")
 ```
 
+  Como vemos, pela manhã as viagens são mais longas para a maioria das rotas em questão (as 5 que possuem mediana mais alta). Interessante é que no horário da tarde (de 11h as 13h) todas as rotas fazem viagens menos demoradas em comparação com os outros dois horários. Podemos dizer, como possível razão para isso, que o fato de nos outros dois principais horários, manhã e noite, os passageiros irem para seus postos de trabalho e estudo e só voltem no fim do dia de forma definitiva para suas casas, seja o fator desequilibrante.
   
