@@ -86,13 +86,13 @@ estimated_trips_result %>%
 
 dat1 <- estimated_trips_result %>% 
   group_by(route) %>% 
-  summarise(popularity = divide_by_int(sum(quantity_trips), median(dist_median)), qntt = sum(quantity_trips)) %>% 
+  summarise(real_popularity = divide_by_int(sum(quantity_trips), median(dist_median)), qntt = sum(quantity_trips)) %>% 
   top_n(14)
 
-data1long <- gather(dat1, key="measure", value="value", c("popularity", "qntt"))
+data1long <- gather(dat1, key="measure", value="value", c("real_popularity", "qntt"))
 data1long <- data1long %>% mutate(value_adjusted = log10(value))
 
-ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="forest green") + facet_wrap(~measure)
+ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="forest green") + facet_wrap(~measure) + labs(x = "route", y = "value")
 
 ```
 
@@ -169,7 +169,7 @@ cinco_sete <- hours %>%
 
 cinco_sete
 
-data_comparation2 <- merge(x = seis_oito, y = onze_uma, z = cinco_sete, by = "route")
+data_comparation2 <- merge(x = seis_oito, y = onze_uma, by = "route")
 
 data_comparation3 <- merge(x = data_comparation2, y = cinco_sete, by = "route")
 
@@ -183,3 +183,25 @@ comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 ```
 
+  Como podemos observar, pela manhã a rota 303 ultrapassa em quantidade de viagens a rota 203. A noite e a tarde a 203 volta a exercerrobusta liderança. Observando também as rotas 203, 503, 602, 023 e 502 vemos que suas viagens são mais populares a noite. Por outro lado, as rotas 303, 022, 040, 030, 603, 507, 204 e as que se seguem são mais populares pela manhã, que é a faixa de horário mais popular durante todo o dia.
+
+
+Vamos ver agora a distribuição da quantidade de viagens nos três principais horários do dia: 6-8, 11-13, 17-19.   
+```{r}
+
+hours <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group) %>% 
+  summarise(qntt = sum(qntt))
+
+hours <- hours %>% filter(hour_group != "I")
+hours
+
+ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
+```
+
+  Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas.
+  
+  
