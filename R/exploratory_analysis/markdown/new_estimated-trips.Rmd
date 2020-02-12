@@ -138,29 +138,6 @@ ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = v
 4) Comparação da popularidade das rotas (levando em conta a quantidade de viagens) de acordo com os horários.
 
 ```{r}
-grouped_result %>% 
-  group_by(route) %>% 
-  filter(start_hour >= 6 & start_hour <= 8) %>% 
-  summarise(quantity = sum(quantity_trips)) %>% 
-  filter(quantity > 300) %>% 
-  top_n(20) %>% 
-  ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
-    labs(x = "route", y = "trips quantity") +
-    geom_col() +
-    theme_classic()
-
-
-day_group <- data.frame(week_day = c(2:6),
-                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
-
-  estimated_trips_result %>%
-  group_by(route, week_day) %>% 
-  summarise(qntt = sum(quantity_trips)) %>% 
-  merge(day_group)
-  group_by(day_group, route) %>% 
-  summarise(qntt = median(qntt))
-
-
 hour_group <- data.frame(start_hour = c(4:23),
                          hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
 
@@ -181,8 +158,8 @@ seis_oito <- hours %>%
 seis_oito
 
 onze_uma <- hours %>% 
-  filter(hour_group == "T") %>% 
-  top_n(20)
+  filter(hour_group == "T") %>%
+  top_n(20) 
 
 onze_uma
 
@@ -192,9 +169,17 @@ cinco_sete <- hours %>%
 
 cinco_sete
 
-data_comparation2 <- seis_oito %>% 
-  mutate(qntt6_8 = seis_oito$qntt, qntt11_13 = onze_uma$qntt, qntt17_19 = cinco_sete$qntt)
+data_comparation2 <- merge(x = seis_oito, y = onze_uma, z = cinco_sete, by = "route")
 
-data_comparation2
+data_comparation3 <- merge(x = data_comparation2, y = cinco_sete, by = "route")
+
+data_comparation3 <- data_comparation3 %>% mutate(qnttManha = qntt.x, qnttTarde = qntt.y, qnttNoite = qntt)
+
+data_comparation3
+
+comp_long1 <- gather(data_comparation3, key="measure", value="value", c("qnttManha", "qnttTarde", "qnttNoite"))
+comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 ```
 
