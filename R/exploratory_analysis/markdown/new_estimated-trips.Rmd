@@ -284,18 +284,6 @@ estimated_trips_result %>%
 ```
 
 ```{r}
-
-dat1 <- estimated_trips_result %>% 
-  group_by(route) %>% 
-  summarise(real_popularity = divide_by_int(sum(quantity_trips), median(dist_median)), qntt = sum(quantity_trips)) %>% 
-  top_n(14)
-
-data1long <- gather(dat1, key="measure", value="value", c("real_popularity", "qntt"))
-data1long <- data1long %>% mutate(value_adjusted = log10(value))
-
-ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="blue") + facet_wrap(~measure) + labs(x = "route", y = "value")
-
-
 estimated_trips_result %>%
   group_by(route) %>% 
   summarise(ninety_perc = quantile(duration_median, probs = 0.95), qntt = sum(quantity_trips)) %>% 
@@ -312,7 +300,8 @@ dataPerc <- estimated_trips_result %>%
 
 dataPercLong <- gather(dataPerc, key="measure", value="value", c("ninety_perc", "ninetyFive_perc"))
 
-ggplot(dataPercLong, aes(x = reorder(route, -value), y = value)) + geom_col(stat='identity', fill="black") + facet_wrap(~measure) + labs(x = "route", y = "trip duration")
+ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 
 ```
+
 
