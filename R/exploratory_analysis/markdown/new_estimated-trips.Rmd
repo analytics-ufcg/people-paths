@@ -93,8 +93,7 @@ dat1 <- estimated_trips_result %>%
 data1long <- gather(dat1, key="measure", value="value", c("real_popularity", "qntt"))
 data1long <- data1long %>% mutate(value_adjusted = log10(value))
 
-ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="forest green") + facet_wrap(~measure) + labs(x = "route", y = "value")
-
+ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="blue") + facet_wrap(~measure) + labs(x = "route", y = "value")
 ```
 
   Levando em conta o ranking da popularidade puro e simples, ou seja, contando apenas a quantidade de viagens realizadas, algumas rotas apresentam comportamento diferente se levarmos em conta também a distância percorrida. Rotas como 505, 506 e 507 apresentam queda na popularidade quando dividimos sua quantidade de viagens por sua distância percorrida na mediana, pois a mesma é relativamente alta. As mesmas percorrem 5,738km, 8,810km, 5,804km, respectivamente. Vendo a natureza dessas rotas, observamos que percorrem bairros mais afastados do Centro da cidade, indo até o extremo sul e extremo sudeste do mapa. Por outro lado, as rotas que subiram nessa métrica formas a 050, 020 e 021, naturalmente apresentando distâncias mais curtas na mediana, com 3,513km, 3,901km e 3,967km, respectivamente. Um detalhe é que a rota 021 faz o mesmo percurso que a 022, só que em sentido antihorário.
@@ -222,7 +221,7 @@ comp_long1 <- gather(data_comparation5, key="measure", value="value", c("distMan
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips distance")
 ```
 
-  Apesar de ser o horário com o menor número de viagens no geral, rotas como 506 e 617 apresentam suas viagens como mais longas na mediana nesse horário. A rota 305, curiosamente, apresenta a mesma mediana de distância nos três horários. Para o horário da manhã, aquele que concentra a maior quantidade de viagens, apenas duas são as rotas que aprensentam suas viagens mais longas nesse horário, a 508 e 684.  
+  Apesar de das 11h as 13h ser o horário com o menor número de viagens no geral entre os três principais horários, rotas como 506 e 617 apresentam suas viagens como mais longas na mediana nesse horário. A rota 305, curiosamente, apresenta a mesma mediana de distância nos três horários. Para o horário da manhã, aquele que concentra a maior quantidade de viagens, apenas duas são as rotas que aprensentam suas viagens mais longas nesse horário, a 508 e 684.  
   
 6) Observando agora para o tempo gasto.
 
@@ -258,6 +257,62 @@ ggplot(comp_long2, aes(fill = measure, x = reorder(route, -value), y = value)) +
 
   Como vemos, pela manhã as viagens são mais longas para a maioria das rotas em questão (as 5 que possuem mediana mais alta). Interessante é que no horário da tarde (de 11h as 13h) todas as rotas fazem viagens menos demoradas em comparação com os outros dois horários. Podemos dizer, como possível razão para isso, que o fato de nos outros dois principais horários, manhã e noite, os passageiros irem para seus postos de trabalho e estudo e só voltem no fim do dia de forma definitiva para suas casas, seja o fator desequilibrante.
   
+7) 90 percentil do tempo de viagem
+
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(ninety_perc = quantile(duration_median, probs = 0.9), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -ninety_perc), y = ninety_perc)) + geom_col(stat='identity', colour = "gray") +
+  labs(x = "route", y = "ninety percentille - duration")
+```
+
+  O 90 percentil nos mostra que para a rota 506, suas viagens estão em 90% delas, abaixo ou igual a meia hora de viagem. Podemos ver que viagens mais curtas é uma caracterítica da rota, pois 90% de das viagens não passam de meia hora.
   
-  
-  
+8) 95 percentil do tempo de viagem
+
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(ninety_perc = quantile(duration_median, probs = 0.95), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -ninety_perc), y = ninety_perc)) + geom_col(stat='identity', colour = "gray") +
+  labs(x = "route", y = "ninety percentille - duration")
+```
+
+```{r}
+
+dat1 <- estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(real_popularity = divide_by_int(sum(quantity_trips), median(dist_median)), qntt = sum(quantity_trips)) %>% 
+  top_n(14)
+
+data1long <- gather(dat1, key="measure", value="value", c("real_popularity", "qntt"))
+data1long <- data1long %>% mutate(value_adjusted = log10(value))
+
+ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="blue") + facet_wrap(~measure) + labs(x = "route", y = "value")
+
+
+estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(ninety_perc = quantile(duration_median, probs = 0.95), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -ninety_perc), y = ninety_perc)) + geom_col(stat='identity', colour = "gray") +
+  labs(x = "route", y = "ninety percentille - duration")
+
+dataPerc <- estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(ninety_perc = quantile(duration_median, probs = 0.90), ninetyFive_perc = quantile(duration_median, probs = 0.95), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  top_n(12)
+
+dataPercLong <- gather(dataPerc, key="measure", value="value", c("ninety_perc", "ninetyFive_perc"))
+
+ggplot(dataPercLong, aes(x = reorder(route, -value), y = value)) + geom_col(stat='identity', fill="black") + facet_wrap(~measure) + labs(x = "route", y = "trip duration")
+
+```
+
