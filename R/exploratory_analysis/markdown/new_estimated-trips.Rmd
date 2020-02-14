@@ -29,6 +29,23 @@ estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data
     dist_median = col_double()
   )
 )
+
+irrelevant_routes <- estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(total_trips = sum(quantity_trips)) %>% 
+  filter(total_trips < 300)
+
+estimated_trips_relevant_routes <- 
+  estimated_trips_result %>% 
+  filter(!route %in% irrelevant_routes$route) %>% 
+  filter(!is.na(duration_median),duration_median > 0) %>% 
+  filter(!is.na(dist_median),dist_median > 0) %>% 
+  mutate(speed = ((dist_median/1000) / duration_median *60)) %>% 
+  group_by(date, week_day, route, start_hour, quantity_trips, speed) %>% 
+  expand(trips = seq(1:quantity_trips))
+
+expanded <- estimated_trips_relevant_routes %>% group_by(date, week_day, route, start_hour, quantity_trips, duration_median, duration_sd, dist_median, speed) %>% expand(trips = seq(1:quantity_trips))
+
 ```
 
 1) Análise provendo histograma para a distância, velocidade e duração das rotas.
@@ -36,44 +53,32 @@ estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data
   Para calcular a velocidade de uma rota faremos o cálculo da distância percorrida dividida pelo tempo gasto. Todas as medidas serão calculadas em sua mediana.
   
 ```{r}
-estimated_trips_result %>% 
-  group_by(route) %>% 
-  summarise(speed = first(divide_by_int(median(dist_median), median(duration_median))), qntt = sum(quantity_trips)) %>% 
-  filter(qntt > 300) %>% 
-  ggplot(aes(speed)) + geom_histogram(
-      binwidth=4,  
-      xlab="Age",  
-      fill=I("green"), 
-      col=I("red"), 
-      alpha=I(.2)) + labs(x = "speed m/min")
+expanded %>% 
+  ggplot(aes(speed)) + 
+  geom_histogram(xlab="Speed",  
+      fill=I("black"), 
+      col=I("blue"), 
+      alpha=I(.30)) + labs(x = "speed") + scale_x_continuous(trans = 'log2')
 ```
 
   Agora, faremos o histograma para a distância percorrida.
 ```{r}
-estimated_trips_result %>% 
-  group_by(route) %>% 
-  summarise(dist = median(dist_median), qntt = sum(quantity_trips)) %>% 
-  filter(qntt > 300) %>% 
-  ggplot(aes(dist)) + geom_histogram(
-      binwidth=1000,  
-      xlab="Distance",  
-      fill=I("green"), 
-      col=I("red"), 
-      alpha=I(.30)) + labs(x = "distance - meters")
+expanded %>% 
+  ggplot(aes(dist_median)) + 
+  geom_histogram(xlab="Distance",  
+      fill=I("black"), 
+      col=I("blue"), 
+      alpha=I(.30)) + labs(x = "distance") + scale_x_continuous(trans = 'log2')
 ```
 
   Histograma para a duração das viagens.
 ```{r}
-estimated_trips_result %>% 
-  group_by(route) %>% 
-  summarise(duration = median(duration_median), qntt = sum(quantity_trips)) %>% 
-  filter(qntt > 300) %>% 
-  ggplot(aes(duration)) + geom_histogram(
-      binwidth=4,  
-      xlab="Duration",  
-      fill=I("green"), 
-      col=I("red"), 
-      alpha=I(.2))
+expanded %>% 
+  ggplot(aes(duration_median)) + 
+  geom_histogram(xlab="Duration",  
+      fill=I("black"), 
+      col=I("blue"), 
+      alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log')
 ```
 
 2) Agora analisaremos a real popularidade das rotas, para isso dividiremos a quantidade de viagens realizadas pela distância percorrida. É natural pensar que quanto maior é a distância percorrida mais pessoas realizam viagem na rota.
@@ -301,7 +306,6 @@ dataPerc <- estimated_trips_result %>%
 dataPercLong <- gather(dataPerc, key="measure", value="value", c("ninety_perc", "ninetyFive_perc"))
 
 ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
-
 ```
 
 
