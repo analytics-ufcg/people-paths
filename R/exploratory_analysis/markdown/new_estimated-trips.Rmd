@@ -274,7 +274,7 @@ estimated_trips_result %>%
   labs(x = "route", y = "ninety percentille - duration")
 ```
 
-  O 90 percentil nos mostra que para a rota 506, suas viagens estão em 90% delas, abaixo ou igual a meia hora de viagem. Podemos ver que viagens mais curtas é uma caracterítica da rota, pois 90% de das viagens não passam de meia hora.
+  O 90 percentil nos mostra que para a rota 506, suas viagens estão em 90% delas, abaixo ou igual a meia hora de viagem.
   
 8) 95 percentil do tempo de viagem
 
@@ -308,4 +308,5 @@ dataPercLong <- gather(dataPerc, key="measure", value="value", c("ninety_perc", 
 ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 ```
 
-
+  Medimos o 90 e o 95 percentil do tempo das viagens pelas rotas. Como podemos observar, a rota 022 varia bastante em seus tempos de viagens, seu 90 percentil mostra que 90% de suas viagens estão inclusas no intervalo de 0 a quase 50 minutos. 
+  O 95 percentil, por sua vez, nos mostra que as rotas não variam significativamente em seus tempos de viagens, estando inclusas no intervalo de 0 a pouco mais de 20 minutos.
