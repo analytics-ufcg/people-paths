@@ -41,7 +41,7 @@ estimated_trips_relevant_routes <-
   filter(!is.na(duration_median),duration_median > 0) %>% 
   filter(!is.na(dist_median),dist_median > 0) %>% 
   mutate(speed = ((dist_median/1000) / duration_median *60)) %>% 
-  group_by(date, week_day, route, start_hour, quantity_trips, speed) %>% 
+  group_by(date, week_day, route, start_hour, quantity_trips, speed, duration_median, duration_sd, dist_median) %>% 
   expand(trips = seq(1:quantity_trips))
 
 expanded <- estimated_trips_relevant_routes %>% group_by(date, week_day, route, start_hour, quantity_trips, duration_median, duration_sd, dist_median, speed) %>% expand(trips = seq(1:quantity_trips))
@@ -78,7 +78,7 @@ expanded %>%
   geom_histogram(xlab="Duration",  
       fill=I("black"), 
       col=I("blue"), 
-      alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log')
+      alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log2')
 ```
 
 2) Agora analisaremos a real popularidade das rotas, para isso dividiremos a quantidade de viagens realizadas pela distância percorrida. É natural pensar que quanto maior é a distância percorrida mais pessoas realizam viagem na rota.
