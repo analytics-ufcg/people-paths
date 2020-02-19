@@ -313,17 +313,10 @@ ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value))
   Medimos o 90 e o 95 percentil do tempo das viagens pelas rotas. Como podemos observar, a rota 022 varia bastante em seus tempos de viagens, seu 90 percentil mostra que 90% de suas viagens estão inclusas no intervalo de 0 a quase 50 minutos. 
   O 95 percentil, por sua vez, nos mostra que as rotas não variam significativamente em seus tempos de viagens, estando inclusas no intervalo de 0 a pouco mais de 20 minutos.
   
-9) Gráfico de dispersão para a diferença das viagens de segunda e sexta e terça a quinta. Popularidade, velocidade e distância.
+9) Gráfico de dispersão para a diferença das viagens de segunda e sexta e terça a quinta. Popularidade, duração e distância.
 
+Quantidade de viagens e distância.
 ```{r}
-
-```
-
-Distância e quantidade de viagens.
-```{r}
-day_group <- data.frame(week_day = c(2:6),
-                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
-
 days <- estimated_trips_result %>%
   group_by(route, week_day) %>% 
   summarise(dist_median = median(dist_median), duration_median = median(duration_median), qntt = sum(quantity_trips)) %>% 
@@ -333,13 +326,29 @@ days <- estimated_trips_result %>%
 
 days
 
-
 sp <- ggplot(days, aes(x = dist_median, y = qntt, color="Species")) + 
     geom_point(size=2) +
     theme_ipsum()
 
-sp
 
-sp + facet_grid(. ~ day_group)
+sp + facet_grid(. ~ day_group)  + labs(x = "duration", y = "quantity trips")
+```
+
+Quantidade de viagens e duração
+```{r}
+sp <- ggplot(days, aes(x = duration_median, y = qntt, color="Species")) + 
+    geom_point(size=2) +
+    theme_ipsum()
+
+sp + facet_grid(. ~ day_group) + labs(x = "duration", y = "quantity trips")
+```
+
+Distância e duração
+```{r}
+sp <- ggplot(days, aes(x = dist_median, y = duration_median, color="Species")) + 
+    geom_point(size=2) +
+    theme_ipsum()
+
+sp + facet_grid(. ~ day_group) + labs(x = "duration", y = "quantity trips")
 ```
 
