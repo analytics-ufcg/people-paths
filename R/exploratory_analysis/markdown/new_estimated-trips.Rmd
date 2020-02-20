@@ -339,6 +339,8 @@ sp <- ggplot(days, aes(x = dist_median, y = qntt, color="Species")) +
 sp + facet_grid(. ~ day_group)  + labs(x = "duration", y = "quantity trips")
 ```
 
+  Vemos que quanto maior é a distância percorrida em uma viagem maior é a quantidade de viagens.
+  
 Quantidade de viagens e duração
 ```{r}
 sp <- ggplot(days, aes(x = duration_median, y = qntt, color="Species")) + 
@@ -347,6 +349,7 @@ sp <- ggplot(days, aes(x = duration_median, y = qntt, color="Species")) +
 
 sp + facet_grid(. ~ day_group) + labs(x = "duration", y = "quantity trips")
 ```
+  Vemos que quanto maior é a duração de uma viagem maior é a quantidade de viagens.
 
 Distância e duração
 ```{r}
@@ -354,7 +357,9 @@ sp <- ggplot(days, aes(x = dist_median, y = duration_median, color="Species")) +
     geom_point(size=2) +
     theme_ipsum()
 
-sp + facet_grid(. ~ day_group) + labs(x = "duration", y = "quantity trips")
+sp + facet_grid(. ~ day_group) + labs(x = "distance", y = "duration")
 ```
+
+  Vemos que quanto maior é a distância percorrida em uma viagem maior é a sua duração.
 
 
