@@ -75,6 +75,7 @@ expanded %>%
       col=I("blue"), 
       alpha=I(.30)) + labs(x = "distance") + scale_x_continuous(trans = 'log2')
 ```
+  
   As distâncias percorridas se encontram, em sua maioria, na faixa de valores dos 4 km.
   
   Histograma para a duração das viagens.
@@ -86,7 +87,8 @@ expanded %>%
       col=I("blue"), 
       alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log2')
 ```
-    A duração das viagens se encontram, em sua maioria, na faixa de valores dos 16 minutos, sendo popular tanto nos valores um pouco abaixo quanto um pouco acima.
+    
+  A duração das viagens se encontram, em sua maioria, na faixa de valores dos 16 minutos, sendo popular tanto nos valores um pouco abaixo quanto um pouco acima.
   
 2) Agora analisaremos a real popularidade das rotas, para isso dividiremos a quantidade de viagens realizadas pela distância percorrida. É natural pensar que quanto maior é a distância percorrida mais pessoas realizam viagem na rota.
 
@@ -348,6 +350,7 @@ sp <- ggplot(days, aes(x = duration_median, y = qntt, color="Species")) +
 
 sp + facet_grid(. ~ day_group) + labs(x = "duration", y = "quantity trips")
 ```
+  
   Vemos que quanto maior é a duração de uma viagem maior é a quantidade de viagens.
 
 Distância e duração
@@ -360,5 +363,3 @@ sp + facet_grid(. ~ day_group) + labs(x = "distance", y = "duration")
 ```
 
   Vemos que quanto maior é a distância percorrida em uma viagem maior é a sua duração.
-
-
