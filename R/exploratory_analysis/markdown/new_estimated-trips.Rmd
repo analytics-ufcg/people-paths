@@ -76,7 +76,7 @@ expanded %>%
       alpha=I(.30)) + labs(x = "distance") + scale_x_continuous(trans = 'log2')
 ```
   
-  As distâncias percorridas se encontram, em sua maioria, na faixa de valores dos 4 km.
+  A distância percorrida se encontra, em sua maioria, na faixa de valores dos 4 km.
   
   Histograma para a duração das viagens.
 ```{r}
@@ -110,7 +110,7 @@ data1long <- data1long %>% mutate(value_adjusted = log10(value))
 ggplot(data1long, aes(x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(stat='identity', fill="blue") + facet_wrap(~measure) + labs(x = "route", y = "value")
 ```
 
-  Levando em conta o ranking da popularidade puro e simples, ou seja, contando apenas a quantidade de viagens realizadas, algumas rotas apresentam comportamento diferente se levarmos em conta também a distância percorrida. Rotas como 505, 506 e 507 apresentam queda na popularidade quando dividimos sua quantidade de viagens por sua distância percorrida na mediana, pois a mesma é relativamente alta. As mesmas percorrem 5,738km, 8,810km, 5,804km, respectivamente. Vendo a natureza dessas rotas, observamos que percorrem bairros mais afastados do Centro da cidade, indo até o extremo sul e extremo sudeste do mapa. Por outro lado, as rotas que subiram nessa métrica formas a 050, 020 e 021, naturalmente apresentando distâncias mais curtas na mediana, com 3,513km, 3,901km e 3,967km, respectivamente. Um detalhe é que a rota 021 faz o mesmo percurso que a 022, só que em sentido antihorário.
+  Levando em conta o ranking da popularidade puro e simples, ou seja, contando apenas a quantidade de viagens realizadas, algumas rotas apresentam comportamento diferente se levarmos em conta também a distância percorrida. Rotas como 505, 506 e 507 apresentam queda na popularidade quando dividimos sua quantidade de viagens por sua distância percorrida na mediana, pois a mesma é relativamente alta. As mesmas percorrem 5,738km, 8,810km, 5,804km, respectivamente. Vendo a natureza dessas rotas, observamos que percorrem bairros mais afastados do Centro da cidade, indo até o extremo sul e extremo sudeste do mapa. Por outro lado, as rotas que subiram nessa métrica foram a 050, 020 e 021, naturalmente apresentando distâncias mais curtas na mediana, com 3,513km, 3,901km e 3,967km, respectivamente. Um detalhe é que a rota 021 faz o mesmo percurso que a 022, só que em sentido antihorário.
 
 3) Comparação entre a quantidade de viagens dos períodos de segunda e sexta e terça a quinta.
 
@@ -181,9 +181,10 @@ comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
 
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 ```
-
-  Como podemos observar, pela manhã a rota 303 ultrapassa em quantidade de viagens a rota 203. A noite e a tarde a 203 volta a exercer robusta liderança. Observando também as rotas 203, 503, 602, 023 e 502 vemos que suas viagens são mais populares a noite. Por outro lado, as rotas 303, 022, 040, 030, 603, 507, 204 e as que se seguem são mais populares pela manhã, que é a faixa de horário mais popular durante todo o dia. Não vemos nenhuma rota sendo mais popular no horário da tarde, ou seja, aquela que se encontra entre as 11h e as 13h.
-
+  
+  O horário denominado como "manhã" vai das 6h as 8h; como "tarde" das 11h as 13h e como "noite" das 17h as 19h.
+  Como podemos observar, pela manhã a rota 303 ultrapassa em quantidade de viagens a rota 203. A noite e a tarde a 203 volta a exercer robusta liderança. Observando também as rotas 203, 503, 602, 023 e 502 vemos que suas viagens são mais populares a noite. Por outro lado, as rotas 303, 022, 040, 030, 603, 507, 204 e as que se seguem são mais populares pela manhã, que é a faixa de horário mais popular durante todo o dia. 
+  Não vemos nenhuma rota sendo mais popular no horário da tarde, ou seja, aquela que se encontra entre as 11h e as 13h. Um destaque evidente fica por conta da rota 503, que dispara no horário da noite, ultrapassando a rota 303 e se aproximando da 203. A 503 é uma rota predominantemente noturna.
 
 Vamos ver agora a distribuição da quantidade de viagens nos três principais horários do dia: 6-8, 11-13, 17-19.   
 ```{r}
@@ -234,7 +235,8 @@ comp_long1 <- gather(data_comparation5, key="measure", value="value", c("distMan
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips distance")
 ```
 
-  Apesar das 11h as 13h ser o horário com o menor número de viagens no geral entre os três principais horários, rotas como 506 e 617 apresentam suas viagens como mais longas na mediana nesse horário. A rota 305, curiosamente, apresenta a mesma mediana de distância nos três horários. Para o horário da manhã, aquele que concentra a maior quantidade de viagens, são apenas duas as rotas que aprensentam suas viagens mais longas nesse horário, a 508 e 684.  
+  Apesar das 11h as 13h ser o horário com o menor número de viagens no geral entre os três principais horários, rotas como 506, 646 e 617 apresentam suas viagens como mais longas na mediana nesse horário. A rota 305, curiosamente, apresenta a mesma mediana de distância nos três horários.
+  Para o horário da manhã, aquele que concentra a maior quantidade de viagens, são apenas duas as rotas que aprensentam suas viagens mais longas nesse horário, a 659, 508 e 684.  
   
 6) Observando agora para o tempo gasto.
 
@@ -268,7 +270,7 @@ comp_long2 <- gather(data_comparation7, key="measure", value="value", c("duratio
 ggplot(comp_long2, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips distance")
 ```
 
-  Como vemos, pela manhã as viagens são mais demoradas para a maioria das rotas (especificamente as 5 que possuem mediana mais alta). Interessante é que no horário da tarde (de 11h as 13h) todas as rotas fazem viagens menos demoradas em comparação com os outros dois horários. Podemos dizer, como possível razão para isso, que o fato de nos outros dois principais horários, manhã e noite, os passageiros irem para seus postos de trabalho e estudo e só voltem no fim do dia de forma definitiva para suas casas, seja o fator desequilibrante.
+  Como vemos, pela manhã as viagens são mais demoradas para a maioria das rotas (especificamente as 5 que possuem mediana mais alta). Interessante é que no horário da tarde (de 11h as 13h) todas as rotas, exceto a 370, fazem viagens menos demoradas em comparação com os outros dois horários. Podemos dizer, como possível razão para isso, que o fato de nos outros dois principais horários, manhã e noite, os passageiros irem para seus postos de trabalho e estudo e só voltem no fim do dia de forma definitiva para suas casas, no horário da tarde suas viagens são mais curtas.
   
 7) 90 percentil do tempo de viagem
 
@@ -295,18 +297,10 @@ estimated_trips_result %>%
   ggplot(aes(x = reorder(route, -ninety_perc), y = ninety_perc)) + geom_col(stat='identity', colour = "gray") +
   labs(x = "route", y = "ninety percentille - duration")
 ```
-  
+    
   Faremos agora a comparação entre o 90 e o 95 percentil no que diz respeito a duração das viagens. Observaremos em quais rotas os valores variam mais.
 
 ```{r}
-estimated_trips_result %>%
-  group_by(route) %>% 
-  summarise(ninety_perc = quantile(duration_median, probs = 0.95), qntt = sum(quantity_trips)) %>% 
-  filter(qntt > 300) %>% 
-  top_n(20) %>% 
-  ggplot(aes(x = reorder(route, -ninety_perc), y = ninety_perc)) + geom_col(stat='identity', colour = "gray") +
-  labs(x = "route", y = "ninety percentille - duration")
-
 dataPerc <- estimated_trips_result %>%
   group_by(route) %>% 
   summarise(ninety_perc = quantile(duration_median, probs = 0.90), ninetyFive_perc = quantile(duration_median, probs = 0.95), qntt = sum(quantity_trips)) %>% 
@@ -318,7 +312,7 @@ dataPercLong <- gather(dataPerc, key="measure", value="value", c("ninety_perc", 
 ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 ```
 
-  Medimos o 90 e o 95 percentil do tempo das viagens pelas rotas. Como podemos observar, a rota 022 varia bastante em seus tempos de viagens, seu 95 percentil mostra que 95% de suas viagens estão inclusas no intervalo de 0 a quase 50 minutos. 
+  Medimos o 90 e o 95 percentil do tempo das viagens pelas rotas. Como podemos observar, a rota 022 varia bastante em seus tempos de viagens, seu 95 percentil mostra que 95% de suas viagens estão inclusas no intervalo de 0 a aproximadamente 50 minutos. 
   O 90 percentil, por sua vez, nos mostra que as rotas não variam significativamente em seus tempos de viagens, estando inclusas no intervalo de 0 a pouco mais de 20 minutos.
 
 9) Gráfico de dispersão para a diferença das viagens de segunda e sexta e terça a quinta. Popularidade, duração e distância.
