@@ -84,8 +84,8 @@ estimated_trips_result %>%
   group_by(route) %>%
   summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
   filter(qntt > 100) %>%
-  top_n(20) %>%
-  ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
+  top_n(10) %>%
+  ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic() + labs(y = "distance")
 ```
 
 
@@ -106,8 +106,8 @@ estimated_trips_result %>%
 estimated_trips_result %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
-  filter(quantity > 100) %>% 
-  top_n(20) %>% 
+  filter(quantity > 300) %>% 
+  top_n(10) %>% 
   ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
 ```
 
@@ -216,8 +216,8 @@ estimated_trips_result %>%
 estimated_trips_result %>%
   group_by(route) %>% 
   summarise(qntt = sum(quantity_trips), duration = median(duration_median)) %>%
-  filter(qntt > 300) %>% 
-  top_n(-15) %>% 
+  filter(qntt > 1000) %>% 
+  top_n(-10) %>% 
   ggplot(aes(x = reorder(route, duration), y = duration)) +
     labs(x = "route", y = "trip duration (in minutes)") +
     geom_bar(stat = "identity") +
