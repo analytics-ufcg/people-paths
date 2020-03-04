@@ -61,7 +61,8 @@ expanded %>%
   geom_histogram(xlab="Speed",  
       fill=I("black"), 
       col=I("blue"), 
-      alpha=I(.30)) + labs(x = "speed") + scale_x_continuous(trans = 'log2')
+      alpha=I(.30)) + labs(x = "velocidade", y = "quantidade de viagens") + scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log10')
+
 ```
   
   A velocidade das rotas se encontra, em sua maioria, na faixa dos 16 km/h.
@@ -134,12 +135,12 @@ terça_quinta <- days %>%
   top_n(10)
 
 data_comparation <- segunda_sexta %>% 
-  mutate(qnttSS = segunda_sexta$qntt, qnttTQ = terça_quinta$qntt)
+  mutate(Segunda_Sexta = segunda_sexta$qntt, Terca_Quarta_Quinta = terça_quinta$qntt)
 
-comp_long <- gather(data_comparation, key="measure", value="value", c("qnttSS", "qnttTQ"))
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
 comp_long <- comp_long %>% mutate(value_adjusted = value)
 
-ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
 ```
 
   Como podemos ver, algumas rotas se destacam apresentando um número de viagens maior na mediana nos dias da semana de segunda e sexta em comparação com o período dos dias de terça a quinta, sendo elas a 203, 602 e 040. Por outro lado, rotas como 303, segunda mais popular no geral, 503 e 023 apresentam uma maior quantidade de viagens no período de terça a quinta.
@@ -174,12 +175,12 @@ data_comparation2 <- merge(x = seis_oito, y = onze_uma, by = "route")
 
 data_comparation3 <- merge(x = data_comparation2, y = cinco_sete, by = "route")
 
-data_comparation3 <- data_comparation3 %>% mutate(qnttManha = qntt.x, qnttTarde = qntt.y, qnttNoite = qntt)
+data_comparation3 <- data_comparation3 %>% mutate(Manhã = qntt.x, Tarde = qntt.y, Noite = qntt)
 
-comp_long1 <- gather(data_comparation3, key="measure", value="value", c("qnttManha", "qnttTarde", "qnttNoite"))
+comp_long1 <- gather(data_comparation3, key="measure", value="value", c("Manhã", "Tarde", "Noite"))
 comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
 
-ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
 ```
   
   O horário denominado como "manhã" vai das 6h as 8h; como "tarde" das 11h as 13h e como "noite" das 17h as 19h.
@@ -304,13 +305,13 @@ estimated_trips_result %>%
 ```{r}
 dataPerc <- estimated_trips_result %>%
   group_by(route) %>% 
-  summarise(ninety_perc = quantile(duration_median, probs = 0.90), ninetyFive_perc = quantile(duration_median, probs = 0.95), qntt = sum(quantity_trips)) %>% 
+  summarise(noventa_percentil = quantile(duration_median, probs = 0.90), duração_mediana_geral = median(duration_median), qntt = sum(quantity_trips)) %>% 
   filter(qntt > 300) %>% 
   top_n(10)
 
-dataPercLong <- gather(dataPerc, key="measure", value="value", c("ninety_perc", "ninetyFive_perc"))
+dataPercLong <- gather(dataPerc, key="measure", value="value", c("noventa_percentil", "duração_mediana_geral"))
 
-ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips duration")
+ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "duração da viagem")
 ```
 
   Medimos o 90 e o 95 percentil do tempo das viagens pelas rotas. Como podemos observar, a rota 022 varia bastante em seus tempos de viagens, seu 95 percentil mostra que 95% de suas viagens estão inclusas no intervalo de 0 a aproximadamente 50 minutos. 

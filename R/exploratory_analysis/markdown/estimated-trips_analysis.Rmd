@@ -30,6 +30,21 @@ estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data
     dist_median = col_double()
   )
 )
+
+may_q <- estimated_trips_result %>%
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>%
+  summarise(qntt = sum(quantity_trips))
+
+june_q <- estimated_trips_result %>%
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>%
+  summarise(qntt = sum(quantity_trips))
+
+july_q <- estimated_trips_result %>%
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>%
+  summarise(qntt = sum(quantity_trips))
+
+qntt_t <- estimated_trips_result %>% summarise(qntt = sum(quantity_trips))
+
 ```
 
 1) Há uma relação entre a distância das viagens e a tempo delas? 
@@ -85,7 +100,7 @@ estimated_trips_result %>%
   summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
   filter(qntt > 100) %>%
   top_n(10) %>%
-  ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic() + labs(y = "distance")
+  ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "rota", y = "distância") + geom_col() + theme_classic()
 ```
 
 
@@ -108,7 +123,7 @@ estimated_trips_result %>%
   summarise(quantity = sum(quantity_trips)) %>% 
   filter(quantity > 300) %>% 
   top_n(10) %>% 
-  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+  ggplot(aes(x = reorder(route, -quantity), y = quantity/100000)) + labs(x = "rota", y = "quantidade de viagens (em milhões)") + geom_bar(stat = "identity") + theme_classic()
 ```
 
 4.1) Verificando a popularidade mês a mês, temos:
@@ -219,7 +234,7 @@ estimated_trips_result %>%
   filter(qntt > 1000) %>% 
   top_n(-10) %>% 
   ggplot(aes(x = reorder(route, duration), y = duration)) +
-    labs(x = "route", y = "trip duration (in minutes)") +
+    labs(x = "rota", y = "duração da viagem na mediana (em minutos)") +
     geom_bar(stat = "identity") +
     theme_classic()
 ```
