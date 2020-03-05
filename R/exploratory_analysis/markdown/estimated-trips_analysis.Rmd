@@ -217,8 +217,8 @@ estimated_trips_result %>%
 estimated_trips_result %>%
   group_by(route) %>% 
   summarise(qntt = sum(quantity_trips), duration = median(duration_median)) %>%
-  filter(qntt > 150) %>% 
-  top_n(20) %>% 
+  filter(qntt > 300) %>% 
+  top_n(10) %>% 
   ggplot(aes(x = reorder(route, -duration), y = duration)) +
     labs(x = "route", y = "trip duration (in minutes)") +
     geom_bar(stat = "identity") +

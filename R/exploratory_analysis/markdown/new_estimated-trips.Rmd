@@ -287,6 +287,17 @@ estimated_trips_result %>%
 ```
 
   O 90 percentil nos mostra que para a rota 506, suas viagens estão em 90% delas, abaixo ou igual a meia hora de viagem.
+
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(dur = median(duration_median), qntt = sum(quantity_trips)) %>% 
+  filter(qntt > 300) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -dur), y = dur)) + geom_col(stat='identity', colour = "gray") +
+  labs(x = "route", y = "ninety percentille - duration")
+```
+
   
 8) 95 percentil do tempo de viagem
 
@@ -305,11 +316,11 @@ estimated_trips_result %>%
 ```{r}
 dataPerc <- estimated_trips_result %>%
   group_by(route) %>% 
-  summarise(noventa_percentil = quantile(duration_median, probs = 0.90), duração_mediana_geral = median(duration_median), qntt = sum(quantity_trips)) %>% 
+  summarise(duração_noventa_percentil = quantile(duration_median, probs = 0.90), duração_mediana_geral = median(duration_median), qntt = sum(quantity_trips)) %>% 
   filter(qntt > 300) %>% 
   top_n(10)
 
-dataPercLong <- gather(dataPerc, key="measure", value="value", c("noventa_percentil", "duração_mediana_geral"))
+dataPercLong <- gather(dataPerc, key="measure", value="value", c("duração_noventa_percentil", "duração_mediana_geral"))
 
 ggplot(dataPercLong, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "duração da viagem")
 ```
