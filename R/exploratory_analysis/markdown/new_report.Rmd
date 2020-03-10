@@ -1,0 +1,49 @@
+---
+title: "new_report"
+author: "José Ivan Silva da Cruz Júnior"
+date: "3/10/2020"
+output: html_document
+---
+
+```{r}
+estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+
+irrelevant_routes <- estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(total_trips = sum(quantity_trips)) %>% 
+  filter(total_trips < 300)
+
+estimated_trips_relevant_routes <- 
+  estimated_trips_result %>% 
+  filter(!route %in% irrelevant_routes$route) %>% 
+  filter(!is.na(duration_median),duration_median > 0) %>% 
+  filter(!is.na(dist_median),dist_median > 0) %>% 
+  mutate(speed = ((dist_median/1000) / duration_median *60)) %>% 
+  group_by(date, week_day, route, start_hour, quantity_trips, speed, duration_median, duration_sd, dist_median) %>% 
+  expand(trips = seq(1:quantity_trips))
+```
+```{r}
+hour_group <- data.frame(start_hour = c(4:23),
+                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
+
+hours <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group) %>% 
+  summarise(qntt = sum(qntt))
+
+hours <- hours %>% filter(hour_group != "I")
+
+ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
+```
+
