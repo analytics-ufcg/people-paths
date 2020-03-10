@@ -142,8 +142,67 @@ comp_long <- comp_long %>% mutate(value_adjusted = value)
 
 ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
 ```
-
   Como podemos ver, algumas rotas se destacam apresentando um número de viagens maior na mediana nos dias da semana de segunda e sexta em comparação com o período dos dias de terça a quinta, sendo elas a 203, 602 e 040. Por outro lado, rotas como 303, segunda mais popular no geral, 503 e 023 apresentam uma maior quantidade de viagens no período de terça a quinta.
+
+3.1) Distância
+
+```{r}
+day_group <- data.frame(week_day = c(2:6),
+                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
+
+days <- estimated_trips_result %>%
+  group_by(route, week_day) %>% 
+  summarise(dist = median(dist_median)) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(dist = median(dist))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$dist, Terca_Quarta_Quinta = terça_quinta$dist)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "distância da viagem")
+```
+
+3.2) Velocidade 
+```{r}
+day_group <- data.frame(week_day = c(2:6),
+                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
+
+days <- estimated_trips_relevant_routes %>%
+  group_by(route, week_day) %>% 
+  summarise(speed = median(speed)) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(speed = median(speed))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$speed, Terca_Quarta_Quinta = terça_quinta$speed)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "velocidade da viagem")
+```
+
 
 4) Comparação da popularidade das rotas (levando em conta a quantidade de viagens) de acordo com os horários.
 
@@ -370,3 +429,5 @@ sp + facet_grid(. ~ day_group) + labs(x = "distance", y = "duration")
 ```
 
   Vemos que quanto maior é a distância percorrida em uma viagem maior é a sua duração.
+  
+
