@@ -28,9 +28,68 @@ estimated_trips_relevant_routes <-
   filter(!is.na(duration_median),duration_median > 0) %>% 
   filter(!is.na(dist_median),dist_median > 0) %>% 
   mutate(speed = ((dist_median/1000) / duration_median *60)) %>% 
-  group_by(date, week_day, route, start_hour, quantity_trips, speed, duration_median, duration_sd, dist_median) %>% 
-  expand(trips = seq(1:quantity_trips))
+  group_by(date, week_day, route, start_hour, quantity_trips, speed, duration_median, duration_sd, dist_median)
 ```
+1) Segunda-sexta e terça-quarta-quinta. 
+
+1.1) Quantidade de viagens
+```{r}
+day_group <- data.frame(week_day = c(2:6),
+                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
+
+days <- estimated_trips_result %>%
+  group_by(route, week_day) %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(qntt = median(qntt))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$qntt, Terca_Quarta_Quinta = terça_quinta$qntt)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
+```
+1.2) Distância percorrida
+```{r}
+day_group <- data.frame(week_day = c(2:6),
+                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
+
+days <- estimated_trips_result %>%
+  group_by(route, week_day) %>% 
+  summarise(dist = median(dist_median)) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(dist = median(dist))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$dist, Terca_Quarta_Quinta = terça_quinta$dist)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "distância da viagem")
+```
+ 
+2) Quantidade de viagens durante as horas do dia
 ```{r}
 hour_group <- data.frame(start_hour = c(4:23),
                          hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
@@ -47,3 +106,44 @@ hours <- hours %>% filter(hour_group != "I")
 ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 ```
 
+  Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e a tarde (das 11h as 13h).
+
+3) Horários do dia: manhã, tarde e noite  
+```{r}
+hour_group <- data.frame(start_hour = c(4:23),
+                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
+
+hours <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(qntt = median(qntt))
+
+seis_oito <- hours %>% 
+  filter(hour_group == "M") %>% 
+  top_n(12)
+
+onze_uma <- hours %>% 
+  filter(hour_group == "T") %>%
+  top_n(12) 
+
+cinco_sete <- hours %>% 
+  filter(hour_group == "N") %>% 
+  top_n(12)
+
+
+data_comparation2 <- merge(x = seis_oito, y = onze_uma, by = "route")
+
+data_comparation3 <- merge(x = data_comparation2, y = cinco_sete, by = "route")
+
+data_comparation3 <- data_comparation3 %>% mutate(Manhã = qntt.x, Tarde = qntt.y, Noite = qntt)
+
+comp_long1 <- gather(data_comparation3, key="measure", value="value", c("Manhã", "Tarde", "Noite"))
+comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
+```
+
+
+  
