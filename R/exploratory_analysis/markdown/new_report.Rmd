@@ -257,6 +257,8 @@ expanded %>%
       alpha=I(.30)) + labs(x = "velocidade", y = "quantidade de viagens") + scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log10')
 ```
 
+  Vemos que a maioria das viagens feitas demoram em mediana cerca de 16 minutos a serem realizadas. Vemos que há uma boa quantidade de viagens realizadas acima e abaixo dessa faixa de tempo, chegando a ter viagens com 2 minutos e outras com 2 horas.
+  
 4.2) Distância
 ```{r}
 expanded %>% 
@@ -264,9 +266,11 @@ expanded %>%
   geom_histogram(xlab="Distance",  
       fill=I("black"), 
       col=I("blue"), 
-      alpha=I(.30)) + labs(x = "distancia") + scale_x_continuous(trans = 'log2')
+      alpha=I(.30)) + labs(x = "distância") + scale_x_continuous(trans = 'log2')
 ```
 
+  Vemos que a distância percorrida nas viagens tem sua maior concentração na faixa de valor dos 4 quilômetros percorridos. 
+  
 4.3) Duração
 ```{r}
 expanded %>% 
@@ -277,3 +281,4 @@ expanded %>%
       alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log2')
 ```
 
+  Observamos que a duração das viagens se concentra na faixa de valor dos 15 minutos, o que é um tempo razoável considerando o tamanho geográfico da cidade de Curitiba. 
