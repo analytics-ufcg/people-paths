@@ -123,7 +123,7 @@ estimated_trips_result %>%
   summarise(quantity = sum(quantity_trips)) %>% 
   filter(quantity > 300) %>% 
   top_n(10) %>% 
-  ggplot(aes(x = reorder(route, -quantity), y = quantity/100000)) + labs(x = "rota", y = "quantidade de viagens (em milhões)") + geom_bar(stat = "identity") + theme_classic()
+  ggplot(aes(x = reorder(route, -quantity), y = quantity/1000)) + labs(x = "rota", y = "quantidade de viagens (em milhões)") + geom_bar(stat = "identity") + theme_classic()
 ```
 
 4.1) Verificando a popularidade mês a mês, temos:

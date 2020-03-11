@@ -48,7 +48,6 @@ estimated_trips_relevant_routes <-
   expand(trips = seq(1:quantity_trips))
 
 expanded <- estimated_trips_relevant_routes %>% group_by(date, week_day, route, start_hour, quantity_trips, duration_median, duration_sd, dist_median, speed) %>% expand(trips = seq(1:quantity_trips))
-
 ```
 
 1) Análise provendo histograma para a distância, velocidade e duração das rotas.
@@ -62,7 +61,6 @@ expanded %>%
       fill=I("black"), 
       col=I("blue"), 
       alpha=I(.30)) + labs(x = "velocidade", y = "quantidade de viagens") + scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log10')
-
 ```
   
   A velocidade das rotas se encontra, em sua maioria, na faixa dos 16 km/h.
