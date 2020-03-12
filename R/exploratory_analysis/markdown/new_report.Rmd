@@ -6,6 +6,22 @@ output: html_document
 ---
 
 ```{r}
+library(tidyverse)
+library(geosphere)
+library(dplyr)
+library(magrittr)
+library(hrbrthemes)
+library(ggplot2)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+options(warn=-1)
+```
+
+```{r}
 estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
@@ -184,8 +200,6 @@ cinco_sete2 <- hours2 %>%
 data_comparation4 <- merge(x = seis_oito2, y = onze_uma2, by = "route")
 
 data_comparation5 <- merge(x = data_comparation4, y = cinco_sete2, by = "route")
-
-data_comparation5
 
 data_comparation5 <- data_comparation5 %>% mutate(distManha = dist.x, distTarde = dist.y, distNoite = dist)
 
