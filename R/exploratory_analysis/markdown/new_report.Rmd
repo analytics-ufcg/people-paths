@@ -63,7 +63,9 @@ comp_long <- comp_long %>% mutate(value_adjusted = value)
 
 ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
 ```
-
+  
+  Como podemos ver, algumas rotas se destacam apresentando um número de viagens maior na mediana nos dias da semana de segunda e sexta em comparação com o período dos dias de terça a quinta, sendo elas a 203, 602 e 040. As duas últimas rotas ligam regiões periféricas da cidade a outras. Por outro lado, rotas como 303, segunda mais popular no geral, 503 e 023 apresentam uma maior quantidade de viagens no período de terça a quinta. Essas três rotas citadas ligam pontos da cidade ao Centro.
+  
 1.2) Distância percorrida
 ```{r}
 day_group <- data.frame(week_day = c(2:6),
@@ -92,7 +94,10 @@ comp_long <- comp_long %>% mutate(value_adjusted = value)
 
 ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "distância da viagem")
 ```
- 
+
+  Observamos agora as rotas que na mediana percorrem uma maior distância. A rota 474 apresenta uma distância consideravalmente maior nas suas viagens no período de terça, quarta e quinta. A mesma liga regiões afastadas, como o bairro Uberaba, ao centro da cidade. Outra rota de comportamento similar é a 617. Essa liga também regiões afastadas, como o bairro Tutuquara, mas a bairros periféricos, como Capão Raso e Pinheirinho.
+  Por outro lado, apresentando um comportamento contrário, ou seja, tendo a distância consideravelmente maior no período de segunda e sexta, a 646 liga uma bairro de características rurais a centros de comércio popular, como o bairro Pinheirinho.
+  
 2) Quantidade de viagens durante as horas do dia
 
 ```{r}
@@ -111,7 +116,7 @@ hours <- hours %>% filter(hour_group != "I")
 ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
 ```
 
-  Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e a tarde (das 11h as 13h).
+  Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e a tarde (das 11h as 13h). Esses são os horários de pico, ou seja, os horários onde a movimentação no transporte público é maior.
 
 3) Análise pelos horários do dia: manhã, tarde e noite  
 
@@ -152,6 +157,9 @@ comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
 ```
 
+  Como podemos observar, pela manhã a rota 303 ultrapassa em quantidade de viagens a rota 203. A noite e a tarde a 203 volta a exercer robusta liderança. Observando também as rotas 203, 503, 602, 023 e 502 vemos que suas viagens são mais populares a noite. Por outro lado, as rotas 303, 022, 040, 030, 603, 507, 204 e as que se seguem são mais populares pela manhã, que é a faixa de horário mais popular durante todo o dia. 
+  Não vemos nenhuma rota sendo mais popular no horário da tarde, ou seja, aquela que se encontra entre as 11h e as 13h. Um destaque evidente fica por conta da rota 503, que dispara no horário da noite, ultrapassando a rota 303 e se aproximando da 203. A 503 é uma rota predominantemente noturna.
+  
 3.2) Distância percorrida
 ```{r}
 hours2 <- estimated_trips_result %>% 
@@ -185,10 +193,13 @@ comp_long1 <- gather(data_comparation5, key="measure", value="value", c("distMan
 
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "distância percorrida")
 ```
-
+  
+  Apesar das 11h as 13h ser o horário com o menor número de viagens no geral entre os três principais horários, rotas como 506, 646 e 617 apresentam suas viagens como mais longas na mediana nesse horário. A rota 305, curiosamente, apresenta a mesma mediana de distância nos três horários.
+  Para o horário da manhã, aquele que concentra a maior quantidade de viagens, são apenas três as rotas que aprensentam suas viagens mais longas nesse horário, a 659, 508 e 684.
+  
 3.3) Velocidade
 
-3.3.1) Mais lentos
+3.3.1) Mais rápidas
 ```{r}
 hours3 <- estimated_trips_relevant_routes %>% 
   group_by(route, start_hour) %>% 
@@ -219,8 +230,10 @@ comp_long1 <- gather(data_comparation5, key="measure", value="value", c("Manha",
 
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "velocidade (km/h)")
 ```
-
-3.3.2) Mais rápidos
+  
+  Podemos observar que a tarde é o horário que, predominantemente, apresenta as viagens como sendo mais rápidas e a noite mais lentas, entre as rotas mais lentas no geral. 
+  
+3.3.2) Mais lentas
 ```{r}
 seis_oito3 <- hours3 %>% 
   filter(hour_group == "M") %>% 
@@ -244,7 +257,10 @@ comp_long1 <- gather(data_comparation5, key="measure", value="value", c("Manha",
 
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "velocidade (km/h)")
 ```
-
+  
+  Dentre as rotas mais lentas, a manhã é o horário onde a maioria delas anda mais rápido e a noite como mais lentas. Porém algumas rotas, apresentam comportamentos peculiares, como a 631, 822 e 714.
+  
+  
 4) Histogramas: velocidade, distância e duração das viagens.
 
 4.1) Velocidade
