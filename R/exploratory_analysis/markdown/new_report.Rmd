@@ -133,6 +133,7 @@ ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position
 ```
 
   Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e a tarde (das 11h as 13h). Esses são os horários de pico, ou seja, os horários onde a movimentação no transporte público é maior.
+  Como explicação pro horário da manhã ser o de maior popularidade é o fato de ser nesse horário que as pessoas se deslocam pros seus locais de estudo e trabalho, onde tendem a permanecer pelo resto do dia. Assim, o horário de 11h as 13h se torna o horário se reserva para uma parte das pessoas se deslocam para almoço e para o deslocamento dos alunos até as escolas. Geralmente, as pessoas que saíram pela manhã não voltam para seus locais de origem no horário do almoço, fazendo isso apenas a noite.
 
 3) Análise pelos horários do dia: manhã, tarde e noite  
 
@@ -245,7 +246,7 @@ comp_long1 <- gather(data_comparation5, key="measure", value="value", c("Manha",
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "velocidade (km/h)")
 ```
   
-  Podemos observar que a tarde é o horário que, predominantemente, apresenta as viagens como sendo mais rápidas e a noite mais lentas, entre as rotas mais lentas no geral. 
+  Podemos observar que a tarde é o horário que, predominantemente, apresenta as viagens como sendo mais rápidas e a noite mais lentas, entre as rotas mais rápidas no geral. 
   
 3.3.2) Mais lentas
 ```{r}
@@ -287,7 +288,7 @@ expanded %>%
       alpha=I(.30)) + labs(x = "velocidade", y = "quantidade de viagens") + scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log10')
 ```
 
-  Vemos que a maioria das viagens feitas demoram em mediana cerca de 16 minutos a serem realizadas. Vemos que há uma boa quantidade de viagens realizadas acima e abaixo dessa faixa de tempo, chegando a ter viagens com 2 minutos e outras com 2 horas.
+  Vemos que a maioria das viagens feitas possue velocidade mediana de cerca de 16 km/h. Vemos que há também uma boa quantidade de viagens realizadas acima e abaixo dessa faixa de velocidade, chegando a ter viagens a 2 km/h e outras com mais de 100 km/h.
   
 4.2) Distância
 ```{r}
@@ -299,7 +300,7 @@ expanded %>%
       alpha=I(.30)) + labs(x = "distância") + scale_x_continuous(trans = 'log2')
 ```
 
-  Vemos que a distância percorrida nas viagens tem sua maior concentração na faixa de valor dos 4 quilômetros percorridos. 
+  Vemos que as viagens feitas pelos usuários percorrem uma distância média de 4 quilômetros percorridos por trecho.
   
 4.3) Duração
 ```{r}
@@ -311,4 +312,4 @@ expanded %>%
       alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log2')
 ```
 
-  Observamos que a duração das viagens se concentra na faixa de valor dos 15 minutos, o que é um tempo razoável considerando o tamanho geográfico da cidade de Curitiba. 
+  Observamos que a duração das viagens em sua mediana se concentra na faixa de valor dos 15 minutos, o que é um tempo razoável considerando o tamanho geográfico da cidade de Curitiba. 
