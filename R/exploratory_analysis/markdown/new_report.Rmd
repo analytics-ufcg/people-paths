@@ -79,8 +79,8 @@ comp_long <- comp_long %>% mutate(value_adjusted = value)
 
 ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
 ```
-  
-  Como podemos ver, algumas rotas se destacam apresentando um número de viagens maior na mediana nos dias da semana de segunda e sexta em comparação com o período dos dias de terça a quinta, sendo elas a 203, 602 e 040. As duas últimas rotas ligam regiões periféricas da cidade a outras. Por outro lado, rotas como 303, segunda mais popular no geral, 503 e 023 apresentam uma maior quantidade de viagens no período de terça a quinta. Essas três rotas citadas ligam pontos da cidade ao Centro.
+
+  Como podemos ver, algumas rotas se destacam apresentando um número de viagens inferidas maior na mediana nos dias da semana de segunda e sexta em comparação com o período dos dias de terça a quinta, sendo elas a 203, 602 e 040. As duas últimas rotas ligam regiões periféricas da cidade a outras. Por outro lado, rotas como 303, segunda mais popular no geral, 503 e 023 apresentam uma maior quantidade de viagens no período de terça a quinta. Essas três rotas citadas ligam pontos da cidade ao Centro.
   
 1.2) Distância percorrida
 ```{r}
@@ -111,7 +111,7 @@ comp_long <- comp_long %>% mutate(value_adjusted = value)
 ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "distância da viagem")
 ```
 
-  Observamos agora as rotas que na mediana percorrem uma maior distância. A rota 474 apresenta uma distância consideravalmente maior nas suas viagens no período de terça, quarta e quinta. A mesma liga regiões afastadas, como o bairro Uberaba, ao centro da cidade. Outra rota de comportamento similar é a 617. Essa liga também regiões afastadas, como o bairro Tutuquara, mas a bairros periféricos, como Capão Raso e Pinheirinho.
+  Observamos agora as rotas para as quais as viagens inferidas dos usuários foram maiores no quesito distância. A rota 474 apresenta uma distância consideravalmente maior nas suas viagens no período de terça, quarta e quinta. A mesma liga regiões afastadas, como o bairro Uberaba, ao centro da cidade. Outra rota de comportamento similar é a 617. Essa liga também regiões afastadas, como o bairro Tutuquara, mas a bairros comerciais, como Capão Raso e Pinheirinho.
   Por outro lado, apresentando um comportamento contrário, ou seja, tendo a distância consideravelmente maior no período de segunda e sexta, a 646 liga uma bairro de características rurais a centros de comércio popular, como o bairro Pinheirinho.
   
 2) Quantidade de viagens durante as horas do dia
