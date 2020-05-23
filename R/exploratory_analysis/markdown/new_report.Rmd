@@ -10,7 +10,7 @@ library(tidyverse)
 library(geosphere)
 library(dplyr)
 library(magrittr)
-library(hrbrthemes)
+#library(hrbrthemes)
 library(ggplot2)
 
 library(rgeos)
@@ -21,8 +21,15 @@ options(scipen = 999)
 options(warn=-1)
 ```
 
+#nolsd
+#local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv
+
 ```{r}
-estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv", col_types = list(
+antigo_data <- read_csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
+```
+
+```{r}
+estimated_trips_result <- read_csv("/home/admin/ivan/data/od-matrix/full/output/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -118,7 +125,7 @@ ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = v
 
 ```{r}
 hour_group <- data.frame(start_hour = c(4:23),
-                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
+                         hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
 
 hours <- estimated_trips_result %>% 
   group_by(route, start_hour) %>% 
@@ -129,7 +136,7 @@ hours <- estimated_trips_result %>%
 
 hours <- hours %>% filter(hour_group != "I")
 
-ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
+ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "período do dia", y = "quantidade de viagens")
 ```
 
   Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e a tarde (das 11h as 13h). Esses são os horários de pico, ou seja, os horários onde a movimentação no transporte público é maior.
@@ -174,13 +181,14 @@ comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
 ```
 
-  Como podemos observar, pela manhã a rota 303 ultrapassa em quantidade de viagens a rota 203. A noite e a tarde a 203 volta a exercer robusta liderança. Observando também as rotas 203, 503, 602, 023 e 502 vemos que suas viagens são mais populares a noite. Por outro lado, as rotas 303, 022, 040, 030, 603, 507, 204 e as que se seguem são mais populares pela manhã, que é a faixa de horário mais popular durante todo o dia. 
-  Não vemos nenhuma rota sendo mais popular no horário da tarde, ou seja, aquela que se encontra entre as 11h e as 13h. Um destaque evidente fica por conta da rota 503, que dispara no horário da noite, ultrapassando a rota 303 e se aproximando da 203. A 503 é uma rota predominantemente noturna.
+  Como podemos observar, pela manhã a rota 303 ultrapassa em quantidade de viagens a rota 203, a mais popular no geral. A noite e a tarde a 203 volta a exercer robusta liderança. Observando também as rotas 203, 503, 602, 023 e 502 vemos que suas viagens são mais populares a noite. Por outro lado, as rotas 303, 022, 040, 030, 603, 507, 204 e as que se seguem são mais populares pela manhã, que é a faixa de horário mais popular durante todo o dia. 
+  Não vemos nenhuma rota sendo mais popular no horário da tarde, ou seja, aquela que se encontra entre as 11h e as 13h. Um destaque evidente fica por conta da rota 503, que dispara no horário da noite, ultrapassando a rota 303 e se aproximando da 203. A 503 é uma rota predominantemente noturna, assim como a 203. A 303 apresenta um comportamento mais equilibrado, mas sendo mais demandada pela manhã.
   
 3.2) Distância percorrida
 ```{r}
-hours2 <- estimated_trips_result %>% 
+hours2 <- estimated_trips_result %>%
   group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
   summarise(dist = median(dist_median)) %>% 
   merge(hour_group) %>% 
   group_by(hour_group, route) %>% 
@@ -206,17 +214,19 @@ data_comparation5 <- data_comparation5 %>% mutate(distManha = dist.x, distTarde 
 
 comp_long1 <- gather(data_comparation5, key="measure", value="value", c("distManha", "distTarde", "distNoite"))
 
-ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "distância percorrida")
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='stepribbon') + labs(x = "route", y = "distância percorrida")
 ```
   
   Apesar das 11h as 13h ser o horário com o menor número de viagens no geral entre os três principais horários, rotas como 506, 646 e 617 apresentam suas viagens como mais longas na mediana nesse horário. A rota 305, curiosamente, apresenta a mesma mediana de distância nos três horários.
   Para o horário da manhã, aquele que concentra a maior quantidade de viagens, são apenas três as rotas que aprensentam suas viagens mais longas nesse horário, a 659, 508 e 684.
-  
+
+
 3.3) Velocidade
 
 3.3.1) Mais rápidas
 ```{r}
 hours3 <- estimated_trips_relevant_routes %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
   group_by(route, start_hour) %>% 
   summarise(speed = median(speed)) %>% 
   merge(hour_group) %>% 
@@ -312,4 +322,22 @@ expanded %>%
       alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log2')
 ```
 
-  Observamos que a duração das viagens em sua mediana se concentra na faixa de valor dos 15 minutos, o que é um tempo razoável considerando o tamanho geográfico da cidade de Curitiba. 
+  Observamos que a duração das viagens em sua mediana se concentra na faixa de valor dos 15 minutos, o que é um tempo razoável considerando o tamanho geográfico da cidade de Curitiba.
+
+  Relação entre a distância percorida e velocidade.
+```{r}
+estimated_trips_relevant_routes %>%
+  ggplot(aes(x = dist_median, y = speed)) + 
+  geom_hex() +   
+  geom_smooth(method = "lm", color = "brown") + labs(x = "distância percorrida", y = "velocidade")
+```
+
+  Relação entre a velocidade e a quantidade de viagens.
+```{r}
+theme_set(theme_classic())
+
+estimated_trips_relevant_routes %>%
+  ggplot(aes(x = quantity_trips, y = speed)) + 
+  geom_hex() +   
+  geom_smooth(method = "lm", color = "brown") + labs(x = "quantidade de viagens", y = "velocidade")
+```

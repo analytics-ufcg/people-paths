@@ -50,6 +50,16 @@ estimated_trips_relevant_routes <-
 expanded <- estimated_trips_relevant_routes %>% group_by(date, week_day, route, start_hour, quantity_trips, duration_median, duration_sd, dist_median, speed) %>% expand(trips = seq(1:quantity_trips))
 ```
 
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>%
+  summarise(qntt = sum(quantity_trips)) %>% 
+  filter(qntt < 300) %>% 
+  ggplot(aes(x = reorder(route, qntt), y = qntt)) + labs(x = "route") + geom_col() + theme_classic()
+
+```
+
+
 1) Análise provendo histograma para a distância, velocidade e duração das rotas.
 
   Para calcular a velocidade de uma rota faremos o cálculo da distância percorrida dividida pelo tempo gasto. Todas as medidas serão calculadas em sua mediana.

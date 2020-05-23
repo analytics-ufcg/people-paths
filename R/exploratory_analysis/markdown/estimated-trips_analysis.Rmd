@@ -79,16 +79,16 @@ estimated_trips_result %>%
   
 ```{r}
 estimated_trips_result %>% 
-  filter(dist_median < 5000 & duration_median >= 50) %>% 
+  filter(dist_median < 5000 & duration_median >= 30) %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) 
 
 estimated_trips_result %>% 
   filter(route == "022") %>% 
-  filter(dist_median < 5000 & duration_median >= 50) %>% 
+  filter(dist_median < 5000 & duration_median >= 30) %>% 
   ggplot(aes(x = duration_median, y = dist_median)) + geom_point()
 ```
-  Os outliers são aquelas viagens que apresentam duração mediana acima de 25 minutos. Nessa análise, restringimos as viagens para aquelas com duração mediana igual ou maior que 50, onde vemos que a rota 022 possui o maior número de viagens, com cerca de 284. As rotas 370 e 532 também se destacam, com 162 e 129 viagens feitas, respectivamente. 
+  Os outliers são aquelas viagens que apresentam duração mediana acima de 25 minutos. Nessa análise, restringimos as viagens para aquelas com duração mediana igual ou maior que 30, onde vemos que a rota 022 possui o maior número de viagens, com cerca de 284. As rotas 370 e 532 também se destacam, com 162 e 129 viagens feitas, respectivamente. 
   
   Podemos dizer que, de alguma forma, a linha 022 se mostra mais propensa a 'imprevistos'. Temos 3 viagens com cerca de 1,5 km percorrido em quase 120 minutos (2 horas), além de 6 viagens percorrendo cerca de 4,5 km entre 80 e 100 minutos (1hr e 20min e 1hr e 40min).  
 
