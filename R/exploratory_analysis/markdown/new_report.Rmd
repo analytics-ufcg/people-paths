@@ -91,8 +91,6 @@ ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = v
   
 1.2) Distância percorrida
 ```{r}
-day_group <- data.frame(week_day = c(2:6),
-                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
 
 days <- estimated_trips_result %>%
   group_by(route, week_day) %>% 
@@ -123,7 +121,35 @@ ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = v
 
 1.3) Velocidade das viagens
 
+```{r}
+
+days <- estimated_trips_result %>%
+  group_by(route, week_day) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  summarise(speed = median((dist_median/1000) / (duration_median * 60))) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(speed =  median(speed))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$speed, Terca_Quarta_Quinta = terça_quinta$speed)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "velocidade da viagem")
+```
   
+  Observamos que a valocidade é praticamente a mesma entre todas as rotas no dois diferentes períodos da semana.
+
 2) Quantidade de viagens durante as horas do dia
 
 ```{r}
