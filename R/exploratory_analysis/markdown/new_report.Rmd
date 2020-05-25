@@ -56,6 +56,9 @@ estimated_trips_relevant_routes <-
 
 expanded <- estimated_trips_relevant_routes %>% group_by(date, week_day, route, start_hour, quantity_trips, duration_median, duration_sd, dist_median, speed) %>% expand(trips = seq(1:quantity_trips))
 ```
+
+Vale destacar que quando nos referirmos as viagens em qualquem varívael (velocidade, quantidade, distânia, etc), estaremos falando de cada viagem feita por passageiro e não por ônibus ou rota. Isso significa dizer, que uma rota terá várias viagens feitas nela.
+
 1) Análise de segunda-sexta e terça-quarta-quinta. 
 
 1.1) Quantidade de viagens (na mediana)
