@@ -318,6 +318,37 @@ comp_long1 <- gather(data_comparation5, key="measure", value="value", c("distMan
 ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='stepribbon') + labs(x = "route", y = "distância percorrida")
 ```
 
+3.2.2) 022 - outlier - Duração
+
+```{r}
+hours2 <- estimated_trips_result %>%
+  group_by(route, start_hour) %>% 
+  filter(route == "022") %>% 
+  summarise(duration_median = median(duration_median)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(duration_median = median(duration_median))
+
+seis_oito2 <- hours2 %>% 
+  filter(hour_group == "M")
+
+onze_uma2 <- hours2 %>% 
+  filter(hour_group == "T")
+
+cinco_sete2 <- hours2 %>% 
+  filter(hour_group == "N")
+
+data_comparation4 <- merge(x = seis_oito2, y = onze_uma2, by = "route")
+
+data_comparation5 <- merge(x = data_comparation4, y = cinco_sete2, by = "route")
+
+data_comparation5 <- data_comparation5 %>% mutate(durationManha = duration_median.x, durationTarde = duration_median.y, durationNoite = duration_median)
+
+comp_long1 <- gather(data_comparation5, key="measure", value="value", c("durationManha", "durationTarde", "durationNoite"))
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='stepribbon') + labs(x = "route", y = "duração")
+```
+
 
 3.3) Velocidade
 
