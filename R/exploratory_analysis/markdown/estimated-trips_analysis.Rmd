@@ -103,21 +103,21 @@ estimated_trips_result %>%
 outlier %>%
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
-  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_bw()
+  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_bw() + labs(x = "hora", y = "quantidade de viagens")
 ```
 
 ```{r}
 outlier %>%
   group_by(start_hour) %>% 
   summarise(dist = median(dist_median)) %>% 
-  ggplot(aes(x = start_hour, y = dist)) + geom_col() + theme_bw()
+  ggplot(aes(x = start_hour, y = dist)) + geom_col() + theme_bw() + labs(x = "hora", y = "distância percorrida (metro)")
 ```
 
 ```{r}
 outlier %>%
   group_by(start_hour) %>% 
   summarise(duration = median(duration_median)) %>% 
-  ggplot(aes(x = start_hour, y = duration)) + geom_col() + theme_bw()
+  ggplot(aes(x = start_hour, y = duration)) + geom_col() + theme_bw() + labs(x = "hora", y = "duração da viagam")
 ```
 
 2) Quais as rotas que, na mediana, percorrem uma maior distância?
