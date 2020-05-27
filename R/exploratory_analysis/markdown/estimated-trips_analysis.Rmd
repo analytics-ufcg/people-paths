@@ -52,7 +52,7 @@ qntt_t <- estimated_trips_result %>% summarise(qntt = sum(quantity_trips))
 estimated_trips_result %>%
   ggplot(aes(x = dist_median, y = duration_median)) + 
   geom_point(size = .5, alpha = .5) + theme_classic()  + 
-  geom_smooth(method = "lm") 
+  geom_smooth(method = "lm") + labs(x = "Distância percorrida", y = "Duração")
 
 ```
 
@@ -79,18 +79,46 @@ estimated_trips_result %>%
   
 ```{r}
 estimated_trips_result %>% 
-  filter(dist_median < 5000 & duration_median >= 30) %>% 
+  filter(dist_median < 6000 & duration_median >= 30) %>% 
   group_by(route) %>% 
   summarise(quantity = sum(quantity_trips)) 
 
+outlier <- estimated_trips_result %>% 
+  filter(route == "022") %>%
+  filter(dist_median < 6000 & duration_median >= 30)
+
+outlier  
+
 estimated_trips_result %>% 
-  filter(route == "022") %>% 
-  filter(dist_median < 5000 & duration_median >= 30) %>% 
-  ggplot(aes(x = duration_median, y = dist_median)) + geom_point()
+  filter(route == "022") %>%
+  summarise(duracao = median(duration_median))
 ```
+
   Os outliers são aquelas viagens que apresentam duração mediana acima de 25 minutos. Nessa análise, restringimos as viagens para aquelas com duração mediana igual ou maior que 30, onde vemos que a rota 022 possui o maior número de viagens, com cerca de 284. As rotas 370 e 532 também se destacam, com 162 e 129 viagens feitas, respectivamente. 
   
-  Podemos dizer que, de alguma forma, a linha 022 se mostra mais propensa a 'imprevistos'. Temos 3 viagens com cerca de 1,5 km percorrido em quase 120 minutos (2 horas), além de 6 viagens percorrendo cerca de 4,5 km entre 80 e 100 minutos (1hr e 20min e 1hr e 40min).  
+  Podemos dizer que, de alguma forma, a linha 022 se mostra mais propensa a 'imprevistos'. Temos 3 viagens com cerca de 1,5 km percorrido em quase 120 minutos (2 horas), além de 6 viagens percorrendo cerca de 4,5 km entre 80 e 100 minutos (1hr e 20min e 1hr e 40min). 
+  
+  Analisando a rota 022 mais profundamente.
+```{r}
+outlier %>%
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_bw()
+```
+
+```{r}
+outlier %>%
+  group_by(start_hour) %>% 
+  summarise(dist = median(dist_median)) %>% 
+  ggplot(aes(x = start_hour, y = dist)) + geom_col() + theme_bw()
+```
+
+```{r}
+outlier %>%
+  group_by(start_hour) %>% 
+  summarise(duration = median(duration_median)) %>% 
+  ggplot(aes(x = start_hour, y = duration)) + geom_col() + theme_bw()
+```
 
 2) Quais as rotas que, na mediana, percorrem uma maior distância?
 
