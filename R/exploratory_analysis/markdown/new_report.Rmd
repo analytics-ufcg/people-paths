@@ -481,32 +481,31 @@ Intervalo de confiança - gráficos de barra
 ```{r}
 library(Rmisc)
 
-hours
+hour_group <- data.frame(start_hour = c(4:23),
+                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
 
-ic_estimated_trips_result <- summarySE(hours, measurevar="qntt", groupvars=c("route"))
+dat <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507" || route == "022") %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route)
+  
+dat
+
+ic_estimated_trips_result <- summarySE(dat, measurevar="qntt", groupvars=c("route", "hour_group"))
+
+ic_estimated_trips_result <- ic_estimated_trips_result %>%
+  filter(hour_group != "I")
 
 ic_estimated_trips_result
 
-ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt)) + 
+ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt, fill=hour_group)) + 
     geom_bar(position=position_dodge(), stat="identity") +
     geom_errorbar(aes(ymin=qntt-se, ymax=qntt+se),
                   width=.2,                    # Width of the error bars
                   position=position_dodge(.9))
-```
 
-```{r}
-hour_group <- data.frame(start_hour = c(4:23),
-                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
-
-hours <- estimated_trips_result %>% 
-  group_by(route, start_hour) %>% 
-  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507" || route == "022") %>% 
-  summarise(qnt = sum(quantity_trips))
-  merge(hour_group) %>% 
-  group_by(hour_group, route) %>% 
-  summarise(qntt = median(qnt))
-  
-hours
 
 ```
 
