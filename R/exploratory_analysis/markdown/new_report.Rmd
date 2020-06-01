@@ -479,8 +479,6 @@ estimated_trips_relevant_routes %>%
 Intervalo de confiança - gráficos de barra
 
 ```{r}
-library(Rmisc)
-
 hour_group <- data.frame(start_hour = c(4:23),
                          hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
 
@@ -492,6 +490,11 @@ dat <- estimated_trips_result %>%
   group_by(hour_group, route)
   
 dat
+
+```
+
+```{r}
+library(Rmisc)
 
 ic_estimated_trips_result <- summarySE(dat, measurevar="qntt", groupvars=c("route", "hour_group"))
 
@@ -505,7 +508,6 @@ ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt, fill=hour
     geom_errorbar(aes(ymin=qntt-se, ymax=qntt+se),
                   width=.2,                    # Width of the error bars
                   position=position_dodge(.9)) + labs(x = "rota", y = "quantidade de viagens", fill="Horário")
-
 
 ```
 
