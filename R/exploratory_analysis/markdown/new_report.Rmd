@@ -12,6 +12,7 @@ library(dplyr)
 library(magrittr)
 #library(hrbrthemes)
 library(ggplot2)
+library(Rmisc)
 
 library(rgeos)
 library(sp)
@@ -189,6 +190,8 @@ hours <- estimated_trips_result %>%
   merge(hour_group) %>% 
   group_by(hour_group, route) %>% 
   summarise(qntt = median(qntt))
+
+hours
 
 seis_oito <- hours %>% 
   filter(hour_group == "M") %>% 
@@ -470,3 +473,18 @@ estimated_trips_relevant_routes %>%
   geom_hex() +   
   geom_smooth(method = "lm", color = "brown") + labs(x = "quantidade de viagens", y = "velocidade")
 ```
+
+Intervalo de confiança - gráficos de barra
+
+```{r}
+ic_estimated_trips_result <- summarySE(hours, measurevar="qntt", groupvars=c("route"))
+
+ic_estimated_trips_result
+
+ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_errorbar(aes(ymin=qntt-se, ymax=qntt+se),
+                  width=.2,                    # Width of the error bars
+                  position=position_dodge(.9))
+```
+
