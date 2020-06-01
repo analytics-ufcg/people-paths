@@ -482,7 +482,7 @@ Intervalo de confiança - gráficos de barra
 library(Rmisc)
 
 hour_group <- data.frame(start_hour = c(4:23),
-                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
+                         hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
 
 dat <- estimated_trips_result %>% 
   group_by(route, start_hour) %>% 
