@@ -504,7 +504,7 @@ ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt, fill=hour
     geom_bar(position=position_dodge(), stat="identity") +
     geom_errorbar(aes(ymin=qntt-se, ymax=qntt+se),
                   width=.2,                    # Width of the error bars
-                  position=position_dodge(.9))
+                  position=position_dodge(.9)) + labs(x = "rota", y = "quantidade de viagens", fill="Horário")
 
 
 ```
