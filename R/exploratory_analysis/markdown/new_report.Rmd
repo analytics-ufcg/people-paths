@@ -6,13 +6,12 @@ output: html_document
 ---
 
 ```{r}
+library(dplyr)
 library(tidyverse)
 library(geosphere)
-library(dplyr)
 library(magrittr)
 #library(hrbrthemes)
 library(ggplot2)
-library(Rmisc)
 
 library(rgeos)
 library(sp)
@@ -67,13 +66,16 @@ Vale destacar que quando nos referirmos as viagens em qualquem varívael (veloci
 day_group <- data.frame(week_day = c(2:6),
                         day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
 
+estimated_trips_result
+
 days <- estimated_trips_result %>%
-  group_by(route, week_day) %>% 
-  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507" || route == "022") %>%
+  group_by(week_day, route) %>%
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
   summarise(qntt = sum(quantity_trips)) %>% 
   merge(day_group) %>% 
   group_by(day_group, route) %>% 
   summarise(qntt = median(qntt))
+
 
 segunda_sexta <- days %>% 
   filter(day_group == "SS") %>% 
@@ -477,6 +479,10 @@ estimated_trips_relevant_routes %>%
 Intervalo de confiança - gráficos de barra
 
 ```{r}
+library(Rmisc)
+
+hours
+
 ic_estimated_trips_result <- summarySE(hours, measurevar="qntt", groupvars=c("route"))
 
 ic_estimated_trips_result
@@ -486,5 +492,21 @@ ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt)) +
     geom_errorbar(aes(ymin=qntt-se, ymax=qntt+se),
                   width=.2,                    # Width of the error bars
                   position=position_dodge(.9))
+```
+
+```{r}
+hour_group <- data.frame(start_hour = c(4:23),
+                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
+
+hours <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507" || route == "022") %>% 
+  summarise(qnt = sum(quantity_trips))
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(qntt = median(qnt))
+  
+hours
+
 ```
 
