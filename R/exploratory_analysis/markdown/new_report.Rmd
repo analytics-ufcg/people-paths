@@ -476,7 +476,7 @@ estimated_trips_relevant_routes %>%
   geom_smooth(method = "lm", color = "brown") + labs(x = "quantidade de viagens", y = "velocidade")
 ```
 
-Intervalo de confiança - gráficos de barra
+5) Intervalo de confiança - gráficos de barra
 
 ```{r}
 hour_group <- data.frame(start_hour = c(4:23),
@@ -492,6 +492,7 @@ dat <- estimated_trips_result %>%
 dat
 
 ```
+5.1) Quantidade de viagens
 
 ```{r}
 library(Rmisc)
@@ -509,5 +510,32 @@ ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt, fill=hour
                   width=.2,                    # Width of the error bars
                   position=position_dodge(.9)) + labs(x = "rota", y = "quantidade de viagens", fill="Horário")
 
+```
+
+5.2) Distância percorrida
+
+```{r}
+dat2 <- estimated_trips_result %>%
+  group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  summarise(dist = median(dist_median)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) 
+
+dat2
+```
+```{r}
+ic_estimated_trips_result <- summarySE(dat2, measurevar="dist", groupvars=c("route", "hour_group"))
+
+ic_estimated_trips_result <- ic_estimated_trips_result %>%
+  filter(hour_group != "I")
+
+ic_estimated_trips_result
+
+ggplot(ic_estimated_trips_result, aes(x= reorder(route,-dist), y=dist, fill=hour_group)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_errorbar(aes(ymin=dist-se, ymax=dist+se),
+                  width=.2,                    # Width of the error bars
+                  position=position_dodge(.9)) + labs(x = "rota", y = "distância percorrida", fill="Horário")
 ```
 
