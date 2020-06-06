@@ -1,0 +1,83 @@
+---
+title: "new_report"
+author: "José Ivan Silva da Cruz Júnior"
+date: "3/10/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(geosphere)
+library(magrittr)
+#library(hrbrthemes)
+library(ggplot2)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+options(warn=-1)
+```
+
+```{r}
+estimated_trips_result <- read_csv("/home/admin/ivan/data/od-matrix/full/output/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+
+irrelevant_routes <- estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(total_trips = sum(quantity_trips)) %>% 
+  filter(total_trips < 540)
+
+antigo_data <- read_csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
+
+
+```
+
+```{r}
+theme_set(theme_bw())
+library(sf)
+
+map <- readOGR("../../../../data/DIVISA_DE_BAIRROS/DIVISA_DE_BAIRROS.shp")
+map
+
+ggplot(data = map) +
+  geom_sf() +
+  geom_point(data = antigo_data, aes(x = to_stop_lon, y = to_stop_lat), fill = "darked") +
+      coord_sf(xlim = c(-88, -78), ylim = c(24.5, 33), expand = FALSE)
+
+library(tidyverse)
+library(leaflet)
+#library(geojsonio)
+library(htmlwidgets)
+library(htmltools)
+
+cmap <- leaflet(antigo_data) %>% 
+  addProviderTiles("CartoDB.Positron") %>%
+  setView(-49.29166, -25.42241, zoom = 13) %>% 
+  addPolygons(data=map,
+              col = 'dodgerblue',
+              stroke = FALSE, 
+              fillOpacity = 0.3, 
+              smoothFactor = 0.5) %>%
+  addCircleMarkers(weight = 3, 
+                   radius=10, 
+                   color="#ffa500")
+
+cmap
+
+```
+
+
+
+
+

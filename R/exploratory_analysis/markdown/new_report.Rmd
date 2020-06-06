@@ -21,7 +21,7 @@ options(scipen = 999)
 options(warn=-1)
 ```
 
-#nolsd
+#noAnalytics
 #local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv
 
 ```{r}
