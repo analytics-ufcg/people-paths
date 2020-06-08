@@ -65,14 +65,12 @@ Points_Shape = SpatialPoints(antigo_data[,c("to_stop_lon","to_stop_lat")],proj4s
 
 Points_Shape = SpatialPointsDataFrame(Points_Shape,antigo_data)
 
-plot(Points_Shape)
 
 ggplot(shpf.df) + 
-aes(long,lat) + 
+aes(long,lat, group=group) + 
 geom_polygon() +
 geom_path(color="white") +
-scale_fill_brewer("Curitiba Ecoregion") +
-geom_point(data=antigo_data, aes(x=to_stop_lon, y=to_stop_lat), color = "black")
+scale_fill_brewer("Curitiba Ecoregion")
 
 proj4string(shpf)
 
@@ -97,8 +95,21 @@ mapdata<-data.frame(antigo_data)
 names(mapdata)[names(mapdata)=="to_stop_lon"]<-"x"
 names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
 
-ggplot() +geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+  geom_point(data=mapdata, aes(x=x, y=y), color="red")
+ggplot() +geom_polygon(data=shpf, aes(x=long, y=lat, subgroup=group))+ 
+  geom_point(data=mapdata, aes(x=x, y=y), color="red") + geom_tile(data=mapdata, aes(x=x, y=y))
 
+ggplot(shpf.df) + 
+aes(long,lat) + 
+geom_polygon() +
+geom_path(color="white") +
+scale_fill_brewer("Curitiba Ecoregion") +
+geom_point(data=mapdata, aes(x=x, y=y), color="red") + geom_tile(data=mapdata, aes(x=x, y=y))
+
+
+
+```
+
+```{r}
 ggplot() +  
     geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
         colour="grey90", alpha=1)+
@@ -112,8 +123,6 @@ ggplot() +
         colours=c( "#f9f3c2","#660000"))+ # change color scale
     coord_equal(ratio=1) # square plot to avoid the distortion
 ```
-
-
 
 
 
