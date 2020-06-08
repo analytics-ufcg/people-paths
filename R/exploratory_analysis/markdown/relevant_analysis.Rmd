@@ -38,7 +38,7 @@ irrelevant_routes <- estimated_trips_result %>%
   summarise(total_trips = sum(quantity_trips)) %>% 
   filter(total_trips < 540)
 
-antigo_data <- read_csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
+antigo_data <- read.csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg", stringsAsFactors=F)
 
 
 ```
@@ -47,33 +47,26 @@ antigo_data <- read_csv("/home/admin/ivan/people-paths/R/exploratory_analysis/ma
 theme_set(theme_bw())
 library(sf)
 
-map <- readOGR("../../../../data/DIVISA_DE_BAIRROS/DIVISA_DE_BAIRROS.shp")
-map
+shpf <- readOGR("../../../../data/DIVISA_DE_BAIRROS/DIVISA_DE_BAIRROS.shp")
+shpf
 
-ggplot(data = map) +
-  geom_sf() +
-  geom_point(data = antigo_data, aes(x = to_stop_lon, y = to_stop_lat), fill = "darked") +
-      coord_sf(xlim = c(-88, -78), ylim = c(24.5, 33), expand = FALSE)
+plot(shpf)
 
-library(tidyverse)
-library(leaflet)
-#library(geojsonio)
-library(htmlwidgets)
-library(htmltools)
+library(sp)
+library(maptools)
+library(rgdal)
+library(rgeos)
 
-cmap <- leaflet(antigo_data) %>% 
-  addProviderTiles("CartoDB.Positron") %>%
-  setView(-49.29166, -25.42241, zoom = 13) %>% 
-  addPolygons(data=map,
-              col = 'dodgerblue',
-              stroke = FALSE, 
-              fillOpacity = 0.3, 
-              smoothFactor = 0.5) %>%
-  addCircleMarkers(weight = 3, 
-                   radius=10, 
-                   color="#ffa500")
+plot(antigo_data$to_stop_lon, antigo_data$to_stop_lat, pch=20, col="red")
 
-cmap
+Points=read.csv("nyc_data_sample.csv",stringsAsFactors=F)
+shapefile=readOGR("shapefiles","nyu_2451_34512")
+
+Points_Shape = SpatialPoints(antigo_data[,c("to_stop_lon","to_stop_lat")],proj4string=CRS(proj4string(shpf)))
+
+Points_Shape = SpatialPointsDataFrame(Points_Shape,antigo_data)
+
+plot(Points_Shape)
 
 ```
 
