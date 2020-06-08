@@ -95,16 +95,29 @@ mapdata<-data.frame(antigo_data)
 names(mapdata)[names(mapdata)=="to_stop_lon"]<-"x"
 names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
 
-ggplot() +geom_polygon(data=shpf, aes(x=long, y=lat, subgroup=group))+ 
-  geom_point(data=mapdata, aes(x=x, y=y), color="red") + geom_tile(data=mapdata, aes(x=x, y=y))
 
-ggplot(shpf.df) + 
-aes(long,lat) + 
+ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+  geom_density2d(data=mapdata, aes(x=x, y=y), color="red")
+
+
+
+
+
+ggplot(mapdata, aes(x=x, y=y)) + 
+  stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon")+
+  geom_point(colour="red")+
+  geom_path(data=shpf,aes(x=long, y=lat,group=group), colour="grey50")+
+  scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral")))+
+  xlim(-10,+2.5) +
+  coord_fixed()
+
+
+
+ggplot(shpf) + 
+aes(long,lat,group=group) + 
 geom_polygon() +
 geom_path(color="white") +
-scale_fill_brewer("Curitiba Ecoregion") +
-geom_point(data=mapdata, aes(x=x, y=y), color="red") + geom_tile(data=mapdata, aes(x=x, y=y))
-
+scale_fill_brewer("Curitiba Ecoregion")
 
 
 ```
@@ -117,8 +130,8 @@ ggplot() +
     theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
           axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
           plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
-    geom_point(aes(x=x, y=y), data=mapdata, alpha=1, size=3, color="grey20")+# to get outline
-    geom_point(aes(x=x, y=y), data=mapdata, alpha=1, size=2)+
+    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=1, size=3, color="grey20")+# to get outline
+    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=1, size=2)+
     scale_colour_gradientn("Building\narea (sq-km)", 
         colours=c( "#f9f3c2","#660000"))+ # change color scale
     coord_equal(ratio=1) # square plot to avoid the distortion
