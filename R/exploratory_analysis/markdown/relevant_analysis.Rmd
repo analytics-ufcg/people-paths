@@ -46,21 +46,20 @@ antigo_data <- read.csv("/home/admin/ivan/people-paths/R/exploratory_analysis/ma
 ```{r}
 theme_set(theme_bw())
 library(sf)
+library(maptools)
+library(plyr)
 
 shpf <- readOGR("../../../../data/DIVISA_DE_BAIRROS/DIVISA_DE_BAIRROS.shp")
 shpf
 
+shpf@data$id = rownames(shpf@data)
+shpf.points = fortify(shpf, region="id")
+shpf.df = join(shpf.points, shpf@data, by="id")
+
 plot(shpf)
+shpf
 
-library(sp)
-library(maptools)
-library(rgdal)
-library(rgeos)
-
-plot(antigo_data$to_stop_lon, antigo_data$to_stop_lat, pch=20, col="red")
-
-Points=read.csv("nyc_data_sample.csv",stringsAsFactors=F)
-shapefile=readOGR("shapefiles","nyu_2451_34512")
+library(esquisse)
 
 Points_Shape = SpatialPoints(antigo_data[,c("to_stop_lon","to_stop_lat")],proj4string=CRS(proj4string(shpf)))
 
@@ -68,7 +67,52 @@ Points_Shape = SpatialPointsDataFrame(Points_Shape,antigo_data)
 
 plot(Points_Shape)
 
+ggplot(shpf.df) + 
+aes(long,lat) + 
+geom_polygon() +
+geom_path(color="white") +
+scale_fill_brewer("Curitiba Ecoregion") +
+geom_point(data=antigo_data, aes(x=to_stop_lon, y=to_stop_lat), color = "black")
+
+proj4string(shpf)
+
 ```
+
+```{r}
+class(antigo_data)
+
+coordinates(antigo_data)<-~to_stop_lon+to_stop_lat
+class(antigo_data)
+
+proj4string(antigo_data)
+
+proj4string(antigo_data)<-CRS("+proj=longlat +datum=NAD83")
+
+antigo_data<-spTransform(antigo_data, CRS(proj4string(shpf)))
+
+identical(proj4string(antigo_data),proj4string(shpf))
+
+mapdata<-data.frame(antigo_data)
+
+names(mapdata)[names(mapdata)=="to_stop_lon"]<-"x"
+names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
+
+ggplot() +geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+  geom_point(data=mapdata, aes(x=x, y=y), color="red")
+
+ggplot() +  
+    geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+        colour="grey90", alpha=1)+
+    labs(x="", y="", title="Building Area Within 1000m")+ #labels
+    theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+          axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+          plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+    geom_point(aes(x=x, y=y), data=mapdata, alpha=1, size=3, color="grey20")+# to get outline
+    geom_point(aes(x=x, y=y), data=mapdata, alpha=1, size=2)+
+    scale_colour_gradientn("Building\narea (sq-km)", 
+        colours=c( "#f9f3c2","#660000"))+ # change color scale
+    coord_equal(ratio=1) # square plot to avoid the distortion
+```
+
 
 
 
