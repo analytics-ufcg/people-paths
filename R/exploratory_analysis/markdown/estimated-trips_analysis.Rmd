@@ -366,7 +366,7 @@ estimated_trips_result %>%
 estimated_trips_result %>% 
   group_by(start_hour) %>% 
   summarise(quantity = sum(quantity_trips)) %>% 
-  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "hour", y = "trips quantity") + geom_col() + theme_classic()
+  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "intervalo de horário", y = "quantidade de viagens") + geom_col() + theme_classic()
 ```
 
   Podemos ver que os horários mais populares em relação a quantidade de viagens são concentrados na parte inicial da manhã e no início da noite. Os horários de 6h às 8h aparecem no topo da popularidade, seguido pelo horário das 17h às 19h. Esses são os horários onde as pessoas estão indo para os postos de trabalho e estudo, como também, no início da noite, voltando dos mesmos.

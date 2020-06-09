@@ -40,6 +40,7 @@ irrelevant_routes <- estimated_trips_result %>%
 antigo_data <- read.csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg", stringsAsFactors=F)
 
 
+
 ```
 
 ```{r}
@@ -75,6 +76,7 @@ proj4string(shpf)
 
 ```
 
+Demanda de destino
 ```{r}
 class(antigo_data)
 
@@ -97,18 +99,6 @@ names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
 
 ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
   geom_density2d(data=mapdata, aes(x=x, y=y), color="red")
-
-
-
-
-
-ggplot(mapdata, aes(x=x, y=y)) + 
-  stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon")+
-  geom_point(colour="red")+
-  geom_path(data=shpf,aes(x=long, y=lat,group=group), colour="grey50")+
-  scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral")))+
-  xlim(-10,+2.5) +
-  coord_fixed()
 
 
 
@@ -136,6 +126,54 @@ ggplot() +
     coord_equal(ratio=0.7) # square plot to avoid the distortion
 ```
 
+Demanda de embarque
+```{r}
+antigo_data_emb <- read.csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg", stringsAsFactors=F)
+
+class(antigo_data_emb)
+
+coordinates(antigo_data_emb)<-~from_stop_lon+from_stop_lat
+class(antigo_data_emb)
+
+proj4string(antigo_data_emb)
+
+proj4string(antigo_data_emb)<-CRS("+proj=longlat +datum=NAD83")
+
+antigo_data_emb<-spTransform(antigo_data_emb, CRS(proj4string(shpf)))
+
+identical(proj4string(antigo_data_emb),proj4string(shpf))
+
+mapdata_emb <- data.frame(antigo_data_emb)
+
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lon"]<-"xEmb"
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lat"]<-"yEmb"
+
+mapdata_emb
 
 
+ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+  geom_density2d(data=mapdata_emb, aes(x=xEmb, y=yEmb), color="red")
+
+
+ggplot(shpf) + 
+aes(long,lat,group=group) + 
+geom_polygon() +
+geom_path(color="white") +
+scale_fill_brewer("Curitiba Ecoregion")
+```
+
+```{r}
+ggplot() +  
+    geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+        colour="grey90", alpha=1)+
+    labs(x="", y="", title="Bairros com mais embarque")+ #labels
+    theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+          axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+          plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+    geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=3, color="grey20")+# to get outline
+    geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=2)+
+    scale_colour_gradientn("Building\narea (sq-km)", 
+        colours=c( "#f9f3c2","#660000"))+ # change color scale
+    coord_equal(ratio=0.7) # square plot to avoid the distortion
+```
 
