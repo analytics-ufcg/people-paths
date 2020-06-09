@@ -10,7 +10,6 @@ library(dplyr)
 library(tidyverse)
 library(geosphere)
 library(magrittr)
-#library(hrbrthemes)
 library(ggplot2)
 
 library(rgeos)
@@ -126,15 +125,15 @@ scale_fill_brewer("Curitiba Ecoregion")
 ggplot() +  
     geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
         colour="grey90", alpha=1)+
-    labs(x="", y="", title="Building Area Within 1000m")+ #labels
+    labs(x="", y="", title="Bairros mais demandados")+ #labels
     theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
           axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
           plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
-    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=1, size=3, color="grey20")+# to get outline
-    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=1, size=2)+
+    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=3, color="grey20")+# to get outline
+    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=2)+
     scale_colour_gradientn("Building\narea (sq-km)", 
         colours=c( "#f9f3c2","#660000"))+ # change color scale
-    coord_equal(ratio=1) # square plot to avoid the distortion
+    coord_equal(ratio=0.7) # square plot to avoid the distortion
 ```
 
 
