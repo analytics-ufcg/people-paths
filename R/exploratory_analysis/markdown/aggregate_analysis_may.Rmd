@@ -37,7 +37,7 @@ diff_hour <- diff_hour * 60
 
 data_dist <- data_dist %>% bind_cols(diff_hour)
 
-data_dist
+
 
 data_dist %>% ggplot(aes(x = dist, y = diff_hour)) %>% + geom_point() + theme_classic()
 ```
@@ -89,7 +89,7 @@ data %>% mutate(route = as.factor(route)) %>% group_by(route) %>% summarise(temp
 data_dist$new_start_time <- format(as.POSIXct(data_dist$start_time), "%H:%M:%S")
 data_dist$new_end_time <- format(as.POSIXct(data_dist$end_time), "%H:%M:%S")
 
-data_dist
+
 
 new_data_dist <- data_dist[data_dist$new_start_time >= "17:00:00" & data_dist$new_end_time <= "19:00:00",]
 
@@ -134,7 +134,7 @@ new_data_dist %>% mutate(route = (as.factor(route))) %>% group_by(route) %>% sum
 11) Quais as rotas mais populares (lotadas) das 11:00h as 13:00h?
 ```{r}
 new_data_dist <- data_dist[data_dist$new_start_time >= "11:00:00" & data_dist$new_end_time <= "13:00:00",]
-new_data_dist
+
 
 perc = nrow(new_data_dist)/nrow(data_dist)
 perc
@@ -159,7 +159,6 @@ lubridate::hour(lubridate::ymd_hms("2017-07-05 11:02:32"))
 
 new_data_dist <- data_dist %>% mutate(boarding_time = lubridate::hour(lubridate::ymd_hms(start_time)))
 
-new_data_dist
 
 new_data_dist %>% filter(route == "203") %>% group_by(boarding_time) %>% summarise(quantidade = length(route)) %>% ggplot(aes(x = boarding_time, y = quantidade)) + geom_col() + theme_bw()
 ```

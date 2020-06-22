@@ -21,7 +21,8 @@ options(warn=-1)
 ```
 
 ```{r}
-estimated_trips_result <- read_csv("/home/admin/ivan/data/od-matrix/full/output/result.csv", col_types = list(
+#lacina - /home/admin/ivan/data/od-matrix/full/output/result.csv
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -37,9 +38,7 @@ irrelevant_routes <- estimated_trips_result %>%
   summarise(total_trips = sum(quantity_trips)) %>% 
   filter(total_trips < 540)
 
-antigo_data <- read.csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg", stringsAsFactors=F)
-
-
+antigo_data <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
 
 ```
 
@@ -49,7 +48,9 @@ library(sf)
 library(maptools)
 library(plyr)
 
-shpf <- readOGR("../../../../data/DIVISA_DE_BAIRROS/DIVISA_DE_BAIRROS.shp")
+#lacina - ../../../../data/DIVISA_DE_BAIRROS/DIVISA_DE_BAIRROS.shp
+
+shpf <- readOGR("/local/juninho/shape/DIVISA_DE_BAIRROS.shp")
 shpf
 
 shpf@data$id = rownames(shpf@data)
@@ -128,7 +129,7 @@ ggplot() +
 
 Demanda de embarque
 ```{r}
-antigo_data_emb <- read.csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg", stringsAsFactors=F)
+antigo_data_emb <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
 
 class(antigo_data_emb)
 

@@ -9,8 +9,9 @@ library(tidyverse)
 library(geosphere)
 library(dplyr)
 ```
+
 ```{r}
-data <- read.csv("/local/juninho/aggregate_output/2017_07_05_full_agg")
+data <- read.csv("/local/juninho/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
 ```
 
 1) Há uma relação entre a distância das viagens e a tempo delas? 
@@ -69,9 +70,8 @@ data %>% mutate(route = as.factor(route)) %>% group_by(route) %>% summarise(temp
 7) Quais as rotas cujas viagens são mais rápidas na média?
 
 ```{r}
-data %>% mutate(route = as.factor(route)) %>% group_by(route) %>% summarise(tempo = mean(difftime(end_time, start_time, units = 'hour')) * 60) %>% top_n(-10) %>% ggplot(aes(x = reorder(route, tempo), y = tempo)) + geom_point() + theme_bw()
+data %>% mutate(route = as.factor(route)) %>% group_by(route) %>% summarise(tempo = mean(difftime(end_time, start_time, units = 'hour')) * 60) %>% top_n(-20) %>% ggplot(aes(x = reorder(route, tempo), y = tempo)) + geom_point() + theme_bw()
 
-data %>% mutate(route = as.factor(route)) %>% group_by(route) %>% summarise(tempo = mean(difftime(end_time, start_time, units = 'hour')) * 60) %>% top_n(-20)
 ```
   Podemos ver que as rotas cujas viagens na média são mais rápidas são a 343, com média de 2.25 minutos, a 912, com média 3.5 minutos e a 311, com média de 4.6 minutos, respectivamente. A pouca distância percorrida pela rota 343 se explica no fato de que seu itinário é muito curto, praticamente cruzando uma parte do Bairro ALto. A linha 912, que não opera aos domingos cruza de forma quase reta a Avenida Manoel Ribas.
   
@@ -80,7 +80,6 @@ data %>% mutate(route = as.factor(route)) %>% group_by(route) %>% summarise(temp
 data_dist$new_start_time <- format(as.POSIXct(data_dist$start_time), "%H:%M:%S")
 data_dist$new_end_time <- format(as.POSIXct(data_dist$end_time), "%H:%M:%S")
 
-data_dist
 
 new_data_dist <- data_dist[data_dist$new_start_time >= "17:00:00" & data_dist$new_end_time <= "19:00:00",]
 
@@ -105,7 +104,7 @@ new_data_dist %>% mutate(route = (as.factor(route))) %>% group_by(route) %>% sum
 10) Quais as rotas mais populares (lotadas) das 6:30h as 8:30h?
 ```{r}
 new_data_dist <- data_dist[data_dist$new_start_time >= "06:30:00" & data_dist$new_end_time <= "08:30:00",]
-new_data_dist
+
 
 perc = nrow(new_data_dist)/nrow(data_dist)
 perc
@@ -127,7 +126,6 @@ new_data_dist %>% mutate(route = (as.factor(route))) %>% group_by(route) %>% sum
 11) Quais as rotas mais populares (lotadas) das 11:00h as 13:00h?
 ```{r}
 new_data_dist <- data_dist[data_dist$new_start_time >= "11:00:00" & data_dist$new_end_time <= "13:00:00",]
-new_data_dist
 
 perc = nrow(new_data_dist)/nrow(data_dist)
 perc
@@ -155,19 +153,11 @@ lubridate::hour(lubridate::ymd_hms("2017-07-05 11:02:32"))
 
 new_data_dist <- data_dist %>% mutate(boarding_time = lubridate::hour(lubridate::ymd_hms(start_time)))
 
-new_data_dist
 
 new_data_dist %>% filter(route == "203") %>% group_by(boarding_time) %>% summarise(quantidade = length(route)) %>% ggplot(aes(x = boarding_time, y = quantidade)) + geom_col() + theme_bw()
 ```
   Podemos ver que o maior número de viagens na linha 203 são nos horários de pico tradicionais (7h as 8h e 17h as 18h). Das 7h as 7:59h há a maior quantidade de viagens na rota, mais de 2500 viagens feitas. Em seguida, temos a faixa das 18h as 18:59h, com cerca de 1800 viagens feitas.
-  
-```{r}
-new_data_dist <- data_dist %>% mutate(landing_time = lubridate::hour(lubridate::ymd_hms(end_time)))
 
-new_data_dist %>% filter(route == "203") %>% group_by(landing_time) %>% summarise(quantidade = length(route)) %>% ggplot(aes(x = landing_time, y = quantidade)) + geom_col() + theme_bw()
-```
-
-  
 14) A rota 204 apresenta um comportamento interessante. No horário das 6:30 as 8:30 ela apresenta cerca de 1200 viagens, já das 17h as 19h apenas 500 viagens, uma queda de cerca de 58%. Vamos a distribuião da rota 204 durante todo o dia.
 
 ```{r}
@@ -175,12 +165,6 @@ new_data_dist %>% filter(route == "204") %>% group_by(boarding_time) %>% summari
 ```
 
   Podemos ver que o horário onde a rota é mais requisitada é o horário das 6h as 8h. Vemos que durante todo o restante do dia a qauntidade de viagens cai pela metade em alguns horários e até menos que isso. Podemos chegar a conclusão que aqueles que embarcam, pela manhã, na rota 204, voltam aos seus bairros de origem por outras rotas. Podemos chegar a conclusão também de que a rota 204 não se encontra em uma região periférica, já que no início do dia é quando os usuários precisam sair do bairro onde moram para irem até seus trabalhos e estudos.
-  
-```{r}
-new_data_dist <- data_dist %>% mutate(landing_time = lubridate::hour(lubridate::ymd_hms(end_time)))
-
-new_data_dist %>% filter(route == "204") %>% group_by(landing_time) %>% summarise(quantidade = length(route)) %>% ggplot(aes(x = landing_time, y = quantidade)) + geom_col() + theme_bw()
-```
 
   
 15) Analisando agora a rota 506, outra rota que mostra variação na quantidade de viagens nos horários de pico. Fez 3750 das 17h às 19h e 1277 das 6h às 8h. 
