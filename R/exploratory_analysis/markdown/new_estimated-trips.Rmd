@@ -24,7 +24,7 @@ options(warn=-1)
 
 ```{r}
 "/home/admin/ivan/data/od-matrix/full/output/result.csv"
-estimated_trips_result <- read_csv("/home/admin/ivan/data/od-matrix/full/output/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),

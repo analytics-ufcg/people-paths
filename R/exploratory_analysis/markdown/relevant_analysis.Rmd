@@ -99,7 +99,7 @@ names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
 
 new_mapdata <- mapdata %>% 
   mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
-    filter(start_hour >= 7 & start_hour <= 8)
+    filter(start_hour >= 18 & start_hour <= 19)
 
 ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
     geom_density2d(data=new_mapdata, aes(x=x, y=y), color="red")

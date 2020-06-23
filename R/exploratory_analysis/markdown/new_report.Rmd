@@ -163,7 +163,6 @@ ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = v
 hour_group <- data.frame(start_hour = c(4:23),
                          hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
 
-hour_group
 hours <- estimated_trips_result %>% 
   group_by(start_hour) %>% 
   summarise(qntt = sum(quantity_trips)) %>% 
@@ -171,7 +170,7 @@ hours <- estimated_trips_result %>%
   group_by(hour_group) %>%
   summarise(qntt = sum(qntt))
 
-hours
+
 hours <- hours %>% filter(hour_group != "I")
 
 hours$hour_group <- factor(hours$hour_group, levels = c("Manhã", "Tarde", "Noite"))
