@@ -440,7 +440,7 @@ sp + facet_grid(. ~ day_group) + labs(x = "distance", y = "duration")
 
   Vemos que quanto maior é a distância percorrida em uma viagem maior é a sua duração.
   
-  DISTRIBUIÇÃO DAS VIAGENS NAS HORAS DO DIA
+9) DISTRIBUIÇÃO DAS VIAGENS NAS HORAS DO DIA
 ```{r}
 estimated_trips_result %>% 
   group_by(start_hour) %>% 
