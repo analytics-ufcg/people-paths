@@ -29,7 +29,7 @@ antigo_data <- read_csv("/home/admin/ivan/people-paths/R/exploratory_analysis/ma
 ```
 
 ```{r}
-estimated_trips_result <- read_csv("/home/admin/ivan/data/od-matrix/full/output/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -163,16 +163,20 @@ ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = v
 hour_group <- data.frame(start_hour = c(4:23),
                          hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
 
+hour_group
 hours <- estimated_trips_result %>% 
-  group_by(route, start_hour) %>% 
+  group_by(start_hour) %>% 
   summarise(qntt = sum(quantity_trips)) %>% 
   merge(hour_group) %>% 
-  group_by(hour_group) %>% 
+  group_by(hour_group) %>%
   summarise(qntt = sum(qntt))
 
+hours
 hours <- hours %>% filter(hour_group != "I")
 
-ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "período do dia", y = "quantidade de viagens")
+hours$hour_group <- factor(hours$hour_group, levels = c("Manhã", "Tarde", "Noite"))
+
+ggplot(hours, aes(x = hour_group, y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "período do dia", y = "quantidade de viagens")
 ```
 
   Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e a tarde (das 11h as 13h). Esses são os horários de pico, ou seja, os horários onde a movimentação no transporte público é maior.
@@ -537,5 +541,13 @@ ggplot(ic_estimated_trips_result, aes(x= reorder(route,-dist), y=dist, fill=hour
     geom_errorbar(aes(ymin=dist-se, ymax=dist+se),
                   width=.2,                    # Width of the error bars
                   position=position_dodge(.9)) + labs(x = "rota", y = "distância percorrida", fill="Horário")
+```
+
+QUANTIDADE DE VIAGENS PELAS HORAS DO DIA
+```{r}
+estimated_trips_result %>% 
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "intervalo de horário", y = "quantidade de viagens") + geom_col() + theme_classic()
 ```
 

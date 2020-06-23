@@ -20,7 +20,7 @@ options(scipen = 999)
 Análise referente aos dados do estimated-trips, sendo esses dados mais atualizados do que os dados agregados.
 
 ```{r}
-estimated_trips_result <- read_csv("/local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
