@@ -97,34 +97,32 @@ mapdata<-data.frame(antigo_data)
 names(mapdata)[names(mapdata)=="to_stop_lon"]<-"x"
 names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
 
+new_mapdata <- mapdata %>% 
+  mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+    filter(start_hour >= 7 & start_hour <= 8)
 
 ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
-  geom_density2d(data=mapdata, aes(x=x, y=y), color="red")
-
-
-
-ggplot(shpf) + 
-aes(long,lat,group=group) + 
-geom_polygon() +
-geom_path(color="white") +
-scale_fill_brewer("Curitiba Ecoregion")
+    geom_density2d(data=new_mapdata, aes(x=x, y=y), color="red")
 
 
 ```
 
 ```{r}
-ggplot() +  
-    geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
-        colour="grey90", alpha=1)+
-    labs(x="", y="", title="Bairros mais demandados")+ #labels
-    theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
-          axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
-          plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
-    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=3, color="grey20")+# to get outline
-    geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=2)+
-    scale_colour_gradientn("Building\narea (sq-km)", 
-        colours=c( "#f9f3c2","#660000"))+ # change color scale
-    coord_equal(ratio=0.7) # square plot to avoid the distortion
+mapdata %>% 
+mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  filter(start_hour >= 11 & start_hour <= 12) %>%
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Bairros mais demandados")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.7) # square plot to avoid the distortion
 ```
 
 Demanda de embarque
@@ -151,30 +149,30 @@ names(mapdata_emb)[names(mapdata_emb)=="from_stop_lat"]<-"yEmb"
 
 mapdata_emb
 
+new_mapdata_emb <- mapdata_emb %>% 
+mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  filter(start_hour >= 7 & start_hour <= 8)
 
 ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
-  geom_density2d(data=mapdata_emb, aes(x=xEmb, y=yEmb), color="red")
+    geom_density2d(data=new_mapdata_emb, aes(x=xEmb, y=yEmb), color="red")
 
-
-ggplot(shpf) + 
-aes(long,lat,group=group) + 
-geom_polygon() +
-geom_path(color="white") +
-scale_fill_brewer("Curitiba Ecoregion")
 ```
 
 ```{r}
-ggplot() +  
-    geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
-        colour="grey90", alpha=1)+
-    labs(x="", y="", title="Bairros com mais embarque")+ #labels
-    theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
-          axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
-          plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
-    geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=3, color="grey20")+# to get outline
-    geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=2)+
-    scale_colour_gradientn("Building\narea (sq-km)", 
-        colours=c( "#f9f3c2","#660000"))+ # change color scale
-    coord_equal(ratio=0.7) # square plot to avoid the distortion
+mapdata_emb %>% 
+mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  filter(start_hour >= 18 & start_hour <= 19) %>% 
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Embarque por bairros")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.7) # square plot to avoid the distortion
 ```
 
