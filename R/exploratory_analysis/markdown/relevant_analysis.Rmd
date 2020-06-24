@@ -99,10 +99,10 @@ names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
 
 new_mapdata <- mapdata %>% 
   mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
-    filter(start_hour >= 18 & start_hour <= 19)
+    filter(start_hour >= 17 & start_hour <= 19)
 
 ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
-    geom_density2d(data=new_mapdata, aes(x=x, y=y), color="red")
+    geom_density2d(data=new_mapdata, aes(x=x, y=y), color="red") + labs(x = "longitude", y = "latitude")
 
 
 ```
@@ -151,10 +151,10 @@ mapdata_emb
 
 new_mapdata_emb <- mapdata_emb %>% 
 mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
-  filter(start_hour >= 7 & start_hour <= 8)
+  filter(start_hour >= 17 & start_hour <= 19)
 
 ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
-    geom_density2d(data=new_mapdata_emb, aes(x=xEmb, y=yEmb), color="red")
+    geom_density2d(data=new_mapdata_emb, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
 
 ```
 
@@ -175,4 +175,6 @@ mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>%
           colours=c( "#f9f3c2","#660000"))+ # change color scale
       coord_equal(ratio=0.7) # square plot to avoid the distortion
 ```
+
+
 
