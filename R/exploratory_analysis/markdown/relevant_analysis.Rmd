@@ -178,21 +178,13 @@ mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>%
 
 Viagem final - desembarque
 ```{r}
-n <- antigo_data %>% 
+embarque <- antigo_data %>% 
   mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
   mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
   mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
   filter(leg_id == min(leg_id))
-
-j <- antigo_data %>% 
-  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
-  mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
-  mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
-  mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
-  group_by(cardNum) %>% 
-  filter(leg_id == max(leg_id))
 
   
 ```
