@@ -215,6 +215,23 @@ embarque
   
 ```
 
+Segundo plot do EMBARQUE
+```{r}
+embarque %>% 
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Embarque por bairros")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=xEmb, y=yEmb), data=embarque, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=xEmb, y=yEmb), data=embarque, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.7) # square plot to avoid the distortion
+```
+
 VIAGEM FINAL - DESEMBARQUE
 ```{r}
 class(antigo_data)
@@ -242,12 +259,27 @@ desembarque <- mapdata %>%
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
   filter(leg_id == max(leg_id)) %>% 
-  filter(end_hour >= 17 & end_hour <= 19)
+  filter(end_hour >= 6 & end_hour <= 8)
   
   ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
     geom_density2d(data=desembarque, aes(x=x, y=y), color="red") + labs(x = "longitude", y = "latitude")
 ```
 
-
+Segundo plot do DESEMBARQUE
+```{r}
+desembarque %>% 
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Desembarque por bairros")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=x, y=y), data=desembarque, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=x, y=y), data=desembarque, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.7) # square plot to avoid the distortion
+```
 
 
