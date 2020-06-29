@@ -206,7 +206,7 @@ embarque <- mapdata_emb %>%
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
   filter(leg_id == min(leg_id)) %>% 
-  filter(end_hour >= 17 & end_hour <= 19)
+  filter(end_hour >= 6 & end_hour <= 8)
 
   ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
     geom_density2d(data=embarque, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
@@ -215,15 +215,37 @@ embarque
   
 ```
 
-Viagem final - desembarque
+VIAGEM FINAL - DESEMBARQUE
 ```{r}
-desembarque <- antigo_data %>% 
+class(antigo_data)
+
+coordinates(antigo_data)<-~to_stop_lon+to_stop_lat
+class(antigo_data)
+
+proj4string(antigo_data)
+
+proj4string(antigo_data)<-CRS("+proj=longlat +datum=NAD83")
+
+antigo_data<-spTransform(antigo_data, CRS(proj4string(shpf)))
+
+identical(proj4string(antigo_data),proj4string(shpf))
+
+mapdata<-data.frame(antigo_data)
+
+names(mapdata)[names(mapdata)=="to_stop_lon"]<-"x"
+names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
+
+desembarque <- mapdata %>% 
   mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
   mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
   mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
-  filter(leg_id == max(leg_id))
+  filter(leg_id == max(leg_id)) %>% 
+  filter(end_hour >= 17 & end_hour <= 19)
+  
+  ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+    geom_density2d(data=desembarque, aes(x=x, y=y), color="red") + labs(x = "longitude", y = "latitude")
 ```
 
 
