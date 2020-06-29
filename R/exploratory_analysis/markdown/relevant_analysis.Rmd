@@ -176,18 +176,56 @@ mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>%
       coord_equal(ratio=0.7) # square plot to avoid the distortion
 ```
 
-Viagem final - desembarque
+VIAGEM FINAL  EMBARQUE
 ```{r}
-embarque <- antigo_data %>% 
+antigo_data_emb <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
+
+class(antigo_data_emb)
+
+coordinates(antigo_data_emb)<-~from_stop_lon+from_stop_lat
+class(antigo_data_emb)
+
+proj4string(antigo_data_emb)
+
+proj4string(antigo_data_emb)<-CRS("+proj=longlat +datum=NAD83")
+
+antigo_data_emb<-spTransform(antigo_data_emb, CRS(proj4string(shpf)))
+
+identical(proj4string(antigo_data_emb),proj4string(shpf))
+
+mapdata_emb <- data.frame(antigo_data_emb)
+
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lon"]<-"xEmb"
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lat"]<-"yEmb"
+
+
+embarque <- mapdata_emb %>% 
   mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
   mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
   mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
-  filter(leg_id == min(leg_id))
+  filter(leg_id == min(leg_id)) %>% 
+  filter(end_hour >= 17 & end_hour <= 19)
 
+  ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+    geom_density2d(data=embarque, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
+
+embarque
   
 ```
+
+Viagem final - desembarque
+```{r}
+desembarque <- antigo_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
+  mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
+  mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
+  group_by(cardNum) %>% 
+  filter(leg_id == max(leg_id))
+```
+
 
 
 
