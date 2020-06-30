@@ -57,8 +57,6 @@ shpf@data$id = rownames(shpf@data)
 shpf.points = fortify(shpf, region="id")
 shpf.df = join(shpf.points, shpf@data, by="id")
 
-cur.df <- fortify(shpf) # convert to data frame for ggplot
-
 plot(shpf)
 shpf
 
@@ -207,7 +205,7 @@ embarque <- mapdata_emb %>%
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
   filter(leg_id == min(leg_id)) %>% 
-  filter(end_hour >= 6 & end_hour <= 8)
+  filter(end_hour >= 17 & end_hour <= 18)
 
   ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
     geom_density2d(data=embarque, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
@@ -283,10 +281,9 @@ desembarque %>%
           colours=c( "#f9f3c2","#660000"))+ # change color scale
       coord_equal(ratio=0.8) # square plot to avoid the distortion
 ```
-heatmap
+Density map - DESEMBARQUE
 
 ```{r}
-
 ggplot() + 
   geom_polygon(data=shpf, aes(x=long,y=lat,group=group), fill="black") +
   stat_bin2d(data=desembarque, aes(x=x,y=y), bins=30) +
@@ -298,4 +295,15 @@ ggplot() +
 
 ```
 
+Density map - EMBARQUE
+```{r}
+ggplot() + 
+  geom_polygon(data=shpf, aes(x=long,y=lat,group=group), fill="black") +
+  stat_bin2d(data=embarque, aes(x=xEmb,y=yEmb), bins=30) +
+  geom_path(data=shpf, aes(x=long,y=lat,group=id), colour='white') +
+  coord_equal() +
+  theme_void() +
+  coord_equal(ratio=0.6) + # square plot to avoid the distortion
+  labs(fill="Quantidade de viagens")
+```
 
