@@ -286,7 +286,13 @@ Density map - DESEMBARQUE
 ```{r}
 ggplot() + 
   geom_polygon(data=shpf, aes(x=long,y=lat,group=group), fill="black") +
-  stat_bin2d(data=desembarque, aes(x=x,y=y), bins=30) +
+  stat_bin2d(data=desembarque, aes(x=x,y=y), bins=30, colour="white") +
+  scale_fill_gradient(low = "#132B43",
+  high = "#56B1F7",
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour") + 
   geom_path(data=shpf, aes(x=long,y=lat,group=id), colour='white') +
   coord_equal() +
   theme_void() +
@@ -299,7 +305,13 @@ Density map - EMBARQUE
 ```{r}
 ggplot() + 
   geom_polygon(data=shpf, aes(x=long,y=lat,group=group), fill="black") +
-  stat_bin2d(data=embarque, aes(x=xEmb,y=yEmb), bins=30) +
+  stat_bin2d(data=embarque, aes(x=xEmb,y=yEmb), bins=30, colour="white") +
+  scale_fill_gradient(low = "#132B43",
+  high = "#56B1F7",
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour") + 
   geom_path(data=shpf, aes(x=long,y=lat,group=id), colour='white') +
   coord_equal() +
   theme_void() +
