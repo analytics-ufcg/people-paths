@@ -1,0 +1,71 @@
+---
+title: "new_report"
+author: "José Ivan Silva da Cruz Júnior"
+date: "3/10/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(geosphere)
+library(magrittr)
+library(ggplot2)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+options(warn=-1)
+```
+
+#leitura dos datasets
+```{r}
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+
+ant_data <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
+```
+
+```{r}
+tdata <- ant_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
+  mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
+  mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time)))
+
+tdata
+
+```
+
+```{r}
+rotas <- tdata %>% 
+  group_by(busCode, route, from_hour, end_hour) %>% 
+  dplyr::summarise(bus_trips = n()) %>% 
+  filter(route == "303" & (from_hour >= 6 & end_hour <= 8))
+
+rotas
+
+rotas303 <- rotas %>% 
+  group_by(busCode, bus_trips) %>% 
+  dplyr::summarise(trips = sum(bus_trips)) 
+
+rotas303
+  
+
+
+```
+
+```{r}
+
+```
+
