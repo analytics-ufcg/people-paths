@@ -49,14 +49,14 @@ tdata
 
 ```{r}
 rotas <- tdata %>% 
-  filter(route == "303" & (from_hour >= 6 & end_hour <= 8)) %>% 
   group_by(busCode) %>% 
+  dplyr::summarise(bus = n()) %>% 
   dplyr::summarise(bus_trips = n())
 
 rotas
 
 rotas %>% 
-  dplyr::summarise(trips = sum(bus_trips)) 
+  dplyr::summarise(bus = n())
 
 rotas303
   
