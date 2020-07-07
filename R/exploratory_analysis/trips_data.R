@@ -98,7 +98,8 @@ for(file_data in files) {
     
     enhanced_trips_data <- trips_data %>% 
       mutate(trip_duration = round(difftime(end_time, start_time, units = 'hour') * 60, 0)) %>% 
-      mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+      mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+      mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
       mutate(date = lubridate::date(lubridate::ymd_hms(start_time))) %>% 
       mutate(week_day = lubridate::wday(date)) %>% 
       rowwise() %>% 
@@ -106,7 +107,7 @@ for(file_data in files) {
       
     
     aggregated_trips_data <- enhanced_trips_data %>%
-      group_by(date, week_day, route, start_hour, busCode) %>%
+      group_by(date, week_day, route, from_hour, end_hour, busCode) %>%
       summarise(quantity_trips = n(),
                 duration_median = median(trip_duration),
                 dist_median = median(dist),

@@ -58,12 +58,18 @@ rotas %>%
   dplyr::summarise(bus = n())
 
 rotas303
-  
-
 
 ```
 
 ```{r}
+full_data <- read_csv("/local/juninho/aggregate_output/output2/result.csv")
 
+
+rotas <- full_data %>% 
+  filter(date == "2017-05-01" & route == "303" & (from_hour >= 6 & end_hour <= 8)) %>% 
+  group_by(busCode) %>% 
+  summarise(trips_bus = n())
+
+rotas
 ```
 
