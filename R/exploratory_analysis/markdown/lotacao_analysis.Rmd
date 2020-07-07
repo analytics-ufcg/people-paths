@@ -33,7 +33,7 @@ estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/resul
   )
 )
 
-ant_data <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
+ant_data <- read.csv("/local/juninho/aggregate_output/2017_05_01_full_agg", stringsAsFactors=F)
 ```
 
 ```{r}
@@ -50,8 +50,7 @@ tdata
 ```{r}
 rotas <- tdata %>% 
   group_by(busCode) %>% 
-  dplyr::summarise(bus = n()) %>% 
-  dplyr::summarise(bus_trips = n())
+  dplyr::summarise(bus = n())
 
 rotas
 

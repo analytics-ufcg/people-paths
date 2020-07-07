@@ -110,7 +110,7 @@ for(file_data in files) {
       
     
     aggregated_trips_data <- enhanced_trips_data %>%
-      group_by(date, week_day, route, start_hour) %>%
+      group_by(date, week_day, route, start_hour, busCode) %>%
       summarise(quantity_trips = n(),
                 duration_median = median(trip_duration),
                 dist_median = median(dist),

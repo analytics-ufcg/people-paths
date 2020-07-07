@@ -209,6 +209,15 @@ embarque <- mapdata_emb %>%
 
   ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
     geom_density2d(data=embarque, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
+  
+  ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+  geom_hex(data=embarque, aes(x=xEmb, y=yEmb), bins=40) + labs(x = "longitude", y = "latitude") + scale_fill_continuous(low = "#132B43",
+  high = "#56B1F7",
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour") +
+  theme_bw()
 
 embarque
   
