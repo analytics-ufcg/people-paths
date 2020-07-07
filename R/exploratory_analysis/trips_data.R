@@ -67,15 +67,11 @@ macro.zone <- function(trips_data) {
 }
 
 #trips_data <- readr::read_csv(trips_data_filepath)
-##files <- list.files(trips_data_filepath, all.files = TRUE)
-trips_data <- readr::read_csv("/local/juninho/aggregate_output/2017_05_01_full_agg")
+files <- list.files(trips_data_filepath, all.files = TRUE)
 #trips_data_filepath <- "/local/juninho/aggregate_output/may/"
 #files <- list.files("/local/juninho/aggregate_output/may/", all.files = TRUE)
 files
 
-
-
-enhanced_trips_data
 
 print("Building new data frames")
 for(file_data in files) {
