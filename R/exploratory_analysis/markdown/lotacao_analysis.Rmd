@@ -22,7 +22,7 @@ options(warn=-1)
 
 #leitura dos datasets
 ```{r}
-estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output2/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -33,7 +33,7 @@ estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/resul
   )
 )
 
-ant_data <- read.csv("/local/juninho/aggregate_output/2017_05_01_full_agg", stringsAsFactors=F)
+ant_data <- read.csv("/local/juninho/aggregate_output/output2/result.csv", stringsAsFactors=F)
 ```
 
 ```{r}
@@ -48,9 +48,12 @@ tdata
 ```
 
 ```{r}
-rotas <- tdata %>% 
-  group_by(busCode) %>% 
-  dplyr::summarise(bus = n())
+ant_data
+
+rotas <- ant_data %>% 
+  filter(date=="2017-05-01") %>% 
+  group_by(busCode, route) %>% 
+  dplyr::summarise(bus_trips = sum(quantity_trips))
 
 rotas
 
