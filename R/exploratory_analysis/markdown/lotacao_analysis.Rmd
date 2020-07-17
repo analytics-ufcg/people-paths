@@ -33,7 +33,7 @@ estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output2/resu
   )
 )
 
-ant_data <- read.csv("/local/juninho/aggregate_output/output2/result.csv", stringsAsFactors=F)
+ant_data <- read.csv("/local/juninho/aggregate_output/2017_05_02_full_agg", stringsAsFactors=F)
 ```
 
 ```{r}
@@ -44,6 +44,16 @@ tdata <- ant_data %>%
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time)))
 
 tdata
+
+rotas <- tdata %>% 
+  filter(route == "203" & (from_hour >= 6 & end_hour <= 7)) %>%
+  group_by(route, busCode, start_time) %>% 
+  summarise(n = n()) %>% 
+  summarise(start_time = min(start_time), trips_bus = sum(n)) %>% 
+  arrange(start_time) %>% 
+  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros")
+
+rotas
 
 ```
 
