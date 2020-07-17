@@ -48,31 +48,22 @@ tdata
 ```
 
 ```{r}
-ant_data
-
-rotas <- ant_data %>% 
-  filter(date=="2017-05-01") %>% 
-  group_by(busCode, route) %>% 
-  dplyr::summarise(bus_trips = sum(quantity_trips))
-
-rotas
-
-rotas %>% 
-  dplyr::summarise(bus = n())
-
-rotas303
-
-```
-
-```{r}
 full_data <- read_csv("/local/juninho/aggregate_output/output2/result.csv")
+
+full_data
 
 
 rotas <- full_data %>% 
-  filter(date == "2017-05-01" & route == "303" & (from_hour >= 6 & end_hour <= 8)) %>% 
-  group_by(busCode) %>% 
-  summarise(trips_bus = n())
+  filter(date == "2017-05-02" & route == "203" & (from_hour >= 6 & end_hour <= 7)) %>%
+  group_by(route, busCode, from_hour) %>% 
+  summarise(trips_bus = sum(quantity_trips)) %>% 
+  filter(trips_bus >= 80) %>%
+  top_n(10) %>% 
+  ggplot(aes(x = reorder(busCode, -trips_bus), y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de viagens")
 
+# número de ônibus - 43
+# número de õnivus com mais de 80 pessoas - 14 
+# 33% dos ônibus lotados
 rotas
 ```
 
