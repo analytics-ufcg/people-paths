@@ -57,6 +57,7 @@ rotas
 
 ```
 
+Análise da lotação dos ônibus com os dados completos
 ```{r}
 full_data <- read_csv("/local/juninho/aggregate_output/output2/result.csv")
 
@@ -71,7 +72,8 @@ rotas <- full_data %>%
   group_by(busCode, start_time, quantity_trips) %>% 
   summarise(from_time = min(start_time), trips_bus = sum(quantity_trips)) %>% 
   arrange(from_time) %>% 
-  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros")
+  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros") + theme(axis.title.x=element_blank(),  axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
 # número de ônibus - 43
 # número de õnivus com mais de 80 pessoas - 14 
