@@ -8,7 +8,7 @@ library(sp)
 library(rgdal)
 
 
-#trips_data <- read_csv("/local/juninho/aggregate_output/2017_05_01_full_agg")
+trips_data <- read_csv("/local/juninho/aggregate_output/2017_05_01_full_agg")
 
 
 help <- "
@@ -107,7 +107,7 @@ for(file_data in files) {
       
     
     aggregated_trips_data <- enhanced_trips_data %>%
-      group_by(date, week_day, route, start_time, end_hour, busCode) %>%
+      group_by(date, week_day, route, from_time, end_hour, busCode) %>%
       summarise(quantity_trips = n(),
                 duration_median = median(trip_duration),
                 dist_median = median(dist),

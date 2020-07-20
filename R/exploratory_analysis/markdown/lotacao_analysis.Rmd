@@ -48,8 +48,8 @@ tdata
 rotas <- tdata %>% 
   filter(route == "203" & (from_hour >= 6 & end_hour <= 7)) %>%
   group_by(route, busCode, start_time) %>% 
-  summarise(n = n()) %>% 
-  summarise(start_time = min(start_time), trips_bus = sum(n)) %>% 
+  summarise(n = n())
+  summarise(start_time = min(start_time), trips_bus = sum(n)) 
   arrange(start_time) %>% 
   ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros")
 
@@ -60,16 +60,18 @@ rotas
 ```{r}
 full_data <- read_csv("/local/juninho/aggregate_output/output2/result.csv")
 
+
+full_data <- full_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time)))
+
 full_data
 
-
 rotas <- full_data %>% 
-  filter(date == "2017-05-02" & route == "203" & (from_hour >= 6 & end_hour <= 7)) %>%
-  group_by(route, busCode, from_hour) %>% 
-  summarise(trips_bus = sum(quantity_trips)) %>% 
-  filter(trips_bus >= 80) %>%
-  top_n(10) %>% 
-  ggplot(aes(x = reorder(busCode, -trips_bus), y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de viagens")
+  filter((date == "2017-05-02") & (route == "203") & (from_hour >= 6 & end_hour <= 7)) %>%
+  group_by(busCode, start_time, quantity_trips) %>% 
+  summarise(from_time = min(start_time), trips_bus = sum(quantity_trips)) %>% 
+  arrange(from_time) %>% 
+  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros")
 
 # número de ônibus - 43
 # número de õnivus com mais de 80 pessoas - 14 
