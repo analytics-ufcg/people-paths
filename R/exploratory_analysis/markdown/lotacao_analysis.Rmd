@@ -63,15 +63,15 @@ full_data <- read_csv("/local/juninho/aggregate_output/output2/result.csv")
 
 
 full_data <- full_data %>% 
-  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time)))
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
 
 full_data
 
 rotas <- full_data %>% 
   filter((date == "2017-05-02") & (route == "203") & (from_hour >= 6 & end_hour <= 7)) %>%
-  group_by(busCode, start_time, quantity_trips) %>% 
-  summarise(from_time = min(start_time), trips_bus = sum(quantity_trips)) %>% 
-  arrange(from_time) %>% 
+  group_by(busCode, from_time, quantity_trips) %>% 
+  summarise(start_time = min(from_time), trips_bus = sum(quantity_trips)) %>% 
+  arrange(start_time) %>% 
   ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros") + theme(axis.title.x=element_blank(),  axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
 

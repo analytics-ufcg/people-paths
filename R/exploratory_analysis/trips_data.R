@@ -110,8 +110,7 @@ for(file_data in files) {
       group_by(date, week_day, route, from_time, end_hour, busCode) %>%
       summarise(quantity_trips = n(),
                 duration_median = median(trip_duration),
-                dist_median = median(dist),
-                duration_sd = sd(trip_duration))
+                dist_median = median(dist))
     
     #file_name <- tail(stringr::str_split(trips_data_filepath,'/')[[1]], n=1)
     readr::write_csv(aggregated_trips_data, paste0(output_folderpath,'/', file_data, "_output.csv"))  
