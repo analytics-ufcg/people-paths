@@ -1,0 +1,50 @@
+---
+title: "new_report"
+author: "José Ivan Silva da Cruz Júnior"
+date: "21/07/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(geosphere)
+library(magrittr)
+library(ggplot2)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+options(warn=-1)
+```
+
+```{r}
+final_data <- read.csv("/local/juninho/aggregate_output/output2/result.csv", stringsAsFactors=F)
+
+final_data <- final_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
+```
+
+```{r}
+final_data %>%
+  ggplot(aes(x = dist_median, y = duration_median)) + 
+  geom_point(size = .5, alpha = .5) + theme_classic()  + 
+  geom_smooth(method = "lm") + labs(x = "Distância percorrida", y = "Duração")
+```
+```{r}
+estimated_trips_result %>%
+  filter(dist_median < 5000 & duration_median > 50) %>% 
+  ggplot(aes(x = dist_median, y = duration_median)) + geom_point()
+
+estimated_trips_result %>%
+  filter(dist_median < 6000 & duration_median > 50) 
+```
+
+```{r}
+
+  
+```
+
+

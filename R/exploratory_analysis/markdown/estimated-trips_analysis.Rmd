@@ -20,7 +20,7 @@ options(scipen = 999)
 Análise referente aos dados do estimated-trips, sendo esses dados mais atualizados do que os dados agregados.
 
 ```{r}
-estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output2/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -68,11 +68,11 @@ estimated_trips_result %>%
 
 ```{r}
 estimated_trips_result %>%
-  filter(dist_median < 5000 & duration_median > 100) %>% 
+  filter(dist_median < 5000 & duration_median > 50) %>% 
   ggplot(aes(x = dist_median, y = duration_median)) + geom_point()
 
 estimated_trips_result %>%
-  filter(dist_median < 5000 & duration_median > 100) 
+  filter(dist_median < 5000 & duration_median > 50) 
 ```
   
   Observando alguns outliers, aqueles que apresentam uma distância mediana percorrida menor que 5 quilômetros e com uma duração de mais de 100 minutos (1 hora e 20 min), observamos que a rota que mais aparece nessa classificação é a 022, com 12 viagens, com os horários indo de 13 as 14 horas. Temos a rota 822 também com 4 viagens.
