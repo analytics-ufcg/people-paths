@@ -47,24 +47,28 @@ Outliers por dia
 estimated_trips_result %>%
   filter(dist_median <= 6000 & duration_median > 50) %>% 
   group_by(week_day) %>%
-  summarise(day_outliers = n())
+  summarise(day_outliers = n()) %>% 
+  ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
   
 ```
 
 Outliers por rota
 ```{r}
 estimated_trips_result %>%
-  filter(dist_median <= 6000 & duration_median > 50 & week_day == "6") %>% 
+  filter(dist_median <= 6000 & duration_median > 50 & week_day == "5") %>% 
   group_by(route) %>%
   summarise(day_outliers = n()) %>% 
-  filter(day_outliers > 40)
+  filter(day_outliers > 40) %>% 
+  ggplot(aes(x = route, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+  
 ```
 
 Otliers por rota e dia da semana
 ```{r}
 estimated_trips_result %>%
-  filter(dist_median <= 6000 & duration_median > 50 & route == "506") %>% 
+  filter(dist_median <= 6000 & duration_median > 50 & route == "370") %>% 
   group_by(route, week_day) %>%
   summarise(day_outliers = n()) %>% 
-  filter(day_outliers > 40)
+  filter(day_outliers > 40) %>% 
+  ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
 ```
