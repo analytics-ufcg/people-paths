@@ -54,8 +54,17 @@ estimated_trips_result %>%
 Outliers por rota
 ```{r}
 estimated_trips_result %>%
-  filter(dist_median <= 6000 & duration_median > 50) %>% 
+  filter(dist_median <= 6000 & duration_median > 50 & week_day == "6") %>% 
   group_by(route) %>%
-  summarise(day_outliers = n())
+  summarise(day_outliers = n()) %>% 
+  filter(day_outliers > 40)
 ```
 
+Otliers por rota e dia da semana
+```{r}
+estimated_trips_result %>%
+  filter(dist_median <= 6000 & duration_median > 50 & route == "506") %>% 
+  group_by(route, week_day) %>%
+  summarise(day_outliers = n()) %>% 
+  filter(day_outliers > 40)
+```
