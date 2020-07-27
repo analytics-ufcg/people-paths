@@ -34,41 +34,41 @@ final_data %>%
   geom_smooth(method = "lm") + labs(x = "Distância percorrida", y = "Duração")
 ```
 ```{r}
-estimated_trips_result %>%
-  filter(dist_median < 5000 & duration_median > 50) %>% 
+final_data %>%
+   filter((dist_median < 6000 & duration_median > 50) | (dist_median < 20000 & duration_median > 60)) %>% 
   ggplot(aes(x = dist_median, y = duration_median)) + geom_point()
 
-estimated_trips_result %>%
-  filter(dist_median < 6000 & duration_median > 50) 
+outliers <- final_data %>%
+  filter((dist_median < 6000 & duration_median > 50) | (dist_median < 20000 & duration_median > 60))
+
+outliers
 ```
 
 Outliers por dia
 ```{r}
-estimated_trips_result %>%
-  filter(dist_median <= 6000 & duration_median > 50) %>% 
+outliers %>% 
   group_by(week_day) %>%
   summarise(day_outliers = n()) %>% 
   ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
   
 ```
 
-Outliers por rota
+Outliers por rota escolhendo o dia
 ```{r}
-estimated_trips_result %>%
-  filter(dist_median <= 6000 & duration_median > 50 & week_day == "5") %>% 
+outliers %>%
+  filter(week_day == "3") %>% 
   group_by(route) %>%
   summarise(day_outliers = n()) %>% 
   filter(day_outliers > 40) %>% 
-  ggplot(aes(x = route, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+  ggplot(aes(x = factor(route), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
   
 ```
 
-Otliers por rota e dia da semana
+Otliers por dia escolhendo a rota
 ```{r}
-estimated_trips_result %>%
-  filter(dist_median <= 6000 & duration_median > 50 & route == "370") %>% 
+outliers %>%
+  filter(route == "370") %>% 
   group_by(route, week_day) %>%
   summarise(day_outliers = n()) %>% 
-  filter(day_outliers > 40) %>% 
   ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
 ```
