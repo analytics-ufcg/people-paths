@@ -27,6 +27,7 @@ final_data <- final_data %>%
   mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
 ```
 
+Outliers - VIAGENS MAIS LENTAS
 ```{r}
 final_data %>%
   ggplot(aes(x = dist_median, y = duration_median)) + 
@@ -35,11 +36,11 @@ final_data %>%
 ```
 ```{r}
 final_data %>%
-   filter((dist_median < 6000 & duration_median > 50) | (dist_median < 20000 & duration_median > 60)) %>% 
+   filter((dist_median < 6000 & duration_median > 45) | (dist_median < 20000 & duration_median > 60)) %>% 
   ggplot(aes(x = dist_median, y = duration_median)) + geom_point()
 
 outliers <- final_data %>%
-  filter((dist_median < 6000 & duration_median > 50) | (dist_median < 20000 & duration_median > 60))
+  filter((dist_median < 6000 & duration_median > 45) | (dist_median < 20000 & duration_median > 60))
 
 outliers
 ```
@@ -49,11 +50,12 @@ Outliers por dia
 outliers %>% 
   group_by(week_day) %>%
   summarise(day_outliers = n()) %>% 
+  filter(week_day != 7) %>% 
   ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
   
 ```
 
-Outliers por rota escolhendo o dia
+Outliers por rota escolhendo o dia da semana
 ```{r}
 outliers %>%
   filter(week_day == "2") %>% 
@@ -61,7 +63,16 @@ outliers %>%
   summarise(day_outliers = n()) %>% 
   filter(day_outliers > 40) %>% 
   ggplot(aes(x = factor(route), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
-  
+```
+
+Outlier por rota escolhendo o dia específico
+```{r}
+outliers %>%
+  filter(date == "2017-05-02") %>% 
+  group_by(route) %>%
+  summarise(day_outliers = n()) %>% 
+  filter(day_outliers > 20) %>% 
+  ggplot(aes(x = factor(route), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
 ```
 
 Otliers por dia escolhendo a rota
@@ -80,6 +91,6 @@ outliers <- outliers %>%
 outliers %>% 
   group_by(month) %>%
   summarise(day_outliers = n()) %>% 
-  ggplot(aes(x = month, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
+  ggplot(aes(x = month, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Mês", y = "Quantidade de viagens")
 ```
 
