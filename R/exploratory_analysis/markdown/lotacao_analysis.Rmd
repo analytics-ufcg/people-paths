@@ -79,5 +79,15 @@ rotas <- full_data %>%
 # número de õnivus com mais de 80 pessoas - 14 
 # 33% dos ônibus lotados
 rotas
-```
+
+full_data %>% 
+  filter((date == "2017-05-02") & (route == "924") & (from_hour >= 7 & end_hour <= 8)) %>% 
+  group_by(busCode) %>% 
+  summarise(trips = sum(quantity_trips)) %>% 
+  filter(trips > 15)
+
+full_data %>% 
+  filter(date == "2017-05-02") %>% 
+  filter(route == "203")
+ ```
 

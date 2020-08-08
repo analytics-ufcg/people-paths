@@ -1,0 +1,277 @@
+---
+title: "spatial_analysis"
+author: "José Ivan Silva da Cruz Júnior"
+date: "07/08/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(geosphere)
+library(magrittr)
+library(ggplot2)
+library(rgeos)
+library(sp)
+library(rgdal)
+options(scipen = 999)
+options(warn=-1)
+```
+
+```{r}
+#lacina - /home/admin/ivan/data/od-matrix/full/output/result.csv
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+irrelevant_routes <- estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(total_trips = sum(quantity_trips)) %>% 
+  filter(total_trips < 540)
+antigo_data <- read.csv("/local/juninho/aggregate_output/2017_05_02_full_agg", stringsAsFactors=F)
+```
+
+```{r}
+theme_set(theme_bw())
+library(sf)
+library(maptools)
+library(plyr)
+#lacina - ../../../../data/DIVISA_DE_BAIRROS/DIVISA_DE_BAIRROS.shp
+shpf <- readOGR("/local/juninho/shape/DIVISA_DE_BAIRROS.shp")
+shpf
+shpf@data$id = rownames(shpf@data)
+shpf.points = fortify(shpf, region="id")
+shpf.df = join(shpf.points, shpf@data, by="id")
+plot(shpf)
+shpf
+library(esquisse)
+Points_Shape = SpatialPoints(antigo_data[,c("to_stop_lon","to_stop_lat")],proj4string=CRS(proj4string(shpf)))
+Points_Shape = SpatialPointsDataFrame(Points_Shape,antigo_data)
+ggplot(shpf.df) + 
+aes(long,lat, group=group) + 
+geom_polygon() +
+geom_path(color="white") +
+scale_fill_brewer("Curitiba Ecoregion")
+proj4string(shpf)
+```
+
+Demanda de destino
+```{r}
+class(antigo_data)
+coordinates(antigo_data)<-~to_stop_lon+to_stop_lat
+class(antigo_data)
+proj4string(antigo_data)
+proj4string(antigo_data)<-CRS("+proj=longlat +datum=NAD83")
+antigo_data<-spTransform(antigo_data, CRS(proj4string(shpf)))
+identical(proj4string(antigo_data),proj4string(shpf))
+mapdata<-data.frame(antigo_data)
+names(mapdata)[names(mapdata)=="to_stop_lon"]<-"x"
+names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
+new_mapdata <- mapdata %>% 
+  mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+    filter(start_hour >= 17 & start_hour <= 19)
+ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+    geom_density2d(data=new_mapdata, aes(x=x, y=y), color="red") + labs(x = "longitude", y = "latitude")
+```
+
+```{r}
+mapdata %>% 
+mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  filter(start_hour >= 11 & start_hour <= 12) %>%
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Bairros mais demandados")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=x, y=y), data=mapdata, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.7) # square plot to avoid the distortion
+```
+
+Demanda de embarque
+```{r}
+antigo_data_emb <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
+class(antigo_data_emb)
+coordinates(antigo_data_emb)<-~from_stop_lon+from_stop_lat
+class(antigo_data_emb)
+proj4string(antigo_data_emb)
+proj4string(antigo_data_emb)<-CRS("+proj=longlat +datum=NAD83")
+antigo_data_emb<-spTransform(antigo_data_emb, CRS(proj4string(shpf)))
+identical(proj4string(antigo_data_emb),proj4string(shpf))
+mapdata_emb <- data.frame(antigo_data_emb)
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lon"]<-"xEmb"
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lat"]<-"yEmb"
+mapdata_emb
+new_mapdata_emb <- mapdata_emb %>% 
+mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  filter(start_hour >= 17 & start_hour <= 19)
+ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+    geom_density2d(data=new_mapdata_emb, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
+```
+
+```{r}
+mapdata_emb %>% 
+mutate(start_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  filter(start_hour >= 18 & start_hour <= 19) %>% 
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Embarque por bairros")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=xEmb, y=yEmb), data=mapdata_emb, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.7) # square plot to avoid the distortion
+```
+
+VIAGEM FINAL - EMBARQUE
+```{r}
+antigo_data_emb <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
+class(antigo_data_emb)
+coordinates(antigo_data_emb)<-~from_stop_lon+from_stop_lat
+class(antigo_data_emb)
+proj4string(antigo_data_emb)
+proj4string(antigo_data_emb)<-CRS("+proj=longlat +datum=NAD83")
+antigo_data_emb<-spTransform(antigo_data_emb, CRS(proj4string(shpf)))
+identical(proj4string(antigo_data_emb),proj4string(shpf))
+mapdata_emb <- data.frame(antigo_data_emb)
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lon"]<-"xEmb"
+names(mapdata_emb)[names(mapdata_emb)=="from_stop_lat"]<-"yEmb"
+
+embarque <- mapdata_emb %>% 
+  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
+  mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
+  mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
+  group_by(cardNum) %>% 
+  filter(leg_id == min(leg_id)) %>% 
+  filter(end_hour >= 6 & end_hour < 8)
+  ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+    geom_density2d(data=embarque, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
+  
+  ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+  geom_hex(data=embarque, aes(x=xEmb, y=yEmb), bins=40) + labs(x = "longitude", y = "latitude") + scale_fill_continuous(low = "#132B43",
+  high = "#56B1F7",
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour") +
+  theme_bw()
+embarque
+  
+```
+
+Segundo plot do EMBARQUE
+```{r}
+embarque %>% 
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Embarque por bairros")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=xEmb, y=yEmb), data=embarque, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=xEmb, y=yEmb), data=embarque, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.7) # square plot to avoid the distortion
+```
+
+VIAGEM FINAL - DESEMBARQUE
+```{r}
+antigo_data <- read.csv("/local/juninho/aggregate_output/2017_05_09_full_agg", stringsAsFactors=F)
+class(antigo_data)
+coordinates(antigo_data)<-~to_stop_lon+to_stop_lat
+class(antigo_data)
+proj4string(antigo_data)
+proj4string(antigo_data)<-CRS("+proj=longlat +datum=NAD83")
+antigo_data<-spTransform(antigo_data, CRS(proj4string(shpf)))
+identical(proj4string(antigo_data),proj4string(shpf))
+mapdata<-data.frame(antigo_data)
+names(mapdata)[names(mapdata)=="to_stop_lon"]<-"x"
+names(mapdata)[names(mapdata)=="to_stop_lat"]<-"y"
+
+desembarque <- mapdata %>% 
+  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
+  mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
+  mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
+  group_by(cardNum) %>% 
+  filter(leg_id == max(leg_id)) %>% 
+  filter(end_hour >= 6 & end_hour < 8)
+  
+  ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
+    geom_density2d(data=desembarque, aes(x=x, y=y), color="red") + labs(x = "longitude", y = "latitude")
+```
+
+Segundo plot do DESEMBARQUE
+```{r}
+desembarque %>% 
+  ggplot() +  
+      geom_polygon(data=shpf, aes(x=long, y=lat, group=group), fill="grey40", 
+          colour="grey90", alpha=1)+
+      labs(x="", y="", title="Desembarque por bairros")+ #labels
+      theme(axis.ticks.y = element_blank(),axis.text.y = element_blank(), # get rid of x ticks/text
+            axis.ticks.x = element_blank(),axis.text.x = element_blank(), # get rid of y ticks/text
+            plot.title = element_text(lineheight=.8, face="bold", vjust=1))+ # make title bold and add space
+      geom_density2d(aes(x=x, y=y), data=desembarque, alpha=0.4, size=3, color="grey20")+# to get outline
+      geom_density2d(aes(x=x, y=y), data=desembarque, alpha=0.4, size=2)+
+      scale_colour_gradientn("Building\narea (sq-km)", 
+          colours=c( "#f9f3c2","#660000"))+ # change color scale
+      coord_equal(ratio=0.8) # square plot to avoid the distortion
+```
+
+Density map - DESEMBARQUE
+
+```{r}
+ggplot() + 
+  geom_polygon(data=shpf, aes(x=long,y=lat,group=group), fill="black") +
+  stat_bin2d(data=desembarque, aes(x=x,y=y), bins=30, colour="white") +
+  scale_fill_gradient(low = "#132B43",
+  high = "#56B1F7",
+  trans = 'log10',
+  space = "Lab",
+  breaks = c("0","1000"),
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "color") + 
+  geom_path(data=shpf, aes(x=long,y=lat,group=id), colour='white') +
+  coord_equal() +
+  theme_void() +
+  coord_equal(ratio=0.6) + # square plot to avoid the distortion
+  labs(fill="Quantidade de viagens")
+ggsave(file="desembarqueManha.eps")
+```
+
+Density map - EMBARQUE
+```{r}
+ggplot() + 
+  geom_polygon(data=shpf, aes(x=long,y=lat,group=group), fill="black") +
+  stat_bin2d(data=embarque, aes(x=xEmb,y=yEmb), bins=30, colour="white") +
+  scale_fill_gradient(low = "#132B43",
+  high = "#56B1F7",
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour") + 
+  geom_path(data=shpf, aes(x=long,y=lat,group=id), colour='white') +
+  coord_equal() +
+  theme_void() +
+  coord_equal(ratio=0.6) + # square plot to avoid the distortion
+  labs(fill="Quantidade de viagens") 
+  ggsave(file="embarqueManha.eps")
+```
