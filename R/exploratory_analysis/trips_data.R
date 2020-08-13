@@ -8,7 +8,7 @@ library(sp)
 library(rgdal)
 
 
-trips_data <- read_csv("/local/juninho/aggregate_output/2017_05_01_full_agg")
+trips_data <- read_csv("/local/juninho/aggregate_output/2017_05_02_full_agg")
 
 
 help <- "
@@ -98,7 +98,7 @@ for(file_data in files) {
     
     enhanced_trips_data <- trips_data %>% 
       mutate(trip_duration = round(difftime(end_time, start_time, units = 'hour') * 60, 0)) %>% 
-      mutate(from_time = format(as.POSIXct(start_time) ,format = "%H:%M:%S")) %>% 
+      mutate(from_time = strftime(lubridate::floor_date(lubridate::ymd_hms(start_time), "hour"), format = "%H:%M:%S", tz = "UTC")) %>% 
       mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
       mutate(date = lubridate::date(lubridate::ymd_hms(start_time))) %>% 
       mutate(week_day = lubridate::wday(date)) %>% 

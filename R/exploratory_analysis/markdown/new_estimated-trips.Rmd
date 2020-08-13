@@ -24,7 +24,7 @@ options(warn=-1)
 
 ```{r}
 "/home/admin/ivan/data/od-matrix/full/output/result.csv"
-estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output2/result.csv", col_types = list(
     date = col_date(format = ""),
     week_day = col_double(),
     route = col_character(),
@@ -217,8 +217,8 @@ ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = v
 4) Comparação da popularidade das rotas (levando em conta a quantidade de viagens) de acordo com os horários.
 
 ```{r}
-hour_group <- data.frame(start_hour = c(4:23),
-                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
+hour_group <- data.frame(from_hour = c(4:23),
+                         hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
 
 hours <- estimated_trips_result %>% 
   group_by(route, start_hour) %>% 
@@ -259,8 +259,11 @@ ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = 
 
 Vamos ver agora a distribuição da quantidade de viagens nos três principais horários do dia: 6-8, 11-13, 17-19.   
 ```{r}
+estimated_trips_result <- estimated_trips_result %>% 
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
+
 hours <- estimated_trips_result %>% 
-  group_by(route, start_hour) %>% 
+  group_by(route, from_hour) %>% 
   summarise(qntt = sum(quantity_trips)) %>% 
   merge(hour_group) %>% 
   group_by(hour_group) %>% 
@@ -268,7 +271,11 @@ hours <- estimated_trips_result %>%
 
 hours <- hours %>% filter(hour_group != "I")
 
-ggplot(hours, aes(x = reorder(hour_group, -qntt), y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "trips quantity")
+hours$hour_group <- factor(hours$hour_group, levels = c("Manhã", "Tarde", "Noite"))
+
+
+ggplot(hours, aes(x = hour_group, y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "Horário de pico", y = "Quantidade de viagens")
+ggsave(file="picos.pdf")
 ```
 
   Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e por fim da tarde (das 11h as 13h).
@@ -442,9 +449,14 @@ sp + facet_grid(. ~ day_group) + labs(x = "distance", y = "duration")
   
 9) DISTRIBUIÇÃO DAS VIAGENS NAS HORAS DO DIA
 ```{r}
+estimated_trips_result <- estimated_trips_result %>% 
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
+
+
 estimated_trips_result %>% 
-  group_by(start_hour) %>% 
-  summarise(quantity = sum(quantity_trips)) %>% 
-  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "intervalo de horário", y = "quantidade de viagens") + geom_col() + theme_classic()
+  dplyr::group_by(from_hour) %>% 
+  dplyr::summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = from_hour, y = quantity)) + labs(x = "Horário do dia", y = "Quantidade de viagens") + geom_col() + theme_classic()
+ggsave(file="horario_dia.pdf", width = 24.88, height = 16.88, units = "cm")
 ```
 

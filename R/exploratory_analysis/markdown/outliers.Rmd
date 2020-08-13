@@ -29,10 +29,13 @@ final_data <- final_data %>%
 
 Outliers - VIAGENS MAIS LENTAS
 ```{r}
-final_data %>%
+final_data2 <- read.csv("/local/juninho/aggregate_output/output/result.csv", stringsAsFactors=F)
+
+final_data2 %>%
   ggplot(aes(x = dist_median, y = duration_median)) + 
   geom_point(size = .5, alpha = .5) + theme_classic()  + 
-  geom_smooth(method = "lm") + labs(x = "Distância percorrida", y = "Duração")
+  geom_smooth(method = "lm") + labs(x = "Distância percorrida", y = "Duração da viagem")
+ggsave(file="relacao_duracao_dist.pdf")
 ```
 ```{r}
 final_data %>%
@@ -52,17 +55,18 @@ outliers %>%
   summarise(day_outliers = n()) %>% 
   filter(week_day != 7) %>% 
   ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
-  
+ggsave(file="outliers_dia.pdf")
 ```
 
 Outliers por rota escolhendo o dia da semana
 ```{r}
 outliers %>%
-  filter(week_day == "2") %>% 
+  filter(week_day == "5") %>% 
   group_by(route) %>%
   summarise(day_outliers = n()) %>% 
   filter(day_outliers > 40) %>% 
   ggplot(aes(x = factor(route), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+ggsave(file="outliers_dia_rota.pdf")
 ```
 
 Outlier por rota escolhendo o dia específico
@@ -71,8 +75,9 @@ outliers %>%
   filter(date == "2017-05-02") %>% 
   group_by(route) %>%
   summarise(day_outliers = n()) %>% 
-  filter(day_outliers > 40) %>% 
+  filter(day_outliers > 15) %>% 
   ggplot(aes(x = factor(route), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+ggsave(file="outliers_data.pdf")
 ```
 
 Otliers por dia escolhendo a rota
@@ -82,6 +87,7 @@ outliers %>%
   group_by(route, week_day) %>%
   summarise(day_outliers = n()) %>% 
   ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
+ggsave(file="outliers_rota.pdf")
 ```
 Outliers por mês
 ```{r}
@@ -104,19 +110,25 @@ full_data <- full_data %>%
 
 full_data
 
-rotas <- full_data %>% 
-  filter((date == "2017-05-02") & (route == "203") & (from_hour >= 6 & end_hour <= 7)) %>%
-  group_by(busCode, from_time, quantity_trips) %>% 
+full_data %>% 
+  filter((date == "2017-05-02") & (route == "303") & (from_hour == 18 & end_hour == 18)) %>%
+  group_by(busCode) %>% 
   summarise(start_time = min(from_time), trips_bus = sum(quantity_trips)) %>% 
+  filter(trips_bus > 15) %>% 
   arrange(start_time) %>% 
-  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros") + theme(axis.title.x=element_blank(),  axis.text.x=element_blank(),
+  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "Ônibus", y = "Quantidade de passageiros") + theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
+ggsave(file="lotacao2.pdf")
 
 # número de ônibus - 43
 # número de õnivus com mais de 80 pessoas - 14 
 # 33% dos ônibus lotados
 rotas
 
+# ver as rotas que possui mais õnibus
+```
+
+```{r}
 ant_data <- read.csv("/local/juninho/aggregate_output/output2/2017_05_02_full_agg_output.csv", stringsAsFactors=F)
 
 tdata <- ant_data %>% 
@@ -142,5 +154,6 @@ full_data %>%
   group_by(busCode) %>% 
   summarise(trips = sum(quantity_trips))
 ```
+
 
 

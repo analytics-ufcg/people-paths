@@ -158,7 +158,7 @@ embarque <- mapdata_emb %>%
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
   filter(leg_id == min(leg_id)) %>% 
-  filter(end_hour >= 6 & end_hour < 8)
+  filter(end_hour >= 17 & end_hour < 19)
   ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
     geom_density2d(data=embarque, aes(x=xEmb, y=yEmb), color="red") + labs(x = "longitude", y = "latitude")
   
@@ -212,7 +212,7 @@ desembarque <- mapdata %>%
   mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time))) %>% 
   group_by(cardNum) %>% 
   filter(leg_id == max(leg_id)) %>% 
-  filter(end_hour >= 6 & end_hour < 8)
+  filter(end_hour >= 17 & end_hour < 19)
   
   ggplot() + geom_polygon(data=shpf, aes(x=long, y=lat, group=group))+ 
     geom_density2d(data=desembarque, aes(x=x, y=y), color="red") + labs(x = "longitude", y = "latitude")
@@ -254,7 +254,7 @@ ggplot() +
   theme_void() +
   coord_equal(ratio=0.6) + # square plot to avoid the distortion
   labs(fill="Quantidade de viagens")
-ggsave(file="desembarqueManha.eps")
+ggsave(file="desembNoite.pdf", width = 24.88, height = 16.88, units = "cm")
 ```
 
 Density map - EMBARQUE
@@ -273,5 +273,5 @@ ggplot() +
   theme_void() +
   coord_equal(ratio=0.6) + # square plot to avoid the distortion
   labs(fill="Quantidade de viagens") 
-  ggsave(file="embarqueManha.eps")
+  ggsave(file="embarqueNoite.pdf", width = 20.88, height = 12.88, units = "cm")
 ```
