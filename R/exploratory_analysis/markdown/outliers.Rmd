@@ -65,18 +65,18 @@ outliers %>%
   group_by(route) %>%
   summarise(day_outliers = n()) %>% 
   filter(day_outliers > 40) %>% 
-  ggplot(aes(x = factor(route), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+  ggplot(aes(x = reorder(factor(route), -day_outliers), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
 ggsave(file="outliers_dia_rota.pdf")
 ```
 
-Outlier por rota escolhendo o dia específico
+Outlier por rota escolhendo a data específico
 ```{r}
 outliers %>%
-  filter(date == "2017-05-02") %>% 
+  filter(date == "2017-05-10") %>% 
   group_by(route) %>%
   summarise(day_outliers = n()) %>% 
-  filter(day_outliers > 15) %>% 
-  ggplot(aes(x = factor(route), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+  filter(day_outliers > 10) %>% 
+  ggplot(aes(x = reorder(factor(route), -day_outliers), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
 ggsave(file="outliers_data.pdf")
 ```
 
@@ -111,7 +111,7 @@ full_data <- full_data %>%
 full_data
 
 full_data %>% 
-  filter((date == "2017-05-02") & (route == "303") & (from_hour == 18 & end_hour == 18)) %>%
+  filter((date == "2017-05-02") & (route == "303") & (from_hour >= 18 & end_hour <= 19)) %>%
   group_by(busCode) %>% 
   summarise(start_time = min(from_time), trips_bus = sum(quantity_trips)) %>% 
   filter(trips_bus > 15) %>% 
