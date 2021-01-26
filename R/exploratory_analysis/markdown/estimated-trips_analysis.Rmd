@@ -1,0 +1,406 @@
+---
+title: "estimated-trips_analysis"
+author: "José Ivan Silva da Cruz Júnior"
+date: "12/17/2019"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(geosphere)
+library(dplyr)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+```
+
+Análise referente aos dados do estimated-trips, sendo esses dados mais atualizados do que os dados agregados.
+
+```{r}
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output2/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+
+may_q <- estimated_trips_result %>%
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>%
+  summarise(qntt = sum(quantity_trips))
+
+june_q <- estimated_trips_result %>%
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>%
+  summarise(qntt = sum(quantity_trips))
+
+july_q <- estimated_trips_result %>%
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>%
+  summarise(qntt = sum(quantity_trips))
+
+qntt_t <- estimated_trips_result %>% summarise(qntt = sum(quantity_trips))
+
+```
+
+1) Há uma relação entre a distância das viagens e a tempo delas? 
+```{r}
+estimated_trips_result %>%
+  ggplot(aes(x = dist_median, y = duration_median)) + 
+  geom_point(size = .5, alpha = .5) + theme_classic()  + 
+  geom_smooth(method = "lm") + labs(x = "Distância percorrida", y = "Duração")
+
+```
+
+```{r}
+theme_set(theme_classic())
+
+estimated_trips_result %>%
+  ggplot(aes(x = dist_median, y = duration_median)) + 
+  geom_hex() +   
+  geom_smooth(method = "lm", color = "brown") 
+```
+
+
+```{r}
+estimated_trips_result %>%
+  filter(dist_median < 5000 & duration_median > 50) %>% 
+  ggplot(aes(x = dist_median, y = duration_median)) + geom_point()
+
+estimated_trips_result %>%
+  filter(dist_median < 5000 & duration_median > 50) 
+```
+  
+  Observando alguns outliers, aqueles que apresentam uma distância mediana percorrida menor que 5 quilômetros e com uma duração de mais de 100 minutos (1 hora e 20 min), observamos que a rota que mais aparece nessa classificação é a 022, com 12 viagens, com os horários indo de 13 as 14 horas. Temos a rota 822 também com 4 viagens.
+  
+```{r}
+estimated_trips_result %>% 
+  filter(dist_median < 6000 & duration_median >= 30) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) 
+
+outlier <- estimated_trips_result %>% 
+  filter(route == "022") %>%
+  filter(dist_median < 6000 & duration_median >= 30)
+
+outlier  
+
+estimated_trips_result %>% 
+  filter(route == "022") %>%
+  summarise(duracao = median(duration_median))
+```
+
+  Os outliers são aquelas viagens que apresentam duração mediana acima de 25 minutos. Nessa análise, restringimos as viagens para aquelas com duração mediana igual ou maior que 30, onde vemos que a rota 022 possui o maior número de viagens, com cerca de 284. As rotas 370 e 532 também se destacam, com 162 e 129 viagens feitas, respectivamente. 
+  
+  Podemos dizer que, de alguma forma, a linha 022 se mostra mais propensa a 'imprevistos'. Temos 3 viagens com cerca de 1,5 km percorrido em quase 120 minutos (2 horas), além de 6 viagens percorrendo cerca de 4,5 km entre 80 e 100 minutos (1hr e 20min e 1hr e 40min). 
+  
+  Analisando a rota 022 mais profundamente.
+```{r}
+outlier %>%
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_bw() + labs(x = "hora", y = "quantidade de viagens")
+```
+
+```{r}
+outlier %>%
+  group_by(start_hour) %>% 
+  summarise(dist = median(dist_median)) %>% 
+  ggplot(aes(x = start_hour, y = dist)) + geom_col() + theme_bw() + labs(x = "hora", y = "distância percorrida (metro)")
+```
+
+```{r}
+outlier %>%
+  group_by(start_hour) %>% 
+  summarise(duration = median(duration_median)) %>% 
+  ggplot(aes(x = start_hour, y = duration)) + geom_col() + theme_bw() + labs(x = "hora", y = "duração da viagam")
+```
+
+2) Quais as rotas que, na mediana, percorrem uma maior distância?
+
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>%
+  summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
+  filter(qntt > 100) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(route, -median_dist), y = median_dist)) + labs(x = "rota", y = "distância") + geom_col() + theme_classic()
+```
+
+
+3) Quais as rotas que, na mediana, percorrem uma menor distância?
+
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(qntt = sum(quantity_trips), median_dist = median(dist_median)) %>% 
+  filter(qntt > 100) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, median_dist), y = median_dist)) + labs(x = "route") + geom_col() + theme_classic()
+```
+
+4) Quais as rotas mais populares, ou seja, aquelas com mais viagens (levando em consideração o passageiro) durante todo o período?
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 300) %>% 
+  top_n(10) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity/1000)) + labs(x = "rota", y = "quantidade de viagens (em milhões)") + geom_bar(stat = "identity") + theme_classic()
+```
+
+4.1) Verificando a popularidade mês a mês, temos:
+
+  maio:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 100) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+  junho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>%
+  filter(quantity > 100) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+  julho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>%
+  filter(quantity > 100) %>%
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+
+5) Quais as rotas menos populares, ou seja, aquelas com menos viagens (levando em consideração o passageiro) durante todo o dia?
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>%
+  filter(quantity > 300) %>% 
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) +
+    labs(x = "route", y = "trip quantity") +
+    geom_bar(stat = "identity") +
+    theme_classic()
+```
+
+5.1) Mês a mês temos:
+
+  maio:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 5) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>%
+  filter(quantity > 300) %>%
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+  junho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 6) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 300) %>%
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+  julho:
+```{r}
+estimated_trips_result %>% 
+  filter(lubridate::month(lubridate::date(lubridate::ymd(date))) == 7) %>% 
+  group_by(route) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 300) %>%
+  top_n(-20) %>% 
+  ggplot(aes(x = reorder(route, quantity), y = quantity)) + labs(x = "route", y = "trip quantity") + geom_bar(stat = "identity") + theme_classic()
+```
+
+
+6) Quais as rotas cujas viagens são mais demoradas na mediana?
+
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(qntt = sum(quantity_trips), duration = median(duration_median)) %>%
+  filter(qntt > 300) %>% 
+  top_n(10) %>% 
+  ggplot(aes(x = reorder(route, -duration), y = duration)) +
+    labs(x = "route", y = "trip duration (in minutes)") +
+    geom_bar(stat = "identity") +
+    theme_classic()
+```
+
+7) Quais as rotas cujas viagens são mais rápidas na mediana?
+
+```{r}
+estimated_trips_result %>%
+  group_by(route) %>% 
+  summarise(qntt = sum(quantity_trips), duration = median(duration_median)) %>%
+  filter(qntt > 1000) %>% 
+  top_n(-10) %>% 
+  ggplot(aes(x = reorder(route, duration), y = duration)) +
+    labs(x = "rota", y = "duração da viagem na mediana (em minutos)") +
+    geom_bar(stat = "identity") +
+    theme_classic()
+```
+
+8) Quais as rotas mais populares (lotadas) das 6h as 8h?
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  filter(start_hour >= 6 & start_hour <= 8) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 150) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
+    labs(x = "route", y = "trips quantity") +
+    geom_col() +
+    theme_classic()
+```
+
+  Nesse horário, a rota 303 ultrapassa em popularidade a rota mais popular no geral, a 203, mostrando que nesse horário a 303 possui uma capacidade muito alta de alcance. 
+  Uma possível explicação para a popularidade da rota 303 nesse horário seria o seu alcance dos bairros, isso porque ela liga bairros populosos e periféricos ao Centro da cidade e a outros bairros importantes no quesito posto de trabalho e estudo. Os bairros de Cajuru, Capão da Imbuia, Jardim Botânico, Cristo Rei, Rebouças, Bigorrilho, Campina do Siqueira e Mossunguê são alcançados pela 303 e ligam todos esses bairros ao Centro.
+  
+  
+9) Quais as rotas mais populares (lotadas) das 11h as 13h?
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  filter(start_hour >= 11 & start_hour <= 13) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 150) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
+    labs(x = "route", y = "trips quantity") +
+    geom_col() +
+    theme_classic()
+```
+
+  Nesse horário, percebemos que já há uma queda considerável na proporção da quantidade de viagens da rota 303 fazendo com que a 203 assuma a liderança.
+  
+10) Quais as rotas mais populares (lotadas) das 17h as 19h?
+
+```{r}
+estimated_trips_result %>% 
+  group_by(route) %>% 
+  filter(start_hour >= 17 & start_hour <= 19) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  filter(quantity > 150) %>% 
+  top_n(20) %>% 
+  ggplot(aes(x = reorder(route, -quantity), y = quantity)) +
+    labs(x = "route", y = "trips quantity") +
+    geom_col() +
+    theme_classic()
+
+```
+
+11) A rota 204 apresenta comportamento interessante. Na faixa de horário das 17h as 18h a mesma apresenta uma quantidade de viagens 57% menor do que na faixa de horário das 6h as 8h. Vamos ver a distribuição da quantidade de viagens da rota ao longo de todo o dia.
+
+```{r}
+estimated_trips_result %>%
+  filter(route == "204") %>%
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_bw()
+```
+
+12) Iremos analisar agora a rota 506, outra rota que mostra variação na quantidade de viagens nos horários de pico. Fez 13155 das 17h às 19h e 29755 das 6h às 8h, 56% a mais do que no outro horário.
+
+```{r}
+estimated_trips_result %>% 
+  filter(route == "506") %>% 
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_classic()
+```
+
+13) Iremos analisar agora a rota 550, pois a mesma apresenta uma forte queda na quantidade de viagens no horário de 11h as 13h em comparação com os outros horários. Nesse horário ela fez apenas 7017 viagens, enquanto que nos horários de 6h as 8h e de 17h as 19h fez 38679 e 17603, respectivamente.
+
+```{r}
+estimated_trips_result %>% 
+  filter(route == "550") %>% 
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + geom_col() + theme_classic()
+```
+ 
+14) Iremos analisar agora a distribuição da distância mediana em cada horário.
+
+```{r}
+estimated_trips_result %>% 
+  group_by(start_hour) %>%
+  summarise(distance = median(dist_median)) %>% 
+  ggplot(aes(x = start_hour, y = distance)) + labs(x = "hour", y = "median distance") + geom_col() + theme_classic()
+```
+
+  Podemos ver que os primeiros horários do dia são aqueles que apresentam as maiores distâncias percorridas. Isso, provavelmente, diz respeito as viagens feitas por aquelas pessoas que moram em locais mais distantes do perímetro urbano e do Centro da cidade, onde os principais postos de trabalho e estudo se encontram. Como moram mais longe, essas pessoas precisam sair mais cedo para poder chegar no horário certo.
+
+15) Agora veremos a distribuição da quantidade de viagens no decorrer das horas do dia.
+
+```{r}
+estimated_trips_result %>% 
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "intervalo de horário", y = "quantidade de viagens") + geom_col() + theme_classic()
+```
+
+  Podemos ver que os horários mais populares em relação a quantidade de viagens são concentrados na parte inicial da manhã e no início da noite. Os horários de 6h às 8h aparecem no topo da popularidade, seguido pelo horário das 17h às 19h. Esses são os horários onde as pessoas estão indo para os postos de trabalho e estudo, como também, no início da noite, voltando dos mesmos.
+  
+```{r}
+cr.map <- readOGR("~/Downloads/DIVISA_DE_BAIRROS.shp")
+data <- read.csv("/local/juninho/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
+
+data
+
+cr.map
+
+sodo <- cr.map[]
+
+dat <- data.frame(longitude = c(-49.20830,-49.21477, -49.21686),
+                  latitude = c(-25.46900, -25.45194, -25.44697),
+                  names = c("Cajuru 1", "Cajuru 2", "Cajuru 3"))
+
+sodo
+dat
+coordinates(dat) <- ~ longitude + latitude
+
+plot(sodo)
+plot(dat)
+
+proj4string(dat) <- proj4string(sodo)
+
+over(dat, sodo)
+
+over(sodo, dat)
+
+plot(cr.map)
+
+#codigo regional = 3
+```
+
+

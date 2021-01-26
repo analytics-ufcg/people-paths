@@ -1,0 +1,552 @@
+---
+title: "new_report"
+author: "José Ivan Silva da Cruz Júnior"
+date: "3/10/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(geosphere)
+library(magrittr)
+#library(hrbrthemes)
+library(ggplot2)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+options(warn=-1)
+```
+
+#noAnalytics
+#local/juninho/estimated-trips_analysis/data/od-matrix/full/output_sd/result.csv
+
+```{r}
+antigo_data <- read_csv("/home/admin/ivan/people-paths/R/exploratory_analysis/markdown/2017_07_05_full_agg")
+```
+
+```{r}
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+
+irrelevant_routes <- estimated_trips_result %>% 
+  group_by(route) %>% 
+  summarise(total_trips = sum(quantity_trips)) %>% 
+  filter(total_trips < 300)
+
+estimated_trips_relevant_routes <- 
+  estimated_trips_result %>% 
+  filter(!route %in% irrelevant_routes$route) %>% 
+  filter(!is.na(duration_median),duration_median > 0) %>% 
+  filter(!is.na(dist_median),dist_median > 0) %>% 
+  mutate(speed = ((dist_median/1000) / duration_median *60)) %>% 
+  group_by(date, week_day, route, start_hour, quantity_trips, speed, duration_median, duration_sd, dist_median) %>% 
+  expand(trips = seq(1:quantity_trips))
+
+expanded <- estimated_trips_relevant_routes %>% group_by(date, week_day, route, start_hour, quantity_trips, duration_median, duration_sd, dist_median, speed) %>% expand(trips = seq(1:quantity_trips))
+```
+
+Vale destacar que quando nos referirmos as viagens em qualquem varívael (velocidade, quantidade, distânia, etc), estaremos falando de cada viagem feita por passageiro e não por ônibus ou rota. Isso significa dizer, que uma rota terá várias viagens feitas nela.
+
+1) Análise de segunda-sexta e terça-quarta-quinta. 
+
+1.1) Quantidade de viagens (na mediana)
+```{r}
+day_group <- data.frame(week_day = c(2:6),
+                        day_group = c("SS", "TQ", "TQ", "TQ", "SS"))
+
+estimated_trips_result
+
+days <- estimated_trips_result %>%
+  group_by(week_day, route) %>%
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(qntt = median(qntt))
+
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$qntt, Terca_Quarta_Quinta = terça_quinta$qntt)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
+```
+
+  Como podemos ver, algumas rotas se destacam apresentando um número de viagens inferidas maior na mediana nos dias da semana de segunda e sexta em comparação com o período dos dias de terça a quinta, sendo elas a 203, 602 e 040. As duas últimas rotas ligam regiões periféricas da cidade a outras. Por outro lado, rotas como 303, segunda mais popular no geral, 503 e 023 apresentam uma maior quantidade de viagens no período de terça a quinta. Essas três rotas citadas ligam pontos da cidade ao Centro.
+  
+1.2) Distância percorrida
+```{r}
+
+days <- estimated_trips_result %>%
+  group_by(route, week_day) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  summarise(dist = median(dist_median)) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(dist = median(dist))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$dist, Terca_Quarta_Quinta = terça_quinta$dist)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "distância da viagem")
+```
+
+  Observamos agora, dentre as principais rotas, as distâncias percorridas na mediana para cada viagem feita. Observamos que a rota 507 apresenta uma maior variação entre os períodos da semanam mostrando que na terça, quarta e quinta, suas viagens costumam ser mais longas.
+
+1.3) Velocidade das viagens
+
+```{r}
+
+days <- estimated_trips_result %>%
+  group_by(route, week_day) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  summarise(speed = median((dist_median/1000) / (duration_median * 60))) %>% 
+  merge(day_group) %>% 
+  group_by(day_group, route) %>% 
+  summarise(speed =  median(speed))
+
+segunda_sexta <- days %>% 
+  filter(day_group == "SS") %>% 
+  top_n(10)
+
+terça_quinta <- days %>% 
+  filter(day_group == "TQ") %>% 
+  top_n(10)
+
+data_comparation <- segunda_sexta %>% 
+  mutate(Segunda_Sexta = segunda_sexta$speed, Terca_Quarta_Quinta = terça_quinta$speed)
+
+comp_long <- gather(data_comparation, key="measure", value="value", c("Segunda_Sexta", "Terca_Quarta_Quinta"))
+comp_long <- comp_long %>% mutate(value_adjusted = value)
+
+ggplot(comp_long, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "velocidade da viagem")
+```
+  
+  Observamos que a valocidade é praticamente a mesma entre todas as rotas no dois diferentes períodos da semana.
+
+2) Quantidade de viagens durante as horas do dia
+
+```{r}
+hour_group <- data.frame(start_hour = c(4:23),
+                         hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
+
+hours <- estimated_trips_result %>% 
+  group_by(start_hour) %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group) %>%
+  summarise(qntt = sum(qntt))
+
+
+hours <- hours %>% filter(hour_group != "I")
+
+hours$hour_group <- factor(hours$hour_group, levels = c("Manhã", "Tarde", "Noite"))
+
+ggplot(hours, aes(x = hour_group, y = qntt)) + geom_col(position="dodge", stat='identity') + labs(x = "período do dia", y = "quantidade de viagens")
+```
+
+  Como vemos, o horário da manhã (das 6h as 8h) é o que concentra a maior quantidade de viagens feitas, seguido da noite (das 17h as 19h) e a tarde (das 11h as 13h). Esses são os horários de pico, ou seja, os horários onde a movimentação no transporte público é maior.
+  Como explicação pro horário da manhã ser o de maior popularidade é o fato de ser nesse horário que as pessoas se deslocam pros seus locais de estudo e trabalho, onde tendem a permanecer pelo resto do dia. Assim, o horário de 11h as 13h se torna o horário se reserva para uma parte das pessoas se deslocam para almoço e para o deslocamento dos alunos até as escolas. Geralmente, as pessoas que saíram pela manhã não voltam para seus locais de origem no horário do almoço, fazendo isso apenas a noite.
+
+3) Análise pelos horários do dia: manhã, tarde e noite  
+
+3.1) Quantidade de viagens
+```{r}
+hour_group <- data.frame(start_hour = c(4:23),
+                         hour_group = c("I", "I", "M", "M", "M", "I", "I", "T", "T", "T", "I", "I", "I", "N", "N", "N", "I", "I", "I", "I"))
+
+hours <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507" || route == "022") %>%
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(qntt = median(qntt))
+
+hours
+
+seis_oito <- hours %>% 
+  filter(hour_group == "M") %>% 
+  top_n(12)
+
+onze_uma <- hours %>% 
+  filter(hour_group == "T") %>%
+  top_n(12) 
+
+cinco_sete <- hours %>% 
+  filter(hour_group == "N") %>% 
+  top_n(12)
+
+
+data_comparation2 <- merge(x = seis_oito, y = onze_uma, by = "route")
+
+data_comparation3 <- merge(x = data_comparation2, y = cinco_sete, by = "route")
+
+data_comparation3 <- data_comparation3 %>% mutate(Manhã = qntt.x, Tarde = qntt.y, Noite = qntt)
+
+comp_long1 <- gather(data_comparation3, key="measure", value="value", c("Manhã", "Tarde", "Noite"))
+comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
+```
+
+  Como podemos observar, pela manhã a rota 303 ultrapassa em quantidade de viagens a rota 203, a mais popular no geral. A noite e a tarde a 203 volta a exercer robusta liderança. Observando também as rotas 203, 503, 602, 023 e 502 vemos que suas viagens são mais populares a noite. Por outro lado, as rotas 303, 022, 040, 030, 603, 507, 204 e as que se seguem são mais populares pela manhã, que é a faixa de horário mais popular durante todo o dia. 
+  Não vemos nenhuma rota sendo mais popular no horário da tarde, ou seja, aquela que se encontra entre as 11h e as 13h. Um destaque evidente fica por conta da rota 503, que dispara no horário da noite, ultrapassando a rota 303 e se aproximando da 203. A 503 é uma rota predominantemente noturna, assim como a 203. A 303 apresenta um comportamento mais equilibrado, mas sendo mais demandada pela manhã.
+
+3.1.1) Outlier - 022
+
+```{r}
+
+hours <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  filter(route == "022") %>%
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(qntt = median(qntt))
+
+seis_oito <- hours %>% 
+  filter(hour_group == "M")
+
+onze_uma <- hours %>% 
+  filter(hour_group == "T")
+
+cinco_sete <- hours %>% 
+  filter(hour_group == "N")
+
+
+data_comparation2 <- merge(x = seis_oito, y = onze_uma, by = "route")
+
+data_comparation3 <- merge(x = data_comparation2, y = cinco_sete, by = "route")
+
+data_comparation3 <- data_comparation3 %>% mutate(Manhã = qntt.x, Tarde = qntt.y, Noite = qntt)
+
+comp_long1 <- gather(data_comparation3, key="measure", value="value", c("Manhã", "Tarde", "Noite"))
+comp_long1 <- comp_long1 %>% mutate(value_adjusted = value)
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value_adjusted), y = value_adjusted)) + geom_col(position="dodge", stat='identity') + labs(x = "rota", y = "quantidade de viagens")
+```
+
+3.2) Distância percorrida
+```{r}
+hours2 <- estimated_trips_result %>%
+  group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  summarise(dist = median(dist_median)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(dist = median(dist))
+
+seis_oito2 <- hours2 %>% 
+  filter(hour_group == "M") %>% 
+  top_n(20)
+
+onze_uma2 <- hours2 %>% 
+  filter(hour_group == "T") %>%
+  top_n(20) 
+
+cinco_sete2 <- hours2 %>% 
+  filter(hour_group == "N") %>% 
+  top_n(20)
+
+data_comparation4 <- merge(x = seis_oito2, y = onze_uma2, by = "route")
+
+data_comparation5 <- merge(x = data_comparation4, y = cinco_sete2, by = "route")
+
+data_comparation5 <- data_comparation5 %>% mutate(distManha = dist.x, distTarde = dist.y, distNoite = dist)
+
+comp_long1 <- gather(data_comparation5, key="measure", value="value", c("distManha", "distTarde", "distNoite"))
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='stepribbon') + labs(x = "route", y = "distância percorrida")
+```
+  
+  Apesar das 11h as 13h ser o horário com o menor número de viagens no geral entre os três principais horários, a rota 507 apresenta suas viagens como mais longa nesse horário. Observamos também, que há uma queda brusca na distância no horário da noite, mostrando que há uma mudança no tipo de viagem que o período da noite abarca na rota, onde claramente as pessoas tendem a fazer viagens mais curtas.
+  Para o horário da manhã, as viagens são as mais longas para todas as rotas analisadas. Esse é um comportamento esperado já que é nesse horário que a maior quantidade de viagens é feita.
+
+3.2.1) Outlier - 022
+```{r}
+hours2 <- estimated_trips_result %>%
+  group_by(route, start_hour) %>% 
+  filter(route == "022") %>% 
+  summarise(dist = median(dist_median)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(dist = median(dist))
+
+seis_oito2 <- hours2 %>% 
+  filter(hour_group == "M")
+
+onze_uma2 <- hours2 %>% 
+  filter(hour_group == "T")
+
+cinco_sete2 <- hours2 %>% 
+  filter(hour_group == "N")
+
+data_comparation4 <- merge(x = seis_oito2, y = onze_uma2, by = "route")
+
+data_comparation5 <- merge(x = data_comparation4, y = cinco_sete2, by = "route")
+
+data_comparation5 <- data_comparation5 %>% mutate(distManha = dist.x, distTarde = dist.y, distNoite = dist)
+
+comp_long1 <- gather(data_comparation5, key="measure", value="value", c("distManha", "distTarde", "distNoite"))
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='stepribbon') + labs(x = "route", y = "distância percorrida")
+```
+
+3.2.2) 022 - outlier - Duração
+
+```{r}
+hours2 <- estimated_trips_result %>%
+  group_by(route, start_hour) %>% 
+  filter(route == "022") %>% 
+  summarise(duration_median = median(duration_median)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(duration_median = median(duration_median))
+
+seis_oito2 <- hours2 %>% 
+  filter(hour_group == "M")
+
+onze_uma2 <- hours2 %>% 
+  filter(hour_group == "T")
+
+cinco_sete2 <- hours2 %>% 
+  filter(hour_group == "N")
+
+data_comparation4 <- merge(x = seis_oito2, y = onze_uma2, by = "route")
+
+data_comparation5 <- merge(x = data_comparation4, y = cinco_sete2, by = "route")
+
+data_comparation5 <- data_comparation5 %>% mutate(durationManha = duration_median.x, durationTarde = duration_median.y, durationNoite = duration_median)
+
+comp_long1 <- gather(data_comparation5, key="measure", value="value", c("durationManha", "durationTarde", "durationNoite"))
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='stepribbon') + labs(x = "route", y = "duração")
+```
+
+
+3.3) Velocidade
+
+3.3.1) Mais rápidas
+```{r}
+hours3 <- estimated_trips_relevant_routes %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  group_by(route, start_hour) %>% 
+  summarise(speed = median(speed)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) %>% 
+  summarise(speed = median(speed))
+
+seis_oito3 <- hours3 %>% 
+  filter(hour_group == "M") %>% 
+  top_n(20)
+
+onze_uma3 <- hours3 %>% 
+  filter(hour_group == "T") %>% 
+  top_n(20)
+
+cinco_sete3 <- hours3 %>% 
+  filter(hour_group == "N") %>% 
+  top_n(20)
+
+data_comparation4 <- merge(x = seis_oito3, y = onze_uma3, by = "route")
+
+data_comparation5 <- merge(x = data_comparation4, y = cinco_sete3, by = "route")
+
+data_comparation5 <- data_comparation5 %>% mutate(Manha = speed.x, Tarde = speed.y, Noite = speed)
+
+comp_long1 <- gather(data_comparation5, key="measure", value="value", c("Manha", "Tarde", "Noite"))
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, -value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "velocidade (km/h)")
+```
+  
+  Podemos observar que a tarde é o horário que, predominantemente, apresenta as viagens como sendo mais rápidas e a noite mais lentas, entre as rotas mais rápidas no geral. 
+  
+3.3.2) Mais lentas
+```{r}
+seis_oito3 <- hours3 %>% 
+  filter(hour_group == "M") %>% 
+  top_n(-20)
+
+onze_uma3 <- hours3 %>% 
+  filter(hour_group == "T") %>% 
+  top_n(-20)
+
+cinco_sete3 <- hours3 %>% 
+  filter(hour_group == "N") %>% 
+  top_n(-20)
+
+data_comparation4 <- merge(x = seis_oito3, y = onze_uma3, by = "route")
+
+data_comparation5 <- merge(x = data_comparation4, y = cinco_sete3, by = "route")
+
+data_comparation5 <- data_comparation5 %>% mutate(Manha = speed.x, Tarde = speed.y, Noite = speed)
+
+comp_long1 <- gather(data_comparation5, key="measure", value="value", c("Manha", "Tarde", "Noite"))
+
+ggplot(comp_long1, aes(fill = measure, x = reorder(route, value), y = value)) + geom_col(position="dodge", stat='identity') + labs(x = "route", y = "velocidade (km/h)")
+```
+  
+  Dentre as rotas mais lentas, a manhã é o horário onde a maioria delas anda mais rápido e a noite como mais lentas. Porém algumas rotas, apresentam comportamentos peculiares, como a 631, 822 e 714.
+  
+  
+4) Histogramas: velocidade, distância e duração das viagens.
+
+4.1) Velocidade
+```{r}
+expanded %>% 
+  ggplot(aes(speed)) + 
+  geom_histogram(xlab="Speed",  
+      fill=I("black"), 
+      col=I("blue"), 
+      alpha=I(.30)) + labs(x = "velocidade", y = "quantidade de viagens") + scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log10')
+```
+
+  Vemos que a maioria das viagens feitas possue velocidade mediana de cerca de 16 km/h. Vemos que há também uma boa quantidade de viagens realizadas acima e abaixo dessa faixa de velocidade, chegando a ter viagens a 2 km/h e outras com mais de 100 km/h.
+  
+4.2) Distância
+```{r}
+expanded %>% 
+  ggplot(aes(dist_median)) + 
+  geom_histogram(xlab="Distance",  
+      fill=I("black"), 
+      col=I("blue"), 
+      alpha=I(.30)) + labs(x = "distância") + scale_x_continuous(trans = 'log2')
+```
+
+  Vemos que as viagens feitas pelos usuários percorrem uma distância média de 4 quilômetros percorridos por trecho.
+  
+4.3) Duração
+```{r}
+expanded %>% 
+  ggplot(aes(duration_median)) + 
+  geom_histogram(xlab="Duration",  
+      fill=I("black"), 
+      col=I("blue"), 
+      alpha=I(.30)) + labs(x = "duration") + scale_x_continuous(trans = 'log2')
+```
+
+  Observamos que a duração das viagens em sua mediana se concentra na faixa de valor dos 15 minutos, o que é um tempo razoável considerando o tamanho geográfico da cidade de Curitiba.
+
+  Relação entre a distância percorida e velocidade.
+```{r}
+estimated_trips_relevant_routes %>%
+  ggplot(aes(x = dist_median, y = speed)) + 
+  geom_hex() +   
+  geom_smooth(method = "lm", color = "brown") + labs(x = "distância percorrida", y = "velocidade")
+```
+
+  Relação entre a velocidade e a quantidade de viagens.
+```{r}
+theme_set(theme_classic())
+
+estimated_trips_relevant_routes %>%
+  ggplot(aes(x = quantity_trips, y = speed)) + 
+  geom_hex() +   
+  geom_smooth(method = "lm", color = "brown") + labs(x = "quantidade de viagens", y = "velocidade")
+```
+
+5) Intervalo de confiança - gráficos de barra
+
+```{r}
+hour_group <- data.frame(start_hour = c(4:23),
+                         hour_group = c("I", "I", "Manhã", "Manhã", "Manhã", "I", "I", "Tarde", "Tarde", "Tarde", "I", "I", "I", "Noite", "Noite", "Noite", "I", "I", "I", "I"))
+
+dat <- estimated_trips_result %>% 
+  group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507" || route == "022") %>% 
+  summarise(qntt = sum(quantity_trips)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route)
+  
+dat
+
+```
+5.1) Quantidade de viagens
+
+```{r}
+library(Rmisc)
+
+ic_estimated_trips_result <- summarySE(dat, measurevar="qntt", groupvars=c("route", "hour_group"))
+
+ic_estimated_trips_result <- ic_estimated_trips_result %>%
+  filter(hour_group != "I")
+
+ic_estimated_trips_result
+
+ggplot(ic_estimated_trips_result, aes(x= reorder(route,-qntt), y=qntt, fill=hour_group)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_errorbar(aes(ymin=qntt-se, ymax=qntt+se),
+                  width=.2,                    # Width of the error bars
+                  position=position_dodge(.9)) + labs(x = "rota", y = "quantidade de viagens", fill="Horário")
+
+```
+
+5.2) Distância percorrida
+
+```{r}
+dat2 <- estimated_trips_result %>%
+  group_by(route, start_hour) %>% 
+  filter(route == "203" || route == "303" || route == "503" || route == "602" || route == "023" || route == "040" || route == "603" || route == "507") %>% 
+  summarise(dist = median(dist_median)) %>% 
+  merge(hour_group) %>% 
+  group_by(hour_group, route) 
+
+dat2
+```
+```{r}
+ic_estimated_trips_result <- summarySE(dat2, measurevar="dist", groupvars=c("route", "hour_group"))
+
+ic_estimated_trips_result <- ic_estimated_trips_result %>%
+  filter(hour_group != "I")
+
+ic_estimated_trips_result
+
+ggplot(ic_estimated_trips_result, aes(x= reorder(route,-dist), y=dist, fill=hour_group)) + 
+    geom_bar(position=position_dodge(), stat="identity") +
+    geom_errorbar(aes(ymin=dist-se, ymax=dist+se),
+                  width=.2,                    # Width of the error bars
+                  position=position_dodge(.9)) + labs(x = "rota", y = "distância percorrida", fill="Horário")
+```
+
+QUANTIDADE DE VIAGENS PELAS HORAS DO DIA
+```{r}
+estimated_trips_result %>% 
+  group_by(start_hour) %>% 
+  summarise(quantity = sum(quantity_trips)) %>% 
+  ggplot(aes(x = start_hour, y = quantity)) + labs(x = "intervalo de horário", y = "quantidade de viagens") + geom_col() + theme_classic()
+```
+

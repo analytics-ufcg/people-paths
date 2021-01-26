@@ -1,0 +1,159 @@
+---
+title: "new_report"
+author: "José Ivan Silva da Cruz Júnior"
+date: "21/07/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(geosphere)
+library(magrittr)
+library(ggplot2)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+options(warn=-1)
+```
+
+```{r}
+final_data <- read.csv("/local/juninho/aggregate_output/output2/result.csv", stringsAsFactors=F)
+
+final_data <- final_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
+```
+
+Outliers - VIAGENS MAIS LENTAS
+```{r}
+final_data2 <- read.csv("/local/juninho/aggregate_output/output/result.csv", stringsAsFactors=F)
+
+final_data2 %>%
+  ggplot(aes(x = dist_median, y = duration_median)) + 
+  geom_point(size = .5, alpha = .5) + theme_classic()  + 
+  geom_smooth(method = "lm") + labs(x = "Distância percorrida", y = "Duração da viagem")
+ggsave(file="relacao_duracao_dist.pdf")
+```
+```{r}
+final_data %>%
+   filter((dist_median < 6000 & duration_median > 45) | (dist_median < 20000 & duration_median > 60)) %>% 
+  ggplot(aes(x = dist_median, y = duration_median)) + geom_point()
+
+outliers <- final_data %>%
+  filter((dist_median < 6000 & duration_median > 45) | (dist_median < 20000 & duration_median > 60))
+
+outliers
+```
+
+Outliers por dia
+```{r}
+outliers %>% 
+  group_by(week_day) %>%
+  summarise(day_outliers = n()) %>% 
+  filter(week_day != 7) %>% 
+  ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
+ggsave(file="outliers_dia.pdf")
+```
+
+Outliers por rota escolhendo o dia da semana
+```{r}
+outliers %>%
+  filter(week_day == "5") %>% 
+  group_by(route) %>%
+  summarise(day_outliers = n()) %>% 
+  filter(day_outliers > 40) %>% 
+  ggplot(aes(x = reorder(factor(route), -day_outliers), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+ggsave(file="outliers_dia_rota.pdf")
+```
+
+Outlier por rota escolhendo a data específico
+```{r}
+outliers %>%
+  filter(date == "2017-05-10") %>% 
+  group_by(route) %>%
+  summarise(day_outliers = n()) %>% 
+  filter(day_outliers > 10) %>% 
+  ggplot(aes(x = reorder(factor(route), -day_outliers), y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Rota", y = "Quantidade de viagens")
+ggsave(file="outliers_data.pdf")
+```
+
+Otliers por dia escolhendo a rota
+```{r}
+outliers %>%
+  filter(route == "370") %>% 
+  group_by(route, week_day) %>%
+  summarise(day_outliers = n()) %>% 
+  ggplot(aes(x = week_day, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Dia da semana", y = "Quantidade de viagens")
+ggsave(file="outliers_rota.pdf")
+```
+Outliers por mês
+```{r}
+outliers <- outliers %>% 
+  mutate(month = lubridate::month(lubridate::date(lubridate::ymd(date))))
+
+outliers %>% 
+  group_by(month) %>%
+  summarise(day_outliers = n()) %>% 
+  ggplot(aes(x = month, y = day_outliers)) + geom_col() + theme_bw() + labs(x = "Mês", y = "Quantidade de viagens")
+```
+
+Análise da lotação dos ônibus com os dados completos
+```{r}
+full_data <- read_csv("/local/juninho/aggregate_output/output2/result.csv")
+
+
+full_data <- full_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
+
+full_data
+
+full_data %>% 
+  filter((date == "2017-05-02") & (route == "303") & (from_hour >= 18 & end_hour <= 19)) %>%
+  group_by(busCode) %>% 
+  summarise(start_time = min(from_time), trips_bus = sum(quantity_trips)) %>% 
+  filter(trips_bus > 15) %>% 
+  arrange(start_time) %>% 
+  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "Ônibus", y = "Quantidade de passageiros") + theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+ggsave(file="lotacao2.pdf")
+
+# número de ônibus - 43
+# número de õnivus com mais de 80 pessoas - 14 
+# 33% dos ônibus lotados
+rotas
+
+# ver as rotas que possui mais õnibus
+```
+
+```{r}
+ant_data <- read.csv("/local/juninho/aggregate_output/output2/2017_05_02_full_agg_output.csv", stringsAsFactors=F)
+
+tdata <- ant_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
+
+tdata <- ant_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
+  mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
+  mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time)))
+
+tdata
+
+tdata %>% 
+  filter((route == "203") & (from_hour == 7)) %>% 
+  group_by(busCode) %>% 
+  summarise(trips = sum(quantity_trips))
+
+full_data %>% 
+  filter(date == "2017-05-02") %>% 
+  filter(route == "550") %>% 
+  filter((from_hour >= 7 & end_hour <= 8)) %>% 
+  group_by(busCode) %>% 
+  summarise(trips = sum(quantity_trips))
+```
+
+
+

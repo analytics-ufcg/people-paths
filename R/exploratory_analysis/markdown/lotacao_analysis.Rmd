@@ -1,0 +1,93 @@
+---
+title: "new_report"
+author: "José Ivan Silva da Cruz Júnior"
+date: "20/06/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(geosphere)
+library(magrittr)
+library(ggplot2)
+
+library(rgeos)
+library(sp)
+library(rgdal)
+
+options(scipen = 999)
+options(warn=-1)
+```
+
+#leitura dos datasets
+```{r}
+estimated_trips_result <- read_csv("/local/juninho/aggregate_output/output2/result.csv", col_types = list(
+    date = col_date(format = ""),
+    week_day = col_double(),
+    route = col_character(),
+    start_hour = col_double(),
+    quantity_trips = col_double(),
+    duration_median = col_double(),
+    dist_median = col_double()
+  )
+)
+
+ant_data <- read.csv("/local/juninho/aggregate_output/2017_05_02_full_agg", stringsAsFactors=F)
+```
+
+```{r}
+tdata <- ant_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::ymd_hms(start_time))) %>% 
+  mutate(from_minute = lubridate::minute(lubridate::ymd_hms(start_time))) %>% 
+  mutate(end_hour = lubridate::hour(lubridate::ymd_hms(end_time))) %>% 
+  mutate(end_minute = lubridate::minute(lubridate::ymd_hms(end_time)))
+
+tdata
+
+rotas <- tdata %>% 
+  filter(route == "203" & (from_hour >= 6 & end_hour <= 7)) %>%
+  group_by(route, busCode, start_time) %>% 
+  summarise(n = n())
+  summarise(start_time = min(start_time), trips_bus = sum(n)) 
+  arrange(start_time) %>% 
+  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros")
+
+rotas
+
+```
+
+Análise da lotação dos ônibus com os dados completos
+```{r}
+full_data <- read_csv("/local/juninho/aggregate_output/output2/result.csv")
+
+
+full_data <- full_data %>% 
+  mutate(from_hour = lubridate::hour(lubridate::hms(from_time)))
+
+full_data
+
+rotas <- full_data %>% 
+  filter((date == "2017-05-02") & (route == "203") & (from_hour >= 6 & end_hour <= 7)) %>%
+  group_by(busCode, from_time, quantity_trips) %>% 
+  summarise(start_time = min(from_time), trips_bus = sum(quantity_trips)) %>% 
+  arrange(start_time) %>% 
+  ggplot(aes(x = busCode, y = trips_bus)) + geom_col() + labs(x = "ônibus", y = "quantidade de passageiros") + theme(axis.title.x=element_blank(),  axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+# número de ônibus - 43
+# número de õnivus com mais de 80 pessoas - 14 
+# 33% dos ônibus lotados
+rotas
+
+full_data %>% 
+  filter((date == "2017-05-02") & (route == "924") & (from_hour >= 7 & end_hour <= 8)) %>% 
+  group_by(busCode) %>% 
+  summarise(trips = sum(quantity_trips)) %>% 
+  filter(trips > 15)
+
+full_data %>% 
+  filter(date == "2017-05-02") %>% 
+  filter(route == "203")
+ ```
+
